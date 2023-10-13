@@ -1,0 +1,75 @@
+<component is="style">
+    .bolderText{
+        font-weight:bolder;
+    }
+    .form-container{
+        padding: 30px;
+        border:1px solid var(--el-border-color-light);
+        border-top: 0;
+        margin-top: -16px;
+    }
+</component>
+<el-card shadow="never">
+    <template #header>
+        <el-alert effect="dark" :closable="false" title="使用说明">在此处定义的变量可以在全局通过site_config("组名.变量名")使用</el-alert>
+    </template>
+    <el-tabs type="card" v-model="tabValue" @tab-change="tabChange">
+        <el-tab-pane :name="key" v-for="(label,key) in groupList" :label="label"></el-tab-pane>
+        {if $app_debug}
+        <el-tab-pane name="addconfig">
+            <template #label>
+                <i class="fa fa-plus"></i>&nbsp;添加配置
+            </template>
+        </el-tab-pane>
+        {/if}
+    </el-tabs>
+    <div class="form-container">
+        <yun-form
+            label-position="left"
+            require-asterisk-position="right"
+            :label-width="200"
+            @submit="onSubmit"
+            :append-width="8"
+            :action="extend.edit_url"
+            @success="onSuccess"
+            v-if="columns && tabValue!='addconfig'"
+            :columns="columns">
+            <template #default>
+                <el-form-item>
+                    <template #label><span class="bolderText">变量标题</span></template>
+                    <el-row style="width:100%">
+                        <el-col :span="16">
+                            <span class="bolderText">变量值</span>
+                        </el-col>
+                        {if $app_debug}
+                        <el-col :span="8">
+                            <div class="bolderText" style="padding-left: 50px;">读取方式</div>
+                        </el-col>
+                        {/if}
+                    </el-row>
+                </el-form-item>
+            </template>
+            <template #addons="{value}">
+                <el-divider>
+                    <el-tag v-if="value.name">{{value.type}}-{{value.name}}</el-tag>
+                    <el-tag v-else type="warning">未安装扩展-{{value.key}}</el-tag>
+                </el-divider>
+            </template>
+            {if $app_debug}
+            <template #append="item">
+                <div style="padding-left:30px;">
+                    <span>{{formatVar(item.column.field,item.column.addons)}}</span>
+                    <el-button style="position: absolute;right: 0" @click="delVar(item.column.field)" size="small" type="danger" v-if="item.column.can_delete">{:__('删除')}</el-button>
+                </div>
+            </template>
+            {/if}
+        </yun-form>
+        <yun-form
+            v-if="tabValue=='addconfig'"
+            :action="extend.add_url"
+            @success="onSuccess"
+            ref="yunform"
+            :columns="addconfig">
+        </yun-form>
+    </div>
+</el-card>

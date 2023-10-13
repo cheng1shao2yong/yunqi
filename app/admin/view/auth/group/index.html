@@ -1,0 +1,22 @@
+<el-card shadow="never">
+    <template #header>
+        <el-alert effect="dark" :closable="false" title="使用说明">角色组可以有多个,角色有上下级层级关系,如果子角色有角色组和管理员的权限则可以派生属于自己组别的下级角色组或管理员</el-alert>
+    </template>
+    <yun-table
+        :columns="columns"
+        :common-search="false"
+        :pagination="false"
+        order="asc"
+        ref="yuntable"
+        :is-tree="true"
+        :tree-expand-all="true"
+        toolbar="refresh,add,del"
+        :auth="{
+            add:{:$auth->check('app\\admin\\controller\\auth\\Group','add')},
+            edit:{:$auth->check('app\\admin\\controller\\auth\\Group','edit')},
+            del:{:$auth->check('app\\admin\\controller\\auth\\Group','del')},
+            multi:{:$auth->check('app\\admin\\controller\\auth\\Group','multi')},
+        }"
+        :extend="extend">
+    </yun-table>
+</el-card>

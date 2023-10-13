@@ -1,0 +1,87 @@
+<component is="style">
+.install:hover{
+    background:var(--el-color-primary-light-9);
+    border:1px solid var(--el-color-primary-light-5);
+}
+.paycode{
+    text-align:center;
+}
+.message{
+    margin-top:5px;
+}
+.footer{
+    margin-top:15px;
+}
+</component>
+<el-card shadow="never">
+    <template #header>
+        {if $plugins_host!='www.56q7.com'}
+        <el-alert effect="dark" :closable="false">扩展可以为系统提供丰富的功能，支持通过更换扩展服务地址来安装其他开发者的扩展程序，同时你也可以打包好的扩展程序开放给别人使用，如需要开放本地扩展，请下载插件【开放扩展支持】</el-alert>
+        {else}
+        <el-alert effect="dark" :closable="false" type="error" title="温馨提醒">您当前未使用官方服务端，为了避免不必要的损失，请勿在正式环境上安装扩展，如有人违法销售涉及“赌博、色情、盗版”等违法扩展程序，<a style="color: #fff;text-decoration: underline;" target="_blank" href="https://bbs.56q7.com/">点击这里举报</a>。</el-alert>
+        {/if}
+    </template>
+    <yun-table
+            :columns="columns"
+            :common-search="false"
+            search="title"
+            tabs="type"
+            ref="yuntable"
+            toolbar="refresh,install,create"
+            :extend="extend">
+            <template #toolbar="{tool}">
+                <template v-if="tool=='install'">
+                    <el-button type="primary" plain class="install hide-600">
+                        <el-radio-group v-model="plain" @change="changePlain">
+                            <el-radio label="all">全部</el-radio>
+                            <el-radio label="free" class="hide-1000">免费</el-radio>
+                            <el-radio label="not-free" class="hide-1000">付费</el-radio>
+                            <el-radio label="local">本地</el-radio>
+                        </el-radio-group>
+                    </el-button>
+                </template>
+                <template v-if="tool=='create'">
+                    <el-button type="primary" @click="createAddon">
+                        创建扩展
+                    </el-button>
+                </template>
+            </template>
+            <template #header="{field}">
+                <div v-if="field=='packed'">
+                    打包
+                    <el-tooltip
+                            effect="dark"
+                            content="仅支持打包安装好的扩展"
+                            placement="top-start">
+                        <i class="fa fa-info-circle"></i>
+                    </el-tooltip>
+                </div>
+                <div v-if="field=='open'">
+                    开放
+                    <el-tooltip
+                            effect="dark"
+                            content="打包好的扩展才能开放给其他开发者使用，禁止销售涉及“赌博、色情、盗版”等违法扩展程序，禁止销售未取得版权，其他开发者的付费程序"
+                            placement="top-start">
+                        <i class="fa fa-info-circle"></i>
+                    </el-tooltip>
+                </div>
+            </template>
+    </yun-table>
+</el-card>
+<el-dialog :width="500" v-model="buyDialog.show" @close="closeBuyDialog" :title="'购买'+type[buyDialog.row.type]+'【'+buyDialog.row.name+'】'">
+    <div class="paycode">
+        <el-alert type="warning">购买后，可以通过微信的支付凭证交易单号重复下载，有效期为30天</el-alert>
+        <img v-if="buyDialog.code_url" :src="buyDialog.code_url" style="width: 150px;height: 150px;"/>
+        <div style="margin-bottom: 10px;">￥{{buyDialog.row.price}}</div>
+    </div>
+    <div class="transaction_id">
+        <el-input v-model="buyDialog.transaction_id" placeholder="请输入交易单号" @change="checkTransactionId"></el-input>
+    </div>
+    <div class="message" v-if="buyDialog.message">
+        <el-tag type="success" v-if="buyDialog.expire_time>0">{{buyDialog.message}}</el-tag>
+        <el-tag type="info" v-else>{{buyDialog.message}}</el-tag>
+    </div>
+    <div class="footer" v-if="buyDialog.status && buyDialog.expire_time>0">
+        <el-button size="large" type="primary" style="width: 100%" @click="payDownload">下载</el-button>
+    </div>
+</el-dialog>

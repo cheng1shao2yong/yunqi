@@ -1,0 +1,62 @@
+<el-container class="layout" id="container">
+    <div class="aside-split" v-show="documentWidth>600 || !elementUi.is_menu_collapse">
+        <div class="logo flx-center">
+            <img class="logo-img" src="{:site_config('basic.logo')}" alt="logo" />
+        </div>
+        <el-scrollbar :height="menuHeight+'px'">
+            <div class="split-list">
+                <div
+                    v-for="(menu,index) in menuList"
+                    :key="menu.url"
+                    :class="['split-item',isChildMenu(menu.id)?'split-active':'']"
+                    @click="changeSubMenu(menu)">
+                    <i :class="menu.icon"></i>
+                    <span class="title">{{ menu.title }}</span>
+                </div>
+            </div>
+        </el-scrollbar>
+    </div>
+    <el-aside v-show="documentWidth>600 || !elementUi.is_menu_collapse" :class="{ 'not-aside': !childMenuList.length }" :style="{ width: elementUi.is_menu_collapse ? '65px' : documentWidth>600 ? '210px':(documentWidth-2)+'px'}">
+        <div class="logo flx-center">
+            <template v-if="elementUi.is_menu_collapse">
+                <span class="logo-text">{:mb_substr(site_config('basic.sitename'),0,1)}</span>
+            </template>
+            <template v-else>
+                <span class="logo-text">{:site_config('basic.sitename')}</span>
+            </template>
+        </div>
+        <el-scrollbar :height="menuHeight+'px'">
+            <el-menu
+                    :default-active="activeMenu?activeMenu.id.toString():''"
+                    :router="false"
+                    :collapse="elementUi.is_menu_collapse"
+                    :collapse-transition="false"
+                    :unique-opened="true">
+                    <Menulist :list="childMenuList" @onclickmenu="clickMenu"></Menulist>
+            </el-menu>
+        </el-scrollbar>
+    </el-aside>
+    <el-container v-show="documentWidth>600 || elementUi.is_menu_collapse">
+        <el-header v-show="!mainFrameExpand">
+            <div class="tool-bar-lf">
+                <i @click="elementUi.is_menu_collapse=!elementUi.is_menu_collapse;setMainContentFrame();" :class="['collapse-icon',elementUi.is_menu_collapse?'fa fa-indent':'fa fa-outdent']"></i>
+                <Breadcrumb class="hide-800" v-if="elementUi.breadcrumb" :list="breadcrumb"></Breadcrumb>
+            </div>
+            <div class="tool-bar-ri">
+                {include file="layout/index/rightbar" /}
+            </div>
+        </el-header>
+        <el-container class="classic-main">
+            <Tabs v-show="!mainFrameExpand && elementUi.tabs" ref="tabs"></Tabs>
+            <el-main :class="mainFrameExpand?'expand':''">
+                <div id="main-content" :style="mainFrameExpand?'width:100%;height:100%;':`width:${contentWidth}px;height:${contentHeight}px;`"></div>
+                <div class="close-main-expand" v-if="mainFrameExpand" @click="minimize">
+                    <i class="fa fa-close"></i>
+                </div>
+            </el-main>
+            <el-footer v-if="elementUi.footer">
+                {include file="layout/index/footer" /}
+            </el-footer>
+        </el-container>
+    </el-container>
+</el-container>

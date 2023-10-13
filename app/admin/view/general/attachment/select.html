@@ -1,0 +1,204 @@
+<component is="style">
+    .filebox{
+        padding: 10px;
+    }
+    .el-card__body{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        padding:0;
+    }
+    .el-card__body>.left{
+        width: 20%;
+        height: 470px;
+        padding:10px;
+    }
+    .el-card__body>.left .li{
+        height: 40px;
+        line-height: 40px;
+        cursor: pointer;
+        padding: 0 10px;
+    }
+    .el-card__body>.left .li:hover{
+        background-color: var(--el-color-primary-light-8);
+    }
+    .el-card__body>.left .li.active{
+        background-color: var(--el-color-primary-light-8);
+    }
+    .el-card__body>.left .li .fr{
+        float:right;
+        display: flex;
+        width: 60px;
+        justify-content: space-between;
+        font-size:12px;
+        color: var(--el-color-primary);
+    }
+    .el-card__body>.left .li .fr span:hover{
+        color: var(--el-color-primary-light-2);
+    }
+    .el-card__body>.right{
+        width: 80%;
+        border-left:1px solid var(--el-border-color-light);
+        padding:12px;
+        position: relative;
+    }
+    .el-upload{
+        width: 110px;
+        height: 110px;
+        margin: 15px 13px 0 0;
+        border-radius: 5px;
+        position:relative;
+        border: 1px dashed #ccc;
+    }
+    .el-upload-list .is-ready,.el-upload-list .is-uploading{
+        display: none;
+    }
+    .el-upload-list .el-upload-list__item{
+        width: 110px;
+        height: 110px;
+        margin: 15px 13px 0 0;
+        border-radius: 5px;
+        position:relative;
+        border: 1px dashed #ccc;
+    }
+    .el-upload-list .el-upload-list__item .img{
+        width: 90px;
+        height: 90px;
+        position: absolute;
+        left:10px;
+        top:10px;
+        overflow: hidden;
+        cursor: pointer;
+        background-repeat: no-repeat;
+        background-size: contain;
+        background-position: center;
+    }
+    .el-upload-list .el-upload-list__item span{
+        display: inline-block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        width: 98%;
+        font-size: 12px;
+        text-align: center;
+        color: #000;
+        position:absolute;
+        border-radius:3px;
+        bottom:1px;
+        left:1%;
+        background-color: rgb(110,110,110,0.5);
+    }
+    .el-upload-list .el-upload-list__item .checked span{
+        background-color: var(--el-color-primary);
+        color:#fff;
+    }
+    .el-upload-list .fa-check{
+        display: none;
+    }
+    .el-upload-list .checked .fa-check{
+        color:var(--el-color-primary);
+        position: absolute;
+        right:10px;
+        top:10px;
+        font-size:24px;
+        display:inline;
+    }
+    .footer{
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+    }
+    .footer .el-button{
+        position: relative;
+        top:7px;
+    }
+</component>
+<div class="filebox">
+    <el-card shadow="never">
+        <div class="left">
+            <el-button type="primary" @click="addCate">添加分类</el-button>
+            <el-input placeholder="请输入分类搜索" style="margin: 15px 0;"></el-input>
+            <el-scrollbar height="320px" style="margin:0 -10px;">
+                <div :class="['li',category=='all'?'active':'']" @click="checkCategory('all');">
+                    <i :class="['fa',category=='all'?'fa-folder-open-o':'fa-folder-o']"></i>&nbsp;&nbsp;全部
+                </div>
+                <div :class="['li',category=='unclassed'?'active':'']" @click="checkCategory('unclassed');">
+                    <i :class="['fa',category==''?'fa-folder-open-o':'fa-folder-o']"></i>&nbsp;&nbsp;未归类
+                </div>
+                <template  v-for="(item,key) in catelist">
+                <div :class="['li',category==key?'active':'']" @click="checkCategory(key);">
+                    <i :class="['fa',category==key?'fa-folder-open-o':'fa-folder-o']"></i>&nbsp;&nbsp;{{item}}
+                    <div class="fr"><span @click.stop="editCate(key,item)">编辑</span>|<span @click.stop="delCate(key,item)">删除</span></div>
+                </div>
+                </template>
+            </el-scrollbar>
+        </div>
+        <div class="right">
+            <el-input placeholder="请输入名称搜索" style="width: 725px;margin-left: 7px;" v-model="keywords">
+                <template #append>
+                    <el-button type="primary" size="small" @click="refresh">搜索</el-button>
+                </template>
+            </el-input>
+            <el-upload
+                    :multiple="true"
+                    accept="image/*"
+                    action="{$config.baseUrl}{$config.upload.uploadurl}"
+                    :data="{category:category,disks:'local_public'}"
+                    :headers="{'x-requested-with': 'XMLHttpRequest'}"
+                    list-type="picture-card"
+                    :on-success="beforeUploadSuccess"
+                    :file-list="list">
+                <i class="fa fa-cloud-upload"></i>
+                <template #file="{file}">
+                    <div :class="inArray(file.fullurl)!==false?'checked':''" @click="checkImg(file)">
+                        <div class="img">
+                            <img @load="parseImg" class="upload-file-img" :data-url="file.thumburl" style="width: 100%"/>
+                        </div>
+                        <span>{{file.filename}}</span>
+                        <i class="fa fa-check"></i>
+                    </div>
+                </template>
+            </el-upload>
+            <el-pagination
+                    style="position: absolute;bottom: 15px;right: 15px"
+                    @current-change="pageChange"
+                    small
+                    :page-size="17"
+                    :current-page="page"
+                    background
+                    layout="prev, pager, next"
+                    :total="total"
+            ></el-pagination>
+        </div>
+    </el-card>
+    <div class="footer">
+        <el-button type="danger" @click="delPic">删除</el-button>
+        <el-button type="warning" @click="setCategory">归类</el-button>
+        <el-button type="primary" @click="confirmImg">选定</el-button>
+        <el-button type="success" @click="refresh">刷新</el-button>
+    </div>
+</div>
+<el-dialog
+        v-model="editCateForm.show"
+        destroy-on-close
+        :lock-scroll="false"
+        :title="editCateForm.title"
+        width="50%"
+        :modal="false"
+        align-center>
+        <el-select style="width: 100%" v-model="editCateForm.key" v-if="editCateForm.type=='set'">
+            <el-option
+                    v-for="(item,key) in catelist"
+                    :key="key"
+                    :label="item"
+                    :value="key">
+            </el-option>
+        </el-select>
+        <el-input placeholder="请输入分类名称" v-model="editCateForm.value" v-else></el-input>
+        <template #footer>
+              <span class="dialog-footer">
+                <el-button type="danger" @click="editCateForm.show=false">取消</el-button>
+                <el-button type="primary" @click="confirm">确认</el-button>
+              </span>
+        </template>
+</el-dialog>

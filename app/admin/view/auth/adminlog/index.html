@@ -1,0 +1,10 @@
+<el-card shadow="never">
+    <template #header>
+        <el-alert effect="dark" :closable="false">管理员可以查看自己所拥有的权限的所有管理员的日志</el-alert>
+    </template>
+    <yun-table
+            :columns="columns"
+            toolbar="refresh,del"
+            :extend="extend">
+    </yun-table>
+</el-card>

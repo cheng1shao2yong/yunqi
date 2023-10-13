@@ -1,0 +1,14 @@
+<el-card shadow="never">
+    <yun-table
+            :columns="columns"
+            search="nickname,mobile"
+            toolbar="refresh,edit,del"
+            :auth="{
+                add:{:$auth->check('app\\admin\\controller\\user\\Index','add')},
+                edit:{:$auth->check('app\\admin\\controller\\user\\Index','edit')},
+                del:{:$auth->check('app\\admin\\controller\\user\\Index','del')},
+                multi:{:$auth->check('app\\admin\\controller\\user\\Index','multi')},
+            }"
+            :extend="extend">
+    </yun-table>
+</el-card>

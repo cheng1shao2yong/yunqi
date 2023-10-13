@@ -1,0 +1,34 @@
+<#if action=='add'#>
+<el-card shadow="never" style="border: 0;">
+    <#if form#>
+    <yun-form
+        <#if !reduced#>
+        ref="yunform"
+        @render="onFormRender"
+        @submit="onSubmit"
+        @success="onSuccess"
+        @fail="onFail"
+        <#endif#>
+        :data="row"
+        :columns="columns">
+        <template #default>
+            {:token_field()}
+        </template>
+<#slot#>
+    </yun-form>
+    <#endif#>
+    <#if !form#>
+    <#title#>
+    <#endif#>
+</el-card>
+<#endif#>
+<#if action=='edit'#>
+<#if form#>
+{include file="<#temp#>" /}
+<#endif#>
+<#if !form#>
+<el-card shadow="never" style="border: 0;">
+   <#title#>
+</el-card>
+<#endif#>
+<#endif#>

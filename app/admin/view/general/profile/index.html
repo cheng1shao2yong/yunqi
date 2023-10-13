@@ -1,0 +1,36 @@
+<el-row>
+    <el-col :md="6" style="padding: 5px;">
+        <el-card header="个人资料" style="height: 100%;" shadow="never">
+            <yun-form
+                    ref="yunform"
+                    @submit="onSubmit"
+                    :columns="columns"
+                    :action="extend.edit_url"
+                    :data='{:json_encode($auth->userinfo())}'
+                    label-position="top">
+                <template #default>
+                    {:token_field()}
+                    <div style="display: flex;justify-content: center;padding: 15px 0;">
+                        <upload-img :image-url="avatar" :is-circle="true" @change="changeImg">
+                            <template #title>
+                                <i class="fa fa-user-circle"></i>
+                                <span>请上传头像</span>
+                            </template>
+                        </upload-img>
+                    </div>
+                </template>
+            </yun-form>
+        </el-card>
+    </el-col>
+    <el-col :md="18" style="padding: 5px;">
+        <el-card header="操作日志" style="height: 100%;" shadow="never">
+            <yun-table
+                  :columns="log"
+                  :common-search="false"
+                  toolbar="refresh"
+                  :extend="extend">
+            </yun-table>
+        </el-card>
+    </el-col>
+</el-row>
+

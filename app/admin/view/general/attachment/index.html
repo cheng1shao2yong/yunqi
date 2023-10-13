@@ -1,0 +1,26 @@
+<el-card shadow="never">
+    <yun-table
+            :columns="columns"
+            tabs="category"
+            search="filename"
+            toolbar="refresh,add,del,guilei"
+            :auth="{
+                del:{:$auth->check('app\\admin\\controller\\general\\Attachment','del')},
+                add:{:$auth->check('app\\admin\\controller\\general\\Attachment','add')},
+                multi:{:$auth->check('app\\admin\\controller\\general\\Attachment','multi')},
+            }"
+            :extend="extend">
+            <template #toolbar="{tool,selections}">
+                <el-dropdown trigger="click" v-if="tool=='guilei'">
+                    <el-button type="warning" :disabled="selections.length?false:true"><i class="fa fa-arrow-right"></i>&nbsp;归类</el-button>
+                    <template #dropdown>
+                        <el-dropdown-menu>
+                            {foreach name="categoryList" id="item"}
+                            <el-dropdown-item @click.stop="changeCategory(selections,'{$key}')"><i class="fa fa-eye"></i> {$item}</el-dropdown-item>
+                            {/foreach}
+                        </el-dropdown-menu>
+                    </template>
+                </el-dropdown>
+            </template>
+    </yun-table>
+</el-card>

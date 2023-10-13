@@ -1,0 +1,39 @@
+<?php
+declare(strict_types=1);
+namespace addons\<#type#>\<#pack#>;
+
+class Install{
+
+    public static $files=[
+<#files#>
+    ];
+
+    public static $unpack=[
+<#unpack#>
+    ];
+
+    public static $menu=[
+<#menu#>
+    ];
+
+    public static $require=[
+<#require#>
+    ];
+
+    public static $config=[
+<#config#>
+    ];
+
+    //安装扩展时的回调方法
+    public static function install()
+    {
+
+    }
+
+    //卸载扩展时的回调方法
+    public static function uninstall()
+    {
+
+    }
+
+}

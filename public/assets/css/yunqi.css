@@ -1,0 +1,317 @@
+body{
+    padding: 0;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5715;
+}
+#ClCache{
+    display: none;
+}
+a{
+    text-decoration: none;
+}
+.el-button{
+    padding-left: 12px;
+    padding-right: 12px;
+}
+.hide{
+    display: none;
+}
+@media screen and (max-width: 1000px) {
+    .hide-1000{
+        display: none!important;
+    }
+}
+@media screen and (max-width: 800px) {
+    .hide-800{
+        display: none!important;
+    }
+}
+@media screen and (max-width: 600px) {
+    .hide-600{
+        display: none!important;
+    }
+}
+.el-table__expand-icon{
+    display: none;
+}
+.operate-box-column{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.operate-box-row{
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+.el-button-icon.default{
+    padding-left:8px;
+    padding-right: 8px;
+    margin: 4px;
+}
+.el-button-icon.large{
+    padding-left:10px;
+    padding-right: 10px;
+    height: 30px;
+    margin: 6px;
+}
+.el-button-icon.large i{
+    font-size: 16px;
+}
+.el-button-icon.small{
+    padding:0px 4px;
+    height: 20px;
+    margin: 2px;
+}
+
+.operate-box-row .el-button-icon.small:first-child,
+.operate-box-row .el-button-icon.default:first-child,
+.operate-box-row .el-button-icon.large:first-child
+{
+    margin-left: 0;
+}
+.operate-box-row .el-button-icon.small:last-child,
+.operate-box-row .el-button-icon.default:last-child,
+.operate-box-row .el-button-icon.large:last-child
+{
+    margin-right: 0;
+}
+
+.el-button .fa-caret-down{
+    margin-left: 3px;
+}
+.sortableButton{
+    cursor: move;
+}
+.sortable-drag .el-table__cell,.sortable-chosen .el-table__cell,sortable-ghost .el-table__cell{
+    background: var(--el-color-primary-light-3)!important;
+}
+.el-input-group__append,
+.el-input-group__prepend {
+    padding: 0 10px;
+}
+.el-input-group__append .el-select,
+.el-input-group__prepend .el-select,
+.el-input-group__append .el-button,
+.el-input-group__prepend .el-button{
+    margin: 0 -10px;
+}
+.link-input .el-input-group__append a{
+    color: var(--el-text-color);
+}
+.link-input .el-input-group__append:hover{
+    background: var(--el-fill-color-darker);
+}
+td .el-image{
+    height: 50px;
+    margin-right:10px;
+}
+td .el-image:last-child{
+    margin-right:0px;
+}
+.toolbar .left{
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+.toolbar .right{
+    display: flex;
+    justify-content: flex-end;
+}
+
+@media screen and (max-width: 600px) {
+    .el-pagination__jump,.el-pagination__sizes{
+        display: none;
+    }
+    .searchInput{
+        display: none;
+    }
+    .toolbar .right {
+        display: none;
+    }
+}
+.el-form--label-top .el-form-item.hide {
+    display: none;
+}
+.toolbar .right>.el-input{
+    width: 200px;
+    margin:0 5px;
+}
+.toolbar .right>.el-select .el-input__wrapper{
+    display: inherit;
+    padding: 0;
+}
+.toolbar .right>.el-select .el-input__inner{
+    display: none;
+}
+.toolbar .right>.el-select .el-input__prefix-inner>:last-child{
+    margin-right: 0;
+}
+.filter{
+    margin-bottom: 20px;
+}
+.filter .el-date-editor--daterange{
+    padding: 0;
+}
+.filter .el-date-editor--daterange .el-range__icon{
+    margin-left: 10px;
+}
+.filter .el-date-editor--daterange .el-range__close-icon{
+    position: relative;
+    right: 5px;
+}
+.filter .filter-between{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.el-table .cell{
+    overflow: visible;
+}
+.table-footer{
+    border-top: none;
+    border-radius: 0;
+}
+.table-footer.small .el-card__body{
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+.form-body{
+    padding-bottom: 20px;
+}
+.form-body .el-date-editor--daterange,.form-body .el-date-editor--timerange{
+    padding: 0;
+}
+.form-body .el-date-editor--daterange .el-range__icon,.form-body .el-date-editor--timerange .el-range__icon{
+    margin-left: 10px;
+}
+.form-body .el-date-editor--daterange .el-range__close-icon,.form-body .el-date-editor--timerange .el-range__close-icon{
+    position: relative;
+    right: 5px;
+}
+.form-footer-layer{
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #f5f7fa;
+    z-index: 999;
+    padding:0 20px;
+    text-align: center;
+    height: 50px;
+    line-height: 50px;
+}
+.form-footer{
+    text-align: center;
+    height: 50px;
+    line-height: 50px;
+}
+.disabled .el-upload--picture-card{
+    display: none!important;
+}
+.fieldlist{
+    font-size: var(--el-form-label-font-size);
+    color: var(--el-text-color-regular);
+    line-height: 32px;
+    width: 100%;
+    padding: 0 10px;
+    padding-left: 0;
+}
+.fieldlist .el-button{
+    font-size: 12px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+.fieldlist .row{
+    margin-bottom: 5px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.fieldlist .row .field{
+    width: 19%;
+    padding-right: 1%;
+}
+.fieldlist .act{
+    position: relative;
+    top: -2px;
+}
+.fieldlist .act .el-button:last-child{
+    position: relative;
+    left: -8px;
+}
+.tag-box{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.tag-box>.el-tag{
+    margin-left: 8px;
+    margin-bottom: 5px;
+}
+.tag-box>.el-tag:last-child{
+    margin-bottom: 0px;
+}
+.panel-head{
+    display: flex;
+    flex-direction: column;
+}
+.panel-head>em{
+    font-weight: bolder;
+    font-style: normal;
+}
+.fast-upload-box .el-upload--picture-card{
+    display: flex;
+    flex-direction: column;
+    font-size: 12px;
+    line-height: 30px;
+    color: var(--el-color-info);
+    background: #ffffff;
+}
+
+
+.fast-upload-box .preview-img img{
+    width: 96%;
+    height: 96%;
+    margin-top: 2%;
+    border-radius: 8px;
+    position: relative;
+}
+
+.fast-upload-box .upload-handle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 10px;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    opacity: 0;
+    transition: var(--el-transition-duration-fast);
+}
+
+.fast-upload-box .upload-handle:hover {
+    opacity: 1;
+    background: rgba(0,0,0,0.5);
+}
+
+.fast-upload-box .is-circle .preview-img img,
+.fast-upload-box .is-circle .el-upload--picture-card,
+.fast-upload-box .is-circle .upload-handle{
+    border-radius: 50%;
+}
+.fast-upload-box .is-disabled .el-upload--picture-card{
+    cursor: not-allowed;
+}
+.fast-upload-box .upload-handle .handle-icon i{
+    font-size: 18px;
+    font-weight: normal;
+    color: #fff;
+}

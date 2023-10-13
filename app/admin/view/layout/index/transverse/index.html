@@ -1,0 +1,48 @@
+<el-container class="layout" id="container">
+    <el-header v-show="!mainFrameExpand">
+        <div class="logo flx-center hide-600">
+            <img class="logo-img" src="{:site_config('basic.logo')}" alt="logo" />
+            <span class="logo-text">{:site_config('basic.sitename')}</span>
+        </div>
+        <el-menu
+            mode="horizontal"
+            :default-active="activeMenu?activeMenu.id.toString():''"
+            :router="false"
+            :unique-opened="true">
+            <template v-for="menu in menuList">
+                <template v-if="menu.childlist && menu.childlist.length>0">
+                    <el-sub-menu :index="menu.id.toString()" :key="menu.id.toString()">
+                        <template #title>
+                            <i :class="menu.icon"></i>
+                            <span class="sle">{{menu.title}}</span>
+                        </template>
+                        <Menulist :list="menu.childlist" @onclickmenu="clickMenu"></Menulist>
+                    </el-sub-menu>
+                </template>
+                <template v-else>
+                    <el-menu-item :index="menu.id.toString()" @click="clickMenu(menu)" :key="menu.id.toString()">
+                        <i :class="menu.icon"></i>
+                        <template #title>
+                            <span class="sle">{{ menu.title }}</span>
+                        </template>
+                    </el-menu-item>
+                </template>
+            </template>
+        </el-menu>
+        <div class="tool-bar-ri">
+            {include file="layout/index/rightbar" /}
+        </div>
+    </el-header>
+    <el-container class="classic-main is-vertical">
+        <Tabs v-show="!mainFrameExpand && elementUi.tabs" ref="tabs"></Tabs>
+        <el-main :class="mainFrameExpand?'expand':''">
+            <div id="main-content" :style="mainFrameExpand?'width:100%;height:100%;':`width:${contentWidth}px;height:${contentHeight}px;`"></div>
+            <div class="close-main-expand" v-if="mainFrameExpand" @click="minimize">
+                <i class="fa fa-close"></i>
+            </div>
+        </el-main>
+        <el-footer v-if="elementUi.footer">
+            {include file="layout/index/footer" /}
+        </el-footer>
+    </el-container>
+</el-container>

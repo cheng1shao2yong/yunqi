@@ -1,0 +1,21 @@
+<el-card shadow="never">
+    <yun-table
+            :columns="columns"
+            toolbar="refresh,add,del"
+            order="asc"
+            :auth="{
+                add:{:$auth->check('app\\admin\\controller\\auth\\Admin','add')},
+                edit:{:$auth->check('app\\admin\\controller\\auth\\Admin','edit')},
+                del:{:$auth->check('app\\admin\\controller\\auth\\Admin','del')},
+                multi:{:$auth->check('app\\admin\\controller\\auth\\Admin','multi')},
+            }"
+            :extend="extend">
+            <template #formatter="{field,rows}">
+                <div v-if="field=='groupids'">
+                    <template v-for="item in rows.groupids">
+                    <el-tag :type="item.status=='normal'?'':'info'" effect="dark" style="margin-right: 5px;">{{item.name}}</el-tag>
+                    </template>
+                </div>
+            </template>
+    </yun-table>
+</el-card>

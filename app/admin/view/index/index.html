@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html {if $config.elementUi.dark}class="dark"{/if}>
+<head>
+{include file="common/meta" /}
+<link rel="stylesheet" href="{:request()->domain()}/assets/css/index/common.css?v={$config.version}" />
+<link rel="stylesheet" href="{:request()->domain()}/assets/css/index/{$config.elementUi.layout}.css?v={$config.version}" />
+</head>
+<body>
+<div id="app">
+    {if $config.elementUi.layout=='classic'}
+    {include file="layout/index/classic/index" /}
+    {/if}
+    {if $config.elementUi.layout=='vertical'}
+    {include file="layout/index/vertical/index" /}
+    {/if}
+    {if $config.elementUi.layout=='transverse'}
+    {include file="layout/index/transverse/index" /}
+    {/if}
+    {if $config.elementUi.layout=='columns'}
+    {include file="layout/index/columns/index" /}
+    {/if}
+    <template v-for="(layer,index) in layerList">
+        <el-dialog
+            v-model="layer.show"
+            :draggable="true"
+            :close-on-click-modal="false"
+            :close-on-press-escape="false"
+            :custom-class="'layer-dialog'"
+            :modal="calculateLayerIndex(index)"
+            :show-close="false"
+            :width="layer.width"
+            :fullscreen="layer.expand">
+            <template #header>
+                <div class="custom-dialog-header">
+                    <span class="custom-dialog-title"><i :class="layer.icon"></i>&nbsp;{{ layer.title }}</span>
+                    <div class="custom-dialog-buttons">
+                        <i class="fa fa-minus custom-dialog-minimize"  @click="hideLayer(layer);"></i>
+                        <i class="fa fa-expand custom-dialog-maximize"
+                           v-if="!layer.expand"
+                           @click="layerExpand(layer)">
+                        </i>
+                        <i class="fa fa-compress custom-dialog-maximize"
+                           v-else
+                           @click="layerExpand(layer)">
+                        </i>
+                        <i class="fa fa-close custom-dialog-close"
+                           @click="closeLayer(layer.id)">
+                        </i>
+                    </div>
+                </div>
+            </template>
+            <template #default>
+                <iframe :src="layer.url" :id="'layer-'+layer.id" class="layer-iframe" width="100%" :height="layer.expand?layerExpandHeight:layer.height" frameborder="no" border="0" marginwidth="0" marginheight="0" scrolling-x="no" scrolling-y="auto" allowtransparency="yes"></iframe>
+            </template>
+        </el-dialog>
+    </template>
+    <el-image-viewer
+            v-if="imageList.length>0"
+            :hide-on-click-modal="true"
+            :url-list="imageList"
+            @close="imageList=[]"
+            :initial-index="0">
+    </el-image-viewer>
+</div>
+</body>
+{include file="common/script" /}
+</html>

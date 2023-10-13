@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="renderer" content="webkit">
+    <meta name="referrer" content="never">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="shortcut icon" href="{:request()->domain()}/favicon.ico" />
+    <link rel="stylesheet" href="{:request()->domain()}/assets/css/element-plus.css" />
+    <link rel="stylesheet" href="{:request()->domain()}/assets/css/theme/dark.css" />
+    <link rel="stylesheet" href="{:request()->domain()}/assets/libs/font-awesome/css/font-awesome.min.css" />
+    <script src="{:request()->domain()}/assets/js/vue.global.js" type="text/javascript"></script>
+    <script src="{:request()->domain()}/assets/js/element-plus.js" type="text/javascript"></script>
+    <script src="//unpkg.com/@element-plus/icons-vue"></script>
+    <title>云起开发平台</title>
+    <style>
+        body{
+            margin: 0;
+            padding: 0;
+        }
+        header{
+            box-shadow: 0.33333rem 0 1.33333rem rgba(87, 87, 87, .1);
+        }
+        .header{
+            height: 80px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding:0 1rem;
+        }
+        .header .logo{
+            width: 200px;
+        }
+        .header-menu{
+            width: 800px;
+        }
+        .header-menu ul{
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+        }
+        .header-menu ul li{
+            margin: 0 1rem;
+            list-style: none;
+        }
+        .header-menu ul li a{
+            font-size: 1rem;
+            text-decoration: none;
+            font-size: 14px;
+            color: #333;
+        }
+        .dark .header-menu ul li a{
+            color: #fff;
+        }
+        .header-menu ul li a.active{
+            color: var(--el-color-primary);
+        }
+        .header .header-right{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 120px;
+        }
+        .header .header-right img{
+            width: 25px;
+        }
+        .el-main{
+            background-color: #eeeeee;
+            background-image: url("/assets/img/bg.svg");
+            background-size: 100% 100%;
+            background-size: cover;
+            height: 80vh
+        }
+        .dark .el-main{
+            color: #fff;
+            background-color: #555;
+        }
+        .desbox{
+            background-image: url("/assets/img/banner.png");
+            background-repeat: no-repeat;
+            background-size: 400px;
+            background-position:bottom right;
+        }
+        .imgbox{
+            display: flex;
+            justify-content: space-around;
+            width: 450px;
+            margin:0 auto;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <el-container>
+        <el-header height="80">
+            <div class="header">
+                <div class="header-left">
+                    <a href="/">
+                        <img class="logo" src="{:request()->domain()}/assets/img/logo_full.png" alt="" />
+                    </a>
+                </div>
+                <div class="header-menu">
+                    <ul>
+                        <li><a class="active" href="/">平台首页</a></li>
+                        <li><a target="_blank" href="https://bbs.56q7.com/">开发社区</a></li>
+                        <li><a target="_blank" href="https://www.56q7.com/download/yunqi-{$version}.zip">下载源码</a></li>
+                        <li><a target="_blank" href="https://demo.56q7.com/backend/index">系统演示</a></li>
+                        <li><a target="_blank" href="https://48rmn452q3.k.topthink.com/@48rmwkl52q/xitongjieshao.html">开发文档</a></li>
+                        <li @click="contact"><a href="#">联系合作</a></li>
+                    </ul>
+                </div>
+                <div class="header-right">
+                    <el-switch v-model="dark" style="--el-switch-on-color: #333;" active-action-icon="Moon" inactive-action-icon="Sunny"></el-switch>
+                    <a href="/" title="码云">
+                        <img src="/assets/img/mayun.png" style="width: 24px"/>
+                    </a>
+                     <a href="/" title="Github">
+                        <img src="/assets/img/github.png"/>
+                    </a>
+                </div>
+            </div>
+        </el-header>
+        <el-main>
+            <div class="desbox">
+                <div style="text-align: center;">
+                    <h1 style="font-size: 3rem;">云起开发平台</h1>
+                    <p style="font-size: 1.5rem;">基于ThinkPHP8.0+Vue3.0+ElementPlus的后台管理系统</p>
+                    <p style="font-size: 1.5rem;">开源免费，支持二次开发</p>
+                    <p style="font-size: 1.5rem;">QQ交流群：123456789</p>
+                    <p style="font-size: 1.5rem;">最新版本：v{$version}</p>
+                    <p style="font-size: 1.5rem;margin-bottom: 0">行到水穷处，坐看云起时，做软件，找贵阳云起信息科技</p>
+                    <div class="imgbox">
+                        <div>
+                            <p style="font-size: 1.5rem;">联系我们:</p>
+                            <p style="font-size: 1.5rem;"><img style="width: 180px" src="/assets/img/qrcode.jpg"/></p>
+                        </div>
+                        <div>
+                            <p style="font-size: 1.5rem;">打赏我们:</p>
+                            <p style="font-size: 1.5rem;"><img style="width: 180px" src="/assets/img/pay.png"/></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </el-main>
+        <el-footer>
+            <div style="text-align: center;">
+                <p>Copyright © 2023-2030，<a href="/" target="_blank">贵阳云起信息科技有限公司</a></p>
+                <p><a href="http://beian.miit.gov.cn/" target="_blank"> 黔ICP备2020011629号-2</a></p>
+            </div>
+        </el-footer>
+    </el-container>
+</div>
+</body>
+<script>
+    let Counter={
+        data:function(){
+            return {
+                dark:false,
+                Moon:ElementPlusIconsVue.Moon,
+                Sunny:ElementPlusIconsVue.Sunny
+            }
+        },
+        watch:{
+            dark:function (data){
+                if(data){
+                    document.getElementsByTagName('html')[0].setAttribute('class','dark');
+                }else{
+                    document.getElementsByTagName('html')[0].setAttribute('class','');
+                }
+            }
+        },
+
+        methods:{
+            contact:function (){
+                ElementPlus.ElMessage.success('请扫下边二维码联系我们！');
+            }
+        }
+    };
+    let app=Vue.createApp(Counter);
+    app.use(ElementPlus);
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+        app.component(key, component)
+    }
+    app.mount('#app');
+</script>
+</html>

@@ -1,0 +1,17 @@
+<el-card shadow="never" style="border: 0;">
+    <yun-form
+        ref="yunform"
+        :columns="columns">
+        <template #default>
+            {:token_field()}
+        </template>
+        <template #filter="{rows}">
+            <el-form-item label="{:__('规则限制')}:">
+                <el-alert type="warning">
+                    规则限制表示在执行任务时，只有满足规则限制的条件才会执行，否则跳过执行，如【日为10，时为12】表示该任务只有在日期为10号，时间在12:00:00~12:59:59才会执行，规则的优先级高于间隔时间。
+                </el-alert>
+                <Fieldlist :value="{年:'',月:'',日:'',时:'',分:'',秒:''}" @change="changeFilter"></Fieldlist>
+            </el-form-item>
+        </template>
+    </yun-form>
+</el-card>

@@ -1,0 +1,14 @@
+<el-card shadow="never">
+   <el-tabs v-model="activeType" type="card" @tab-change="refreshLog">
+      {foreach $moduletype as $key=>$type}
+      <el-tab-pane label="{$type}" name="{$key}"></el-tab-pane>
+      {/foreach}
+   </el-tabs>
+   <yun-table
+           v-if="recharge_url"
+           :columns="rechargeDetail"
+           toolbar="refresh"
+           :search-form-visible="false"
+           :extend="recharge_url">
+   </yun-table>
+</el-card>

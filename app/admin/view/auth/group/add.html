@@ -1,0 +1,43 @@
+<component is="style">
+    .el-tree{
+        left: -18px;
+    }
+</component>
+<el-card shadow="never" style="border: 0;">
+    {if $config.route[2]=='edit'}
+    <template #header>
+        <el-alert
+            type="warning"
+            show-icon>
+            非调试模式下，提交后请清空缓存才能生效！
+        </el-alert>
+    </template>
+    {/if}
+    <yun-form
+        ref="yunform"
+        :data="data"
+        @submit="onSubmit"
+        :columns="columns">
+        <template #default>
+            {:token_field()}
+        </template>
+        <template #pid="item">
+            <el-form-item label="{:__('父级')}:" prop="pid">
+                <el-select @change="changePid" placeholder="请选择{:__('父级')}" v-model="item.rows.pid" :clearable="true" style="width: 100%">
+                    {foreach $groupdata as $key=>$value}
+                    <el-option key="{$value.id}" label="{:str_replace('&amp;','&',$value.name)}" value="{$value.id}"></el-option>
+                    {/foreach}
+                </el-select>
+            </el-form-item>
+        </template>
+        <template v-slot:rules="item">
+            <el-form-item label="{:__('权限')}:">
+                <div style="position: relative;left: 5px;">
+                    <el-checkbox v-model="checkAll">{:__('全部选中')}</el-checkbox>
+                    <el-checkbox v-model="expandAll">{:__('全部展开')}</el-checkbox>
+                </div>
+                <el-tree ref="tree" :props="{children:'childlist',label:'title'}" node-key="id" show-checkbox :default-checked-keys="checkedKey" :data="treedata" style="width: 100%;"></el-tree>
+            </el-form-item>
+        </template>
+    </yun-form>
+</el-card>

@@ -1,0 +1,28 @@
+<el-card shadow="never" style="border: 0;">
+    {if $config.route[2]=='edit'}
+    <template #header>
+        <el-alert
+            type="warning"
+            show-icon>
+            非调试模式下，提交后请清空缓存才能生效！
+        </el-alert>
+    </template>
+    {/if}
+    <yun-form
+        :data="data"
+        ref="yunform"
+        :columns="columns">
+        <template #default>
+            {:token_field()}
+        </template>
+        <template #groupids="item">
+            <el-form-item label="{:__('所属组别')}:" prop="groupids">
+                <el-select placeholder="请选择{:__('所属组别')}" multiple v-model="item.rows.groupids" :clearable="true" style="width: 100%">
+                    {foreach $groupdata as $key=>$value}
+                    <el-option key="{$value.id}" label="{:str_replace('&amp;','&',$value.name)}" value="{$value.id}"></el-option>
+                    {/foreach}
+                </el-select>
+            </el-form-item>
+        </template>
+    </yun-form>
+</el-card>

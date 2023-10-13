@@ -1,0 +1,19 @@
+<el-card shadow="never" style="border: 0;">
+   <yun-form v-if="rechargeData" :data="rechargeData" :columns="rechargeColumn">
+      <template #default>
+         {:token_field()}
+      </template>
+      <template #now="{rows}">
+         {foreach $moduletype as $key=>$type}
+         <el-form-item label="当前{$type}:" v-if="rows.module_type=='{$key}'">
+            <el-input value="{$user[$key]}" :disabled="true"></el-input>
+         </el-form-item>
+         {/foreach}
+      </template>
+      <template #change="{rows}">
+         <el-form-item :label="'变化'+getModuleTypeName(rows.module_type)+':'" prop="change">
+            <el-input v-model="rows.change" type="number"></el-input>
+         </el-form-item>
+      </template>
+   </yun-form>
+</el-card>

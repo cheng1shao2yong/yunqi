@@ -1,0 +1,120 @@
+#container{
+    display: none;
+}
+.el-container {
+    width: 100%;
+    height: 100%;
+}
+
+
+.el-container .el-header {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 55px;
+    padding:0;
+    background-color: var(--el-color-primary);
+    border-bottom: 1px solid var(--el-border-color-light);
+}
+
+.el-container .el-header .header-lf {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.el-container .el-header .header-lf .tool-bar-lf{
+    margin-left: 15px;
+}
+
+.el-container .el-header .header-lf .logo {
+    flex-shrink: 0;
+    width: 195px;
+    margin-right: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.el-container .el-header .header-lf .logo .logo-img {
+    width: 34px;
+    object-fit: contain;
+    margin-right: 5px;
+}
+
+.el-container .el-header .header-lf .logo .logo-text {
+    font-size: 21.5px;
+    font-weight: bold;
+    color: #fff;
+    white-space: nowrap;
+}
+
+.el-container .el-header .header-lf .tool-bar-lf .collapse-icon {
+    color: #ffffff;
+}
+
+.el-container .el-header .header-lf .tool-bar-lf .el-breadcrumb__separator {
+    color: #ffffff;
+}
+
+.el-container .el-header .header-lf .tool-bar-lf .el-breadcrumb__inner.is-link {
+    color: #eaeaea;
+}
+
+.el-container .el-header .header-lf .tool-bar-lf .el-breadcrumb__inner.is-link:hover {
+    color: #ffffff;
+}
+
+.el-container .el-header .header-lf .tool-bar-lf .el-breadcrumb__item:last-child .el-breadcrumb__inner,
+.el-container .el-header .header-lf .tool-bar-lf .el-breadcrumb__item:last-child .el-breadcrumb__inner:hover {
+    color: #eaeaea;
+}
+
+.el-container .el-header .header-ri .tool-bar-ri .toolBar-icon,
+.el-container .el-header .header-ri .tool-bar-ri .el-dropdown,
+.el-container .el-header .header-ri .tool-bar-ri .toolBar-dropdown,
+.el-container .el-header .header-ri .tool-bar-ri .username {
+    color: #ffffff;
+    outline:none;
+}
+
+.tool-bar-ri > .el-dropdown:hover,
+.tool-bar-ri > .toolBar-dropdown:hover,
+.tool-bar-ri > .toolBar-icon:hover,
+.tool-bar-ri > .toolBar-userinfo:hover{
+    background: var(--el-color-primary-light-3);
+}
+
+.el-container .classic-content {
+    display: flex;
+    height: calc(100% - 55px);
+}
+
+.el-container .classic-content .el-aside {
+    width: auto;
+    background-color: var(--el-menu-bg-color);
+    border-right: 1px solid var(--el-border-color-light);
+}
+
+.el-container .classic-content .el-aside .aside-box {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.el-container .classic-content .el-aside .aside-box .el-menu {
+    width: 100%;
+    overflow-x: hidden;
+    border-right: none;
+}
+
+.el-container .classic-content .classic-main {
+    display: flex;
+    flex-direction: column;
+}
+
+.tool-bar-ri .el-badge__content{
+    border: 1px solid var(--el-color-danger);
+}

@@ -1,0 +1,172 @@
+<link rel="stylesheet" href="{:request()->domain()}/assets/css/dashboard.css?v={$config.version}" />
+<el-row>
+    <el-col :md="6" :xs="24" :sm="24">
+        <div class="card-container left">
+            <el-card shadow="always">
+                <div style="font-weight: bold;margin-bottom: 10px;">😀欢迎您，{:$auth->nickname}！</div>
+                <el-alert type="success" :closable="false">行到水穷处，坐看云起时。在线乞讨公司，贵阳云起信息科技，跪求打赏😭</el-alert>
+                <div class="pay">
+                    <img src="{:request()->domain()}/assets/img/pay.png">
+                </div>
+            </el-card>
+        </div>
+        <div class="card-container left">
+            <el-card shadow="always">
+                <template #header>
+                    <div class="header">
+                        <div class="title"><i class="fa fa-caret-right"></i>进度框样式</div>
+                    </div>
+                </template>
+                <el-row>
+                    <el-col :span="24">
+                        <div class="style-2">
+                            <div class="box">
+                                <el-progress type="circle" :percentage="order.percentage[0]"></el-progress>
+                                <div class="box-title">销售目标</div>
+                                <div class="box-number">{{order.count}}单/{{order.total}}单</div>
+                            </div>
+                        </div>
+                    </el-col>
+                    <el-col :span="24">
+                        <div class="style-3">
+                            <div class="box">
+                                <div class="box-title">今日销售额</div>
+                                <div class="box-content">
+                                    <div class="box-content-left">
+                                        <div class="box-number-top">￥{{order.today}}</div>
+                                        <div class="box-number-bottom">昨日销售额：￥{{order.yestoday}}</div>
+                                    </div>
+                                    <div class="icon bkcolor3" v-if="order.percentage[1]<50">
+                                        <i class="fa fa-arrow-down"></i>
+                                    </div>
+                                    <div class="icon bkcolor2" v-if="order.percentage[1]>=50 && order.percentage[1]<100">
+                                        <i class="fa fa-arrow-down"></i>
+                                    </div>
+                                    <div class="icon bkcolor4" v-if="order.percentage[1]>=100">
+                                        <i class="fa fa-arrow-up"></i>
+                                    </div>
+                                </div>
+                                <el-progress v-if="order.percentage[1]<50" :percentage="order.percentage[1]" color="#F56C6C"></el-progress>
+                                <el-progress v-if="order.percentage[1]>=50 && order.percentage[1]<100" :percentage="order.percentage[1]" color="#E6A23C"></el-progress>
+                                <el-progress v-if="order.percentage[1]>=100" :percentage="order.percentage[1]" color="#45991b"></el-progress>
+                            </div>
+                        </div>
+                    </el-col>
+                </el-row>
+            </el-card>
+        </div>
+        <div class="card-container left">
+            <el-card shadow="always">
+                <template #header>
+                    <div class="header">
+                        <div class="title"><i class="fa fa-caret-right"></i>饼状图</div>
+                    </div>
+                </template>
+                <div class="chart2" id="chart2"></div>
+            </el-card>
+        </div>
+    </el-col>
+    <el-col :md="18" :xs="24" :sm="24">
+        <div class="card-container">
+            <el-card shadow="always" body-style="padding-bottom:10px;">
+                <el-row>
+                    <el-col :md="6" :sm="12" :xs="12">
+                        <div class="style-1 bkcolor1">
+                            <div class="box">
+                                <div class="box-title">用户总数</div>
+                                <div class="box-number">{{panel[0]}}</div>
+                            </div>
+                            <i class="fa fa-user-circle-o"></i>
+                        </div>
+                    </el-col>
+                    <el-col :md="6" :sm="12" :xs="12">
+                        <div class="style-1 bkcolor2">
+                            <div class="box">
+                                <div class="box-title">在线人数</div>
+                                <div class="box-number">{{panel[1]}}</div>
+                            </div>
+                            <i class="fa fa-tasks"></i>
+                        </div>
+                    </el-col>
+                    <el-col :md="6" :sm="12" :xs="12">
+                        <div class="style-1 bkcolor3">
+                            <div class="box">
+                                <div class="box-title">月租用户</div>
+                                <div class="box-number">{{panel[2]}}</div>
+                            </div>
+                            <i class="fa fa-dashcube"></i>
+                        </div>
+                    </el-col>
+                    <el-col :md="6" :sm="12" :xs="12">
+                        <div class="style-1 bkcolor4">
+                            <div class="box">
+                                <div class="box-title">数据表数量</div>
+                                <div class="box-number">{{panel[3]}}</div>
+                            </div>
+                            <i class="fa fa-database"></i>
+                        </div>
+                    </el-col>
+                </el-row>
+            </el-card>
+        </div>
+        <div class="card-container">
+            <el-card shadow="always">
+                <template #header>
+                    <div class="header">
+                        <div class="title"><i class="fa fa-caret-right"></i>折线图</div>
+                    </div>
+                </template>
+                <div class="chart1" id="chart1"></div>
+            </el-card>
+        </div>
+        <div class="card-container">
+            <el-card shadow="always">
+                <template #header>
+                    <div class="header">
+                        <div class="title"><i class="fa fa-caret-right"></i>表格</div>
+                        <div class="right-filter">
+                            <el-button-group>
+                                <el-button @click="changeForm('all')" size="small" :type="(filterForm.table=='all')?'primary':''">全部</el-button>
+                                <el-button @click="changeForm('today')" size="small" :type="(filterForm.table=='today')?'primary':''">今日</el-button>
+                                <el-button @click="changeForm('week')" size="small" :type="(filterForm.table=='week')?'primary':''">本周</el-button>
+                                <el-button @click="changeForm('month')" size="small" :type="(filterForm.table=='month')?'primary':''">当月</el-button>
+                            </el-button-group>
+                        </div>
+                    </div>
+                </template>
+                <el-table :data="table">
+                    <el-table-column label="排名" prop="sort"></el-table-column>
+                    <el-table-column label="会员" prop="name"></el-table-column>
+                    <el-table-column label="下单">
+                        <template #default="{row}">{{row.total}}笔</template>
+                    </el-table-column>
+                    <el-table-column label="金额">
+                        <template #default="{row}">￥{{row.money}}</template>
+                    </el-table-column>
+                </el-table>
+            </el-card>
+        </div>
+        <div class="card-container">
+            <el-card shadow="always">
+                <template #header>
+                    <div class="header">
+                        <div class="title"><i class="fa fa-caret-right"></i>柱状图</div>
+                        <div class="right-filter">
+                            <el-form :model="filterForm">
+                                <el-form-item label="统计时间" style="margin-bottom: 0;">
+                                    <el-select v-model="filterForm.select" style="margin-right: 10px;width: 150px;" @change="changeForm(0)">
+                                        <el-option label="第一项" value="one"></el-option>
+                                        <el-option label="第二项" value="two"></el-option>
+                                        <el-option label="第三项" value="three"></el-option>
+                                    </el-select>
+                                    <el-date-picker @change="changeForm(0)" v-model="filterForm.datepicker" style="width: 250px;" type="daterange" range-separator="到"></el-date-picker>
+                                </el-form-item>
+                            </el-form>
+                        </div>
+                    </div>
+                </template>
+                <div class="chart3" id="chart3"></div>
+            </el-card>
+        </div>
+    </el-col>
+</el-row>

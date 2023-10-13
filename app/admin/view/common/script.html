@@ -1,0 +1,15 @@
+<script type="text/javascript" src="{:request()->domain()}/assets/js/yunqi.js?v={$config.version}"></script>
+<script type="module">
+    Yunqi.setConfig({:json_encode($config,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)});
+    Yunqi.setData({:build_var_json(get_defined_vars())});
+    try{
+        Promise.all([
+            import('{$config.jsFile}'),
+            import('{:request()->domain()}/assets/js/zh-cn.js'),
+        ]).then(([pageInfo, zhCn]) => {
+            Yunqi.setUp(pageInfo.default,zhCn.default);
+        });
+    }catch (e){
+        console.error(e);
+    }
+</script>

@@ -1,0 +1,24 @@
+<?php
+declare(strict_types=1);
+
+namespace app\common\model;
+
+use app\common\model\base\BaseModel;
+
+class <#modelName#> extends BaseModel
+{
+    <#if name#>
+    protected $name = '<#name#>';
+    <#endif#>
+
+    <#if weigh#>
+    public static function onAfterInsert($data)
+    {
+        $data->weigh=1000-$data->id;
+        $data->save();
+    }
+    <#endif#>
+    <#if methods#>
+<#methods#>
+    <#endif#>
+}

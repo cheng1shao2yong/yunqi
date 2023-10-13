@@ -1,0 +1,53 @@
+<?php
+declare(strict_types=1);
+
+namespace app\common\model;
+
+use think\Model;
+<#if deletetime#>
+use think\model\concern\SoftDelete;
+<#endif#>
+
+class <#modelName#> Extends Model
+{
+    <#if name#>
+    protected $name = '<#name#>';
+    <#endif#>
+    <#if createtime || updatetime#>
+    // 自动写入时间戳字段
+    protected $autoWriteTimestamp = true;
+    <#endif#>
+    <#if createtime#>
+    protected $createTime = 'createtime';
+    <#endif#>
+    <#if updatetime#>
+    protected $updateTime = 'updatetime';
+    <#endif#>
+
+    <#if deletetime#>
+    use SoftDelete;
+    protected $deleteTime = 'deletetime';
+    <#endif#>
+
+    <#if updatetime || createtime#>
+    protected $type = [
+         <#if createtime#>
+        'createtime'     =>  'timestamp:Y-m-d H:i',
+         <#endif#>
+         <#if updatetime#>
+        'updatetime'     =>  'timestamp:Y-m-d H:i',
+         <#endif#>
+    ];
+    <#endif#>
+
+    <#if weigh#>
+    public static function onAfterInsert($data)
+    {
+        $data->weigh=1000-$data->id;
+        $data->save();
+    }
+    <#endif#>
+    <#if methods#>
+<#methods#>
+    <#endif#>
+}

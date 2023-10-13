@@ -1,0 +1,22 @@
+<el-card shadow="never" style="border: 0;">
+    <template #header>
+        <el-alert type="warning" :closable="false">{:__('【所属分组】请前往常规管理->系统配置->配置分组中进行管理')}</el-alert>
+    </template>
+    <yun-form
+        :data="data"
+        :columns="columns">
+        <template #default>
+            {:token_field()}
+        </template>
+        <template v-slot:pid="{rows}">
+            <el-form-item label="{:__('父级')}:" prop="pid">
+                <el-select placeholder="{:__('请选择父级')}" v-model="rows.pid" :clearable="true" style="width: 100%">
+                    <el-option key="all" label="无" value="0"></el-option>
+                    {foreach name="parentList" item="vo"}
+                    <el-option v-if="rows.type=='{$vo.type}'" key="{$key}" label="{:str_replace('&amp;','&',$vo.name)}" value="{$key}"></el-option>
+                    {/foreach}
+                </el-select>
+            </el-form-item>
+        </template>
+    </yun-form>
+</el-card>

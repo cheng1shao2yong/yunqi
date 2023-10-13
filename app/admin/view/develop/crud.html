@@ -1,0 +1,755 @@
+<component is="style">
+    .checklabel{
+        position: relative;top: 2px;cursor: pointer;
+    }
+    .checklabel input{
+        border: var(--el-checkbox-input-border);
+    }
+    .checklabel span{
+        position: relative;top:-2px;left: 5px;
+    }
+</component>
+<el-card shadow="never">
+    <el-form :model="crudForm" label-width="120px">
+        <el-row :gutter="20">
+            <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12">
+                <el-form-item label="{:__('数据表')}:">
+                    <select-page url="develop/getTable" key-field="name" label-field="title" @change="changeTable"></select-page>
+                </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12">
+                <el-form-item label="{:__('控制器')}:">
+                    <el-input :disabled="!crudForm.table" placeholder="{:__('请输入控制器')}" v-model="crudForm.controller"></el-input>
+                </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12">
+                <el-form-item label="{:__('数据模型')}:">
+                    <el-input :disabled="!crudForm.table" placeholder="{:__('请输入数据模型')}" v-model="crudForm.model"></el-input>
+                </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12">
+                <el-form-item label="{:__('代码风格')}:">
+                    <el-radio-group v-model="crudForm.reduced">
+                        <el-radio :label="true">干净简洁版</el-radio>
+                        <el-radio :label="false">带功能描述且注释版</el-radio>
+                    </el-radio-group>
+                </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12" v-if="crudForm.actionList">
+                <el-form-item label="{:__('操作功能')}:">
+                    <field-list @change="changeAction" :label="[__('方法名'),__('功能描述')]" :value="crudForm.actionList"></field-list>
+                </el-form-item>
+            </el-col>
+        </el-row>
+        <el-form-item>
+            <el-divider>
+                <el-checkbox-group v-model="actions">
+                <el-checkbox label="menu"><span style="font-weight: bolder;">{:__('配置菜单')}</span></el-checkbox>
+                </el-checkbox-group>
+            </el-divider>
+        </el-form-item>
+        <template v-if="crudForm.table && inArray(actions,'menu')">
+            <el-row :gutter="20">
+                <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12">
+                    <el-form-item label="{:__('菜单父级')}:">
+                        <el-select style="width: 100%" placeholder="{:__('请选择父级')}" v-model="crudForm.menu.pid">
+                            {foreach $ruledata as $key=>$value}
+                            <el-option key="{$key}" label="{:str_replace('&amp;','&',$value)}" value="{$key}"></el-option>
+                            {/foreach}
+                        </el-select>
+                    </el-form-item>
+                </el-col>
+                <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12">
+                    <el-form-item label="{:__('菜单名称')}:">
+                        <el-input placeholder="{:__('请输入菜单名称')}" v-model="crudForm.menu.title"></el-input>
+                    </el-form-item>
+                </el-col>
+                <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12">
+                    <el-form-item label="{:__('菜单方法')}:">
+                        <el-select v-model="crudForm.menu.action" style="width: 100%">
+                            <el-option :label="value" :key="key" :value="key" v-for="(value,key) in crudForm.actionList"></el-option>
+                        </el-select>
+                    </el-form-item>
+                </el-col>
+                <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12">
+                    <el-form-item label="{:__('菜单图标')}:">
+                        <el-input v-model="crudForm.menu.icon">
+                            <template #prepend><i :class="crudForm.menu.icon"></i></template>
+                            <template #append>
+                                <el-button size="small" @click="openIconPanel">{:__('选择图标')}</el-button>
+                            </template>
+                        </el-input>
+                    </el-form-item>
+                </el-col>
+                <el-col :span="24">
+                    <el-form-item label="{:__('菜单类型')}:">
+                        <el-radio-group v-model="crudForm.menu.menutype" style="width: 100%">
+                            <el-radio label="addtabs" style="width: 100px;">{:__('选项卡')}</el-radio>
+                            <el-radio label="layer" style="width: 100px;">{:__('弹窗')}</el-radio>
+                            <el-radio label="blank" style="width: 100px;">{:__('跳转链接')}</el-radio>
+                        </el-radio-group>
+                    </el-form-item>
+                </el-col>
+            </el-row>
+        </template>
+        <el-form-item>
+            <el-divider>
+                <el-checkbox-group v-model="actions">
+                <el-checkbox label="table"><span style="font-weight: bolder;">{:__('配置表格')}</span></el-checkbox>
+                </el-checkbox-group>
+            </el-divider>
+        </el-form-item>
+        <template v-if="crudForm.table && inArray(actions,'table')">
+            <el-form-item label="{:__('表格列表')}:">
+                <el-table v-if="tableData" :data="tableData" border style="width: 100%">
+                    <el-table-column prop="field" label="{:__('字段')}" width="150" fixed="left"></el-table-column>
+                    <el-table-column label="{:__('标题')}" width="150">
+                        <template #default="{row}">
+                            <el-input v-model="row.title"></el-input>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="{:__('展示状态')}" width="150">
+                        <template #default="{row}">
+                            <el-select v-model="row.visible" @change="parseSearchList(row)">
+                                <el-option label="展示" :value="true"></el-option>
+                                <el-option label="不展示" value="none"></el-option>
+                                <el-option label="展示关联表" value="relation"></el-option>
+                                <el-option label="默认隐藏" :value="false"></el-option>
+                            </el-select>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="{:__('展示样式')}" width="150">
+                        <template #default="{row}">
+                            <el-select v-model="row.formatter" @change="parseFields(row)" v-if="row.visible!='none'">
+                                <el-option v-for="(label,key) in formatter" :label="label" :key="key" :value="key"></el-option>
+                            </el-select>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="{:__('过滤方式')}" width="300">
+                        <template #default="{row}">
+                            <el-input v-model="row.operate" v-if="row.visible!='none'">
+                                <template #append>
+                                    <el-button size="small" type="primary" @click="showOperate(row)">编辑</el-button>
+                                </template>
+                            </el-input>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="{:__('选择项')}" width="300">
+                        <template #default="{row}">
+                            <el-input v-model="row.searchList" v-if="row.visible!='none'">
+                                <template #append>
+                                    <el-button size="small" type="primary" @click="showSearchList(row)">编辑</el-button>
+                                </template>
+                            </el-input>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="{:__('关联表')}" width="300">
+                        <template #default="{row}">
+                            <el-input v-model="row.relation" v-if="row.visible=='relation'">
+                                <template #append>
+                                    <el-button size="small" type="primary" @click="showRelation(row)">编辑</el-button>
+                                </template>
+                            </el-input>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="{:__('允许排序')}" width="100">
+                        <template #default="{row}">
+                            <el-checkbox-group v-model="row.sortable" v-if="row.visible!='none'">
+                                <el-checkbox label="是"></el-checkbox>
+                            </el-checkbox-group>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="{:__('快速搜索')}" width="100">
+                        <template #default="{row}">
+                            <el-checkbox-group v-model="row.search" v-if="row.visible!='none'">
+                                <el-checkbox label="是"></el-checkbox>
+                            </el-checkbox-group>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="{:__('回收站')}" width="100" v-if="crudForm.recyclebin">
+                        <template #default="{row}">
+                            <el-checkbox-group v-model="row.recyclebin" v-if="row.visible!='none'">
+                                <el-checkbox label="是"></el-checkbox>
+                            </el-checkbox-group>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </el-form-item>
+            <el-row :gutter="20">
+                <el-col :xs="24" :sm="12" :md="8" :lg="6" :xl="6">
+                    <el-form-item label="{:__('顶部分栏')}:">
+                        <el-select v-model="crudForm.tabs" style="width: 100%">
+                            <el-option label="不分栏显示" value=""></el-option>
+                            <template v-for="xtable in tableData" :key="xtable.field">
+                                <el-option v-if="xtable.searchList" :label="xtable.title" :value="xtable.field"></el-option>
+                            </template>
+                        </el-select>
+                    </el-form-item>
+                </el-col>
+                <el-col :xs="24" :sm="12" :md="8" :lg="6" :xl="6">
+                    <el-form-item label="{:__('不要分页')}:">
+                        <label class="checklabel">
+                            <input type="checkbox" v-model="crudForm.pagination"/>
+                            <span>{:__('是')}</span>
+                        </label>
+                    </el-form-item>
+                </el-col>
+                <el-col :xs="24" :sm="12" :md="8" :lg="6" :xl="6">
+                    <el-form-item label="{:__('展示统计')}:">
+                        <label class="checklabel">
+                            <input type="checkbox" v-model="crudForm.summary"/>
+                            <span>{:__('是')}</span>
+                        </label>
+                    </el-form-item>
+                </el-col>
+                <el-col :xs="24" :sm="12" :md="8" :lg="6" :xl="6">
+                    <el-form-item label="{:__('展示扩展')}:">
+                        <label class="checklabel">
+                            <input type="checkbox" v-model="crudForm.expand"/>
+                            <span>{:__('是')}</span>
+                        </label>
+                    </el-form-item>
+                </el-col>
+                <template v-if="havaPid()">
+                    <el-col :xs="24" :sm="12" :md="8" :lg="6" :xl="6">
+                        <el-form-item label="{:__('树形表格')}:">
+                            <label class="checklabel">
+                                <input type="checkbox" v-model="crudForm.isTree"/>
+                                <span>{:__('是')}</span>
+                            </label>
+                        </el-form-item>
+                    </el-col>
+                    <el-col :xs="24" :sm="12" :md="8" :lg="6" :xl="6" v-if="crudForm.isTree">
+                        <el-form-item label="{:__('树形表格标题')}:">
+                            <el-select v-model="crudForm.treeTitle" style="width: 100%">
+                                <template v-for="xtable in tableData" :key="xtable.field">
+                                    <el-option :label="xtable.title" :value="xtable.field"></el-option>
+                                </template>
+                            </el-select>
+                        </el-form-item>
+                    </el-col>
+                </template>
+            </el-row>
+        </template>
+        <el-form-item>
+            <el-divider>
+                <el-checkbox-group v-model="actions">
+                    <el-checkbox label="form"><span style="font-weight: bolder;">{:__('配置表单')}</span></el-checkbox>
+                </el-checkbox-group>
+            </el-divider>
+        </el-form-item>
+        <template v-if="crudForm.table && inArray(actions,'form')">
+            <el-form-item label="{:__('表单列表')}:">
+                <el-table v-if="tableData" :data="tableData" border style="width: 100%">
+                    <el-table-column prop="field" label="{:__('字段')}" width="150" fixed="left"></el-table-column>
+                    <el-table-column label="{:__('标题')}" width="150">
+                        <template #default="{row}">
+                            <el-input v-model="row.title"></el-input>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="{:__('表单')}" width="300">
+                        <template #default="{row}">
+                            <el-input v-model="row.edit">
+                                <template #append>
+                                    <el-button size="small" type="primary" @click="showFormDialog(row)">编辑</el-button>
+                                </template>
+                            </el-input>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="{:__('验证')}" width="300">
+                        <template #default="{row}">
+                            <el-input v-model="row.rules" placeholder="多项验证用“;”隔开" v-if="isShowEdit(row)"></el-input>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="{:__('选择项')}" width="300">
+                        <template #default="{row}">
+                            <el-input v-model="row.searchList" v-if="isShowEdit(row)">
+                                <template #append>
+                                    <el-button size="small" type="primary" @click="showSearchList(row)">编辑</el-button>
+                                </template>
+                            </el-input>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </el-form-item>
+            <template v-if="havaPid()">
+                <el-row>
+                    <el-col :xs="24" :sm="12" :md="8" :lg="6" :xl="6">
+                        <el-form-item label="{:__('树形结构')}:">
+                            <label class="checklabel">
+                                <input type="checkbox" v-model="crudForm.isTree"/>
+                                <span>{:__('是')}</span>
+                            </label>
+                        </el-form-item>
+                    </el-col>
+                    <el-col :xs="24" :sm="12" :md="8" :lg="6" :xl="6" v-if="crudForm.isTree">
+                        <el-form-item label="{:__('树形结构标题')}:">
+                            <el-select v-model="crudForm.treeTitle" style="width: 100%">
+                                <template v-for="xtable in tableData" :key="xtable.field">
+                                    <el-option :label="xtable.title" :value="xtable.field"></el-option>
+                                </template>
+                            </el-select>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+            </template>
+        </template>
+        <el-form-item>
+            <el-button :disabled="!crudForm.table || !crudForm.controller || !crudForm.model" type="primary" @click="submit('code')"><i class="fa fa-code"></i>&nbsp;生成代码</el-button>
+            <el-button :disabled="!crudForm.table || !crudForm.controller || !crudForm.model" type="primary" @click="submit('file')"><i class="fa fa-file"></i>&nbsp;生成文件</el-button>
+            <el-button :disabled="!crudForm.table || !crudForm.controller || !crudForm.model" type="danger" @click="clear"><i class="fa fa-remove"></i>&nbsp;清除文件</el-button>
+        </el-form-item>
+    </el-form>
+</el-card>
+<check-icon ref="checkicon" @selected="selectIcon"></check-icon>
+<el-dialog
+    v-model="operateDialog.show"
+    title="{:__('编辑过滤方式')}"
+    width="800">
+    <el-scrollbar height="400px">
+        <el-form label-width="100px">
+            <el-form-item label="{:__('过滤简写')}:">
+                <el-select v-model="operateDialog.data.short" @change="changeShort('table')" style="width:100%">
+                    <el-option v-for="item in short.table" :key="item.key" :value="item.key">
+                        <span>{{item.key}}</span>
+                        <span style="float: right;font-size: 13px;color: #a2a2a2">{{item.label}}</span>
+                    </el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="{:__('表单类型')}:">
+                <el-select v-model="operateDialog.data.form" @change="changeForm('table')" style="width: 100%">
+                    <el-option v-for="item in formtype.form" :key="item.key" :value="item.key">
+                        <span>{{item.key}}</span>
+                        <span style="float: right;font-size: 13px;color: #a2a2a2">{{item.label}}</span>
+                    </el-option>
+                </el-select>
+            </el-form-item>
+            <template v-if="operateDialog.data.form=='input'">
+                <el-form-item label="{:__('文本类型')}:">
+                    <el-select v-model="operateDialog.data.type" style="width: 100%">
+                        <el-option key="text" value="text">
+                            <span>text</span>
+                            <span style="float: right;font-size: 13px;color: #a2a2a2">{:__('输入文本')}</span>
+                        </el-option>
+                        <el-option key="number" value="number">
+                            <span>number</span>
+                            <span style="float: right;font-size: 13px;color: #a2a2a2">{:__('输入数字')}</span>
+                        </el-option>
+                        <el-option key="password" value="password">
+                            <span>password</span>
+                            <span style="float: right;font-size: 13px;color: #a2a2a2">{:__('输入密码')}</span>
+                        </el-option>
+                        <el-option key="color" value="color">
+                            <span>color</span>
+                            <span style="float: right;font-size: 13px;color: #a2a2a2">{:__('输入颜色')}</span>
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+            </template>
+            <template v-if="operateDialog.data.form=='date-picker'">
+                <el-form-item label="{:__('日期类型')}:">
+                    <el-select v-model="operateDialog.data.type" style="width: 100%" @change="changeForm('table')">
+                        <el-option key="date" value="date">
+                            <span>date</span>
+                            <span style="float: right;font-size: 13px;color: #a2a2a2">{:__('选择日期')}</span>
+                        </el-option>
+                        <el-option key="datetime" value="datetime">
+                            <span>datetime</span>
+                            <span style="float: right;font-size: 13px;color: #a2a2a2">{:__('选择日期+时间')}</span>
+                        </el-option>
+                        <el-option key="daterange" value="daterange">
+                            <span>daterange</span>
+                            <span style="float: right;font-size: 13px;color: #a2a2a2">{:__('选择日期区间')}</span>
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+            </template>
+            <template v-if="operateDialog.data.form=='time-picker'">
+                <el-form-item label="{:__('时间类型')}:">
+                    <el-select v-model="operateDialog.data.type" style="width: 100%" @change="changeForm('table')">
+                        <el-option key="time" value="time">
+                            <span>time</span>
+                            <span style="float: right;font-size: 13px;color: #a2a2a2">{:__('选择时间')}</span>
+                        </el-option>
+                        <el-option key="timerange" value="timerange">
+                            <span>timerange</span>
+                            <span style="float: right;font-size: 13px;color: #a2a2a2">{:__('选择时间区间')}</span>
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+            </template>
+            <template v-if="operateDialog.data.form=='input'">
+                <el-form-item label="{:__('前置内容')}:">
+                    <el-input v-model="operateDialog.data.prepend"></el-input>
+                </el-form-item>
+                <el-form-item label="{:__('后置内容')}:">
+                    <el-input v-model="operateDialog.data.append"></el-input>
+                </el-form-item>
+            </template>
+            <template v-if="operateDialog.searchList && (operateDialog.data.form=='checkbox' || operateDialog.data.form=='radio' || operateDialog.data.form=='select')">
+                <el-form-item label="{:__('选择项')}:">
+                    <field-list field="operate" @change="changeSearchList" :value="operateDialog.searchList"></field-list>
+                </el-form-item>
+            </template>
+            <template v-if="inArray(['input','select','date-picker','time-picker','cascader','selectpage'],operateDialog.data.form)">
+                <el-form-item label="{:__('提示文字')}:">
+                    <el-input v-model="operateDialog.data.placeholder" placeholder="{:__('不填默认显示为字段标题')}"></el-input>
+                </el-form-item>
+            </template>
+            <template v-if="operateDialog.data.form!='hidden'">
+                <el-form-item label="{:__('表单尺寸')}:">
+                    <el-select v-model="operateDialog.data.size" style="width: 100%">
+                        <el-option label="{:__('大')}" key="large" value="large"></el-option>
+                        <el-option label="{:__('中')}" key="default" value="default"></el-option>
+                        <el-option label="{:__('小')}" key="small" value="small"></el-option>
+                    </el-select>
+                </el-form-item>
+            </template>
+            <template v-if="operateDialog.data.filter!='IS NULL' && operateDialog.data.filter!='IS NOT NULL'">
+                <el-form-item label="{:__('默认值')}:">
+                    <el-input v-model="operateDialog.data.value"></el-input>
+                </el-form-item>
+            </template>
+            <template v-if="operateDialog.data.form=='cascader'">
+                <el-form-item label="{:__('数据获取方式')}:">
+                    <el-select v-model="operateDialog.data.cascaderType" style="width: 100%">
+                        <el-option label="{:__('JSON数据')}" key="options" value="options"></el-option>
+                        <el-option label="{:__('网络获取')}" key="url" value="url"></el-option>
+                    </el-select>
+                </el-form-item>
+                <template v-if="operateDialog.data.cascaderType=='url'">
+                    <el-form-item label="{:__('请求地址')}:">
+                        <el-input v-model="operateDialog.data.url"></el-input>
+                    </el-form-item>
+                    <el-form-item label="{:__('获取级数')}:">
+                        <el-input v-model="operateDialog.data.level"></el-input>
+                    </el-form-item>
+                </template>
+                <template v-if="operateDialog.data.cascaderType=='options'">
+                    <el-form-item label="{:__('JSON树')}:">
+                        <el-input type="textarea" rows="4" v-model="operateDialog.data.options"></el-input>
+                    </el-form-item>
+                </template>
+            </template>
+            <template v-if="operateDialog.data.form=='selectpage'">
+                <el-form-item label="{:__('请求地址')}:">
+                    <el-input v-model="operateDialog.data.url"></el-input>
+                </el-form-item>
+                <el-form-item label="{:__('存储字段')}:">
+                    <el-input v-model="operateDialog.data.keyField"></el-input>
+                </el-form-item>
+                <el-form-item label="{:__('显示字段')}:">
+                    <el-input v-model="operateDialog.data.labelField"></el-input>
+                </el-form-item>
+            </template>
+            <template v-if="operateDialog.data.form=='select' || operateDialog.data.form=='cascader' || operateDialog.data.form=='selectpage'">
+                <el-form-item label="{:__('是否多选')}:">
+                    <el-select v-model="operateDialog.data.multiple" style="width: 100%" @change="changeForm('table')">
+                        <el-option label="{:__('是')}" :key="1" :value="1"></el-option>
+                        <el-option label="{:__('否')}" :key="0" :value="0"></el-option>
+                    </el-select>
+                </el-form-item>
+            </template>
+            <el-form-item label="{:__('过滤方式')}:">
+                <el-select v-model="operateDialog.data.filter" style="width: 100%">
+                    <el-option v-for="item in operateDialog.filter" :key="item.key" :value="item.key">
+                        <span>{{item.key}}</span>
+                        <span style="float: right;font-size: 13px;color: #a2a2a2">{{item.label}}</span>
+                    </el-option>
+                    </template>
+                </el-select>
+            </el-form-item>
+        </el-form>
+    </el-scrollbar>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button type="info" @click="operateDialog.show = false">{:__('取消')}</el-button>
+        <el-button type="primary" @click="confirmFilter">{:__('确定')}</el-button>
+      </span>
+    </template>
+</el-dialog>
+<el-dialog
+        v-model="searchListDialog.show"
+        title="{:__('编辑选择项')}"
+        width="800">
+    <el-scrollbar height="400px">
+        <el-form label-width="100px">
+            <template v-if="searchListDialog.searchList">
+                <el-form-item label="{:__('选择项')}:">
+                    <field-list field="searchlist" @change="changeSearchList" :value="searchListDialog.searchList"></field-list>
+                </el-form-item>
+            </template>
+        </el-form>
+    </el-scrollbar>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button type="info" @click="searchListDialog.show = false">{:__('取消')}</el-button>
+        <el-button type="primary" @click="confirmSearchList">{:__('确定')}</el-button>
+      </span>
+    </template>
+</el-dialog>
+<el-dialog
+        v-model="relationDialog.show"
+        title="{:__('编辑关联表')}"
+        width="800">
+    <el-scrollbar height="400px">
+        <el-form label-width="100px">
+            <el-form-item label="{:__('关联表')}:">
+                <select-page url="develop/getTable" key-field="name" label-field="title" @change="changeRelationTable"></select-page>
+            </el-form-item>
+            <el-form-item label="{:__('关联方式')}:">
+                <el-select v-model="relationDialog.data.ralationType" style="width: 100%">
+                    <el-option label="{:__('一对一关联')}" key="one" value="one"></el-option>
+                    <el-option label="{:__('一对多关联')}" key="many" value="many"></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="{:__('关联字段')}:">
+                <el-select v-model="relationDialog.data.relationField" style="width: 100%">
+                    <el-option :label="field.name" :key="field.name" :value="field.name" v-for="field in relationDialog.fields"></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="{:__('展示字段')}:">
+                <el-select v-model="relationDialog.data.showField" style="width: 100%">
+                    <el-option :label="field.name" :key="field.name" :value="field.name" v-for="field in relationDialog.fields"></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="{:__('过滤字段')}:">
+                <el-select v-model="relationDialog.data.filterField" style="width: 100%">
+                    <el-option :label="field.name" :key="field.name" :value="field.name" v-for="field in relationDialog.fields"></el-option>
+                </el-select>
+            </el-form-item>
+        </el-form>
+    </el-scrollbar>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button type="info" @click="relationDialog.show = false">{:__('取消')}</el-button>
+        <el-button type="primary" @click="confirmRelation">{:__('确定')}</el-button>
+      </span>
+    </template>
+</el-dialog>
+<el-dialog
+        v-model="formDialog.show"
+        title="{:__('编辑输入类型')}"
+        width="800">
+    <el-scrollbar height="400px">
+        <el-form label-width="100px">
+            <el-form-item label="{:__('表单简写')}:">
+                <el-select v-model="formDialog.data.short" @change="changeShort('form')" style="width:100%">
+                    <el-option v-for="item in short.form" :key="item.key" :value="item.key">
+                        <span>{{item.key}}</span>
+                        <span style="float: right;font-size: 13px;color: #a2a2a2">{{item.label}}</span>
+                    </el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="{:__('表单类型')}:">
+                <el-select v-model="formDialog.data.form" @change="changeForm('form')" style="width: 100%">
+                    <el-option v-for="item in formtype.form" :key="item.key" :value="item.key">
+                        <span>{{item.key}}</span>
+                        <span style="float: right;font-size: 13px;color: #a2a2a2">{{item.label}}</span>
+                    </el-option>
+                </el-select>
+            </el-form-item>
+            <template v-if="formDialog.data.form=='input'">
+                <el-form-item label="{:__('文本类型')}:">
+                    <el-select v-model="formDialog.data.type" style="width: 100%">
+                        <el-option key="text" value="text">
+                            <span>text</span>
+                            <span style="float: right;font-size: 13px;color: #a2a2a2">{:__('单行文本')}</span>
+                        </el-option>
+                        <el-option key="textarea" value="textarea">
+                            <span>textarea</span>
+                            <span style="float: right;font-size: 13px;color: #a2a2a2">{:__('多行文本')}</span>
+                        </el-option>
+                        <el-option key="hidden" value="hidden">
+                            <span>hidden</span>
+                            <span style="float: right;font-size: 13px;color: #a2a2a2">{:__('隐藏输入')}</span>
+                        </el-option>
+                        <el-option key="number" value="number">
+                            <span>number</span>
+                            <span style="float: right;font-size: 13px;color: #a2a2a2">{:__('输入数字')}</span>
+                        </el-option>
+                        <el-option key="password" value="password">
+                            <span>password</span>
+                            <span style="float: right;font-size: 13px;color: #a2a2a2">{:__('输入密码')}</span>
+                        </el-option>
+                        <el-option key="color" value="color">
+                            <span>color</span>
+                            <span style="float: right;font-size: 13px;color: #a2a2a2">{:__('输入颜色')}</span>
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+            </template>
+            <template v-if="formDialog.data.form=='date-picker'">
+                <el-form-item label="{:__('日期类型')}:">
+                    <el-select v-model="formDialog.data.type" style="width: 100%" @change="changeForm('form')">
+                        <el-option key="date" value="date">
+                            <span>date</span>
+                            <span style="float: right;font-size: 13px;color: #a2a2a2">{:__('选择日期')}</span>
+                        </el-option>
+                        <el-option key="datetime" value="datetime">
+                            <span>datetime</span>
+                            <span style="float: right;font-size: 13px;color: #a2a2a2">{:__('选择日期+时间')}</span>
+                        </el-option>
+                        <el-option key="daterange" value="daterange">
+                            <span>daterange</span>
+                            <span style="float: right;font-size: 13px;color: #a2a2a2">{:__('选择日期区间')}</span>
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+            </template>
+            <template v-if="formDialog.data.form=='time-picker'">
+                <el-form-item label="{:__('时间类型')}:">
+                    <el-select v-model="formDialog.data.type" style="width: 100%" @change="changeForm('form')">
+                        <el-option key="time" value="time">
+                            <span>time</span>
+                            <span style="float: right;font-size: 13px;color: #a2a2a2">{:__('选择时间')}</span>
+                        </el-option>
+                        <el-option key="timerange" value="timerange">
+                            <span>timerange</span>
+                            <span style="float: right;font-size: 13px;color: #a2a2a2">{:__('选择时间区间')}</span>
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+            </template>
+            <template v-if="formDialog.data.form=='input' && formDialog.data.type!='hidden' && formDialog.data.type!='textarea'">
+                <el-form-item label="{:__('前置内容')}:">
+                    <el-input v-model="formDialog.data.prepend"></el-input>
+                </el-form-item>
+                <el-form-item label="{:__('后置内容')}:">
+                    <el-input v-model="formDialog.data.append"></el-input>
+                </el-form-item>
+                <el-form-item label="{:__('只读')}:">
+                    <el-switch v-model="formDialog.data.readonly" :active-value="1" :inactive-value="0"></el-switch>
+                </el-form-item>
+            </template>
+            <template v-if="formDialog.data.form=='input' && formDialog.data.type=='textarea'">
+                <el-form-item label="{:__('显示行数')}:">
+                    <el-input v-model="formDialog.data.rows" type="number"></el-input>
+                </el-form-item>
+            </template>
+            <template v-if="formDialog.data.form=='attachment' || formDialog.data.form=='files'">
+                <el-form-item label="{:__('允许上传数量')}:">
+                    <el-input v-model="formDialog.data.limit" type="number"></el-input>
+                </el-form-item>
+            </template>
+            <template v-if="formDialog.data.form=='files'">
+                <el-form-item label="{:__('支持文件类型')}:">
+                    <el-input v-model="formDialog.data.accept"></el-input>
+                </el-form-item>
+                <el-form-item label="{:__('存储方式')}:">
+                    <el-select v-model="formDialog.data.disks" style="width: 100%">
+                        <el-option key="local_public" value="local_public">
+                            <span>local_public</span>
+                            <span style="float: right;font-size: 13px;color: #a2a2a2">{:__('本地开放文件')}</span>
+                        </el-option>
+                        <el-option key="local_private" value="local_private">
+                            <span>local_private</span>
+                            <span style="float: right;font-size: 13px;color: #a2a2a2">{:__('本地私有文件')}</span>
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+            </template>
+            <template v-if="formDialog.data.form=='fieldlist'">
+                <el-form-item label="{:__('项目标题')}:">
+                    <el-input v-model="formDialog.data.label"></el-input>
+                </el-form-item>
+            </template>
+            <template v-if="formDialog.searchList && (formDialog.data.form=='switch' || formDialog.data.form=='checkbox' || formDialog.data.form=='radio' || formDialog.data.form=='select')">
+                <el-form-item label="{:__('选择项')}:">
+                    <field-list field="form" @change="changeSearchList" :value="formDialog.searchList"></field-list>
+                </el-form-item>
+            </template>
+            <template v-if="inArray(['input','select','date-picker','time-picker','cascader','selectpage'],formDialog.data.form)">
+                <el-form-item label="{:__('提示文字')}:">
+                    <el-input v-model="formDialog.data.placeholder" placeholder="{:__('不填默认显示为字段标题')}"></el-input>
+                </el-form-item>
+            </template>
+            <template v-if="formDialog.data.form=='editor'">
+                <el-form-item label="{:__('宽度')}:">
+                    <el-input v-model="formDialog.data.width" placeholder="{:__('支持数字，像素，百分比如：300,300px,100%')}"></el-input>
+                </el-form-item>
+                <el-form-item label="{:__('高度')}:">
+                    <el-input v-model="formDialog.data.height" placeholder="{:__('支持数字，像素：300,300px')}"></el-input>
+                </el-form-item>
+            </template>
+            <template v-if="formDialog.data.form!='slot'">
+                <el-form-item label="{:__('默认值')}:">
+                    <el-input v-model="formDialog.data.value"></el-input>
+                </el-form-item>
+            </template>
+            <template v-if="formDialog.data.form=='cascader'">
+                <el-form-item label="{:__('数据获取方式')}:">
+                    <el-select v-model="formDialog.data.cascaderType" style="width: 100%">
+                        <el-option label="{:__('JSON数据')}" key="options" value="options"></el-option>
+                        <el-option label="{:__('网络获取')}" key="url" value="url"></el-option>
+                    </el-select>
+                </el-form-item>
+                <template v-if="formDialog.data.cascaderType=='url'">
+                    <el-form-item label="{:__('请求地址')}:">
+                        <el-input v-model="formDialog.data.url"></el-input>
+                    </el-form-item>
+                    <el-form-item label="{:__('获取级数')}:">
+                        <el-input v-model="formDialog.data.level"></el-input>
+                    </el-form-item>
+                </template>
+                <template v-if="formDialog.data.cascaderType=='options'">
+                    <el-form-item label="{:__('JSON树')}:">
+                        <el-input type="textarea" rows="4" v-model="formDialog.data.options"></el-input>
+                    </el-form-item>
+                </template>
+            </template>
+            <template v-if="formDialog.data.form=='selectpage'">
+                <el-form-item label="{:__('请求地址')}:">
+                    <el-input v-model="formDialog.data.url"></el-input>
+                </el-form-item>
+                <el-form-item label="{:__('存储字段')}:">
+                    <el-input v-model="formDialog.data.keyField"></el-input>
+                </el-form-item>
+                <el-form-item label="{:__('显示字段')}:">
+                    <el-input v-model="formDialog.data.labelField"></el-input>
+                </el-form-item>
+            </template>
+            <template v-if="formDialog.data.form=='select' || formDialog.data.form=='cascader' || formDialog.data.form=='selectpage'">
+                <el-form-item label="{:__('是否多选')}:">
+                    <el-select v-model="formDialog.data.multiple" style="width: 100%" @change="changeForm('form')">
+                        <el-option label="{:__('是')}" :key="1" :value="1"></el-option>
+                        <el-option label="{:__('否')}" :key="0" :value="0"></el-option>
+                    </el-select>
+                </el-form-item>
+            </template>
+        </el-form>
+    </el-scrollbar>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button type="info" @click="formDialog.show = false">{:__('取消')}</el-button>
+        <el-button type="primary" @click="confirmForm">{:__('确定')}</el-button>
+      </span>
+    </template>
+</el-dialog>
+<el-dialog
+        v-model="codeDialog.show"
+        title="{:__('生成代码')}"
+        :destroy-on-close="true"
+        height="500"
+        width="80%">
+        <el-tabs type="border-card">
+            <el-tab-pane :label="key+'文件'" v-for="(code,key) in codeDialog.row">
+                <el-scrollbar style="height: 400px">
+                    <div v-if="key=='view'">
+                        <template v-for="(view,name) in code">
+                            <el-divider>{{name}}</el-divider>
+                            <el-input style="border: 0" autosize type="textarea" :value="view"></el-input>
+                        </template>
+                    </div>
+                    <div v-else>
+                        <el-input style="border: 0" autosize type="textarea" :value="code"></el-input>
+                    </div>
+                </el-scrollbar>
+            </el-tab-pane>
+        </el-tabs>
+        <template #footer>
+            <el-button type="primary">
+                复制
+            </el-button>
+        </template>
+</el-dialog>

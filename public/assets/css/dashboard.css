@@ -1,0 +1,123 @@
+.pay{
+    text-align: center;
+    padding: 10px;
+}
+.pay img{
+    width: 180px;
+    height: 180px;
+}
+.card-container{
+    margin-bottom: 10px;
+}
+.card-container.left{
+    padding-right: 10px;
+}
+@media screen and (max-width: 992px) {
+    .card-container.left{
+        padding-right: 0;
+    }
+}
+.card-container .el-card__header{
+    padding: 8px 20px;
+}
+.card-container .header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.card-container .el-card__header .title{
+    font-weight: bold;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+}
+.card-container .el-card__header .title i{
+    font-size: 22px;
+    color: var(--el-color-primary);
+    margin-right: 8px;
+}
+.style-1{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-radius: 6px;
+    width: 87%;
+    margin:0 auto 10px;
+    color: #fff;
+}
+.style-1 i{
+    font-size: 42px;
+    color: #fff;
+}
+.style-2{
+    padding: 10px;
+    width: 87%;
+    margin:0 auto;
+    text-align: center;
+}
+.style-3{
+    padding: 10px;
+    width: 87%;
+    margin:0 auto;
+    text-align: center;
+}
+.style-3 .box-title{
+    text-align: left;
+}
+.style-3 .box{
+    height: 190px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+}
+.style-3 .box-content-left{
+    text-align: left;
+}
+.style-3 .box-number-top{
+    font-size: 26px;
+}
+.style-3 .box-number-bottom{
+    color: darkgrey;
+}
+.style-3 .box-content{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.style-3 .icon{
+    color: #fff;
+    width: 60px;
+    height: 60px;
+    line-height: 60px;
+    text-align: center;
+    font-size: 32px;
+}
+.box .box-title{
+    font-size: 18px;
+}
+.bkcolor1{
+    background: linear-gradient(to right,var(--el-color-primary-light-3),var(--el-color-primary));
+}
+.bkcolor2{
+    background: linear-gradient(to right,var(--el-color-warning-light-3),var(--el-color-warning));
+}
+.bkcolor3{
+    background: linear-gradient(to right,var(--el-color-danger-light-3),var(--el-color-danger));
+}
+.bkcolor4{
+    background: linear-gradient(to right,var(--el-color-success-light-3),var(--el-color-success));
+}
+.chart1{
+    width: 100%;
+    height: 305px;
+}
+.chart2{
+    width: 100%;
+    height: 310px;
+    margin: 0 auto;
+}
+.chart3{
+    width: 100%;
+    height: 300px;
+}

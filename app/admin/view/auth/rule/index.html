@@ -1,0 +1,27 @@
+<el-card shadow="never">
+    <template #header>
+        <el-alert effect="dark" :closable="false" title="使用说明">菜单规则包含两部分，(1)菜单(2)规则，菜单如果不存在子菜单，需要设置控制器与方法，表示点击菜单时访问位置。菜单仅提供显示功能，如果要设置访问位置的权限，需要继续配置规则。</el-alert>
+    </template>
+    <yun-table
+            :columns="indexColumns"
+            toolbar="refresh,add,edit,del,more"
+            @render="onRender"
+            ref="yuntable"
+            :tree-expand-all="true"
+            :is-tree="true"
+            :common-search="false"
+            :pagination="false"
+            :auth="{
+                add:{:$auth->check('app\\admin\\controller\\auth\\Rule','add')},
+                edit:{:$auth->check('app\\admin\\controller\\auth\\Rule','edit')},
+                del:{:$auth->check('app\\admin\\controller\\auth\\Rule','del')},
+                multi:{:$auth->check('app\\admin\\controller\\auth\\Rule','multi')}
+            }"
+            :extend="extend">
+            <template v-slot:formatter="item">
+                <div v-if="item.field=='icon'">
+                    <i :class="item.rows.icon"></i>
+                </div>
+            </template>
+    </yun-table>
+</el-card>

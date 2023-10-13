@@ -1,0 +1,212 @@
+<?php
+declare (strict_types = 1);
+
+namespace <#namespace#>;
+
+use app\common\controller\Backend;
+<#if table || form#>
+use app\admin\traits\Actions;
+<#endif#>
+use think\annotation\route\Group;
+use think\annotation\route\Route;
+use <#model#> as <#modelName#>Model;
+<#if isTree#>
+use app\common\library\Tree;
+<#endif#>
+
+#[Group("<#group#>")]
+class <#controllerName#> extends Backend
+{
+    <#if table || form#>
+    use Actions{
+        <#if table && isset(actionList['index'])#>
+        index as private _index;
+        <#endif#>
+        <#if form && isset(actionList['add'])#>
+        add as private _add;
+        <#endif#>
+        <#if form && isset(actionList['edit'])#>
+        edit as private _edit;
+        <#endif#>
+        <#if isset(actionList['del'])#>
+        del as private _del;
+        <#endif#>
+        <#if isset(actionList['multi'])#>
+        multi as private _multi;
+        <#endif#>
+        <#if isset(actionList['import'])#>
+        import as private _import;
+        <#endif#>
+        <#if isset(actionList['download'])#>
+        download as private _download;
+        <#endif#>
+        <#if isset(actionList['recyclebin'])#>
+        recyclebin as private _recyclebin;
+        <#endif#>
+    }
+    <#endif#>
+
+    protected function _initialize()
+    {
+        parent::_initialize();
+        $this->model = new <#modelName#>Model();
+    }
+
+    <#if table && isset(actionList['index'])#>
+    //查看
+    #[Route("GET,JSON","index")]
+    public function index()
+    {
+        <#if relation#>
+        $this->relationField=<#relation#>;
+        <#endif#>
+        <#if isTree || summary#>
+        if (false === $this->request->isAjax()) {
+            return $this->fetch();
+        }
+        if($this->request->post('selectpage')){
+            return $this->selectpage();
+        }
+        [$where, $order, $limit, $with] = $this->buildparams();
+        $list = $this->model
+            ->withJoin($with,'left')
+            //如果没有使用operate filter过滤的情况下,推荐使用with关联，可以提高查询效率
+            //->with($with)
+            ->where($where)
+            ->order($order)
+            ->paginate($limit);
+        $result = [
+            <#if summary#>
+            'summary' => '自定义统计信息',
+            <#endif#>
+            'total' => $list->total(),
+            <#if isTree#>
+            'rows' => $this->toTree($list->items())
+            <#endif#>
+            <#if !isTree#>
+            'rows' => $list->items()
+            <#endif#>
+        ];
+        return json($result);
+        <#endif#>
+        <#if !isTree && !summary#>
+        return $this->_index();
+        <#endif#>
+    }
+    <#endif#>
+
+    <#if isTree#>
+    private function toTree($list)
+    {
+        $tree = Tree::instance();
+        $tree->init($list, 'pid');
+        return $tree->getTreeList($tree->getTreeArray(0), '<#treeTitle#>');
+    }
+    <#endif#>
+
+    <#if form && isset(actionList['add'])#>
+    //添加
+    #[Route("GET,POST","add")]
+    public function add()
+    {
+        //通过定义postParams来增加或覆盖post提交的表单
+        $this->postParams=[];
+        //通过定义callback回调函数来执行添加后的操作
+        $this->callback=function ($model){};
+        <#if isTree#>
+        if(!$this->request->isPost()){
+            $list=$this->model->select()->toArray();
+            $parentList=$this->toTree($list);
+            $this->assign('parentList',$parentList);
+        }
+        <#endif#>
+        return $this->_add();
+    }
+    <#endif#>
+
+    <#if form && isset(actionList['edit'])#>
+    //修改
+    #[Route("GET,POST","edit")]
+    public function edit()
+    {
+        //通过定义postParams来增加或覆盖post提交的表单
+        $this->postParams=[];
+        //通过定义callback回调函数来执行修改后的操作
+        $this->callback=function ($model){};
+        <#if isTree#>
+        if(!$this->request->isPost()){
+            $list=$this->model->select()->toArray();
+            $parentList=$this->toTree($list);
+            $this->assign('parentList',$parentList);
+        }
+        <#endif#>
+        return $this->_edit();
+    }
+    <#endif#>
+
+    <#if table && isset(actionList['del'])#>
+    //删除
+    #[Route("GET,POST","del")]
+    public function del()
+    {
+        //通过定义callback回调函数来执行删除后的操作
+        $this->callback=function ($ids){};
+        return $this->_del();
+    }
+    <#endif#>
+
+    <#if table && isset(actionList['multi'])#>
+    //更新
+    #[Route("GET,POST","multi")]
+    public function multi()
+    {
+        //通过定义callback回调函数来执行更新后的操作
+        $this->callback=function ($ids,$field,$value){};
+        return $this->_multi();
+    }
+    <#endif#>
+
+    <#if table && isset(actionList['import'])#>
+    //导入
+    #[Route("GET,POST","import")]
+    public function import()
+    {
+        //通过定义callback回调函数来处理导入的数据
+        $this->callback=function ($inserData){
+            return $inserData;
+        };
+        return $this->_import();
+    }
+    <#endif#>
+
+    <#if table && isset(actionList['recyclebin'])#>
+    //回收站
+    #[Route("GET,POST,JSON","recyclebin")]
+    public function recyclebin($action)
+    {
+        $this->recyclebinColumns=[
+        <#recyclebinField#>
+        ];
+        $this->recyclebinColumnsType=[
+        <#recyclebinType#>
+        ];
+        return $this->_recyclebin($action);
+    }
+    <#endif#>
+
+    <#if table && isset(actionList['download'])#>
+    //下载
+    #[Route("GET,POST","download")]
+    public function download()
+    {
+        //通过定义callback回调函数来处理下载的数据
+        $this->callback=function ($downloadData){
+            return $downloadData;
+        };
+        return $this->_download();
+    }
+    <#endif#>
+    <#if methods#>
+<#methods#>
+    <#endif#>
+}

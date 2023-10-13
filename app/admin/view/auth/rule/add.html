@@ -1,0 +1,32 @@
+<el-card shadow="never" style="border: 0;">
+    <yun-form
+        :token="true"
+        :data="data"
+        ref="yunform"
+        @render="onRender"
+        :columns="eidtColumns">
+        <template #default>
+            {:token_field()}
+        </template>
+        <template v-slot:pid="item">
+            <el-form-item label="{:__('父级')}:" prop="pid">
+                <el-select placeholder="{:__('请选择父级')}" v-model="item.rows.pid" :clearable="true" style="width: 100%">
+                    {foreach $ruledata as $key=>$value}
+                    <el-option key="{$key}" label="{:str_replace('&amp;','&',$value)}" value="{$key}"></el-option>
+                    {/foreach}
+                </el-select>
+            </el-form-item>
+        </template>
+        <template v-slot:icon="{rows}">
+            <el-form-item label="{:__('菜单图标')}:" prop="icon" v-if="rows.ismenu=='1'">
+                <el-input v-model="rows.icon">
+                    <template #prepend><i :class="rows.icon"></i></template>
+                    <template #append>
+                        <el-button size="small" @click="openIconPanel">{:__('选择图标')}</el-button>
+                    </template>
+                </el-input>
+            </el-form-item>
+        </template>
+    </yun-form>
+</el-card>
+<check-icon ref="checkicon" @selected="selectIcon"></check-icon>

@@ -1,0 +1,24 @@
+<el-card shadow="never">
+    <yun-table
+            :columns="indexColumns"
+            ref="yuntable"
+            @render="onTableRender"
+            search="nickname,mobile"
+            :show-summary="true"
+            sort-name="weigh,id"
+            order="desc,desc"
+            toolbar="refresh,del,more,import,download,recyclebin"
+            :auth="{
+                del:{:$auth->check('app\\admin\\controller\\demo\\Table','del')},
+                edit:true,
+                multi:{:$auth->check('app\\admin\\controller\\demo\\Table','multi')},
+                import:{:$auth->check('app\\admin\\controller\\demo\\Table','import')},
+                download:{:$auth->check('app\\admin\\controller\\demo\\Table','download')},
+                recyclebin:{:$auth->check('app\\admin\\controller\\demo\\Table','recyclebin')},
+            }"
+            :extend="extend">
+            <template #expand="{rows}">
+                <span>扩展内容</span>
+            </template>
+    </yun-table>
+</el-card>
