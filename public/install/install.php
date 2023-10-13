@@ -39,10 +39,11 @@ class Install{
         }
         $htaccess=0;
         $response=\app\common\library\Http::get($_SERVER['REQUEST_SCHEME'].'://'.$_SERVER['HTTP_HOST'].'/kdfkslfsfd');
-        if(strpos($response->errorMsg,'thinkphp')!==false){
+        if($response->isSuccess()){
             $htaccess=1;
-        }
-        if(strpos($response->errorMsg,'Yunqi')!==false){
+        }else if(strpos($response->errorMsg,'thinkphp')!==false){
+            $htaccess=1;
+        }else if(strpos($response->errorMsg,'Yunqi')!==false){
             $htaccess=1;
         }
         $doman=$_SERVER['REQUEST_SCHEME'].'://'.$_SERVER['HTTP_HOST'];
@@ -127,7 +128,7 @@ EOF;
                 'runtime/cache'
             ];
             foreach ($dirs as $dir){
-                mkdir(root_path().$dir);
+                mkdir(dirname(dirname(__DIR__)).DS.$dir,0777,true);
             }
             file_put_contents(__DIR__.DS.'install.lock','install');
             echo json_encode(['code'=>1,'msg'=>'安装成功'],JSON_UNESCAPED_UNICODE);

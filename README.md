@@ -29,13 +29,12 @@
 * ElementPlus2.3
 
 ## 快速安装
-1. 登陆官网，下载稳定版本，已经打包好了composer依赖，解压到apache或nginx配置的网站目录。
-1. 使用git clone命令在gitee或github中克隆到你的网站目录。
+1. 两种下载方式：（1）登陆官网，下载稳定版本，已经打包好了composer依赖，解压到apache或nginx配置的网站目录。 （2）使用git clone命令在gitee或github中克隆到你的网站目录。
 1. 如果你使用宝塔，请配置好网站的运行目录。
 1. 配置好伪静态。
-1. 使用git clone的项目，运行 composer install，下载依赖包。
+1. 如果你使用git clone的项目，运行 composer install，下载依赖包，官网下载完整包的可以忽略。
 1. 在浏览器中运行：http://你的域名/install/install.php
-1. 根据提示完整安装。
+1. 根据提示完成安装。
 ## 系统特色
 * 🚀一键CRUD，通过网页可视化编辑配置，生成菜单，表格，表单等功能以及所有文件和代码
 * 🍜对单表，内置了查看、添加、修改、删除、更新、导入、下载、回收站功能
