@@ -17,7 +17,7 @@ use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
 use PhpOffice\PhpSpreadsheet\Reader\Xls;
 use PhpOffice\PhpSpreadsheet\Reader\Csv;
 use think\facade\Db;
-use think\facade\Session;
+use app\common\library\Export;
 
 trait Actions
 {
@@ -397,7 +397,7 @@ trait Actions
     /**
      * 下载
      */
-    #[Route('GET,POST','download')]
+    #[Route('GET,JSON','download')]
     public function download()
     {
         if($this->request->isAjax()){
@@ -412,9 +412,9 @@ trait Actions
                 $controller.='\\'.$listAction[$i];
             }
             $action=$listAction[count($listAction)-1];
-            $obj=new $controller();
+            $obj=new $controller($this->request);
             $result=call_user_func_array([$obj,$action],[]);
-            $list=collection($result->getData()['rows'])->toArray();
+            $list=$result->getData()['rows'];
             //格式化
             $fields=[];
             foreach ($postdata['field'] as $v){
@@ -427,7 +427,7 @@ trait Actions
             $export->write();
             $file=date('YmdHis',time()).'.xlsx';
             $export->save(root_path().'runtime'.DS,$file);
-            $this->success('','',$file);
+            $this->success('',$file);
         }else{
             $file=$this->request->get('file');
             $filepath=root_path().'runtime'.DS.$file;
