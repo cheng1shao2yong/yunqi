@@ -70,11 +70,11 @@ class Adminlog extends Backend
     #[Route('GET','detail')]
     public function detail($ids)
     {
+        $row = $this->model->where(['id' => $ids])->find();
         $adminids=$this->getChildrenAdminIds();
-        if(!in_array($ids,$adminids)){
+        if(!in_array($row->admin_id,$adminids)){
             $this->error(__('没有权限'));
         }
-        $row = $this->model->where(['id' => $ids])->find();
         $row->content=htmlspecialchars_decode($row->content);
         $this->assign("row", $row);
         return $this->fetch();

@@ -1,14 +1,94 @@
-<el-card shadow="never">
-    <yun-table
-            :columns="columns"
-            search="nickname,mobile"
-            toolbar="refresh,edit,del"
-            :auth="{
-                add:{:$auth->check('app\\admin\\controller\\user\\Index','add')},
-                edit:{:$auth->check('app\\admin\\controller\\user\\Index','edit')},
-                del:{:$auth->check('app\\admin\\controller\\user\\Index','del')},
-                multi:{:$auth->check('app\\admin\\controller\\user\\Index','multi')},
-            }"
-            :extend="extend">
-    </yun-table>
-</el-card>
+<template>
+    <el-card shadow="never">
+        <yun-table
+                :columns="columns"
+                search="nickname,mobile"
+                toolbar="refresh,edit,del"
+                ref="yuntable"
+                :auth="{
+                    add:{:$auth->check('app\\admin\\controller\\user\\Index','add')},
+                    edit:{:$auth->check('app\\admin\\controller\\user\\Index','edit')},
+                    del:{:$auth->check('app\\admin\\controller\\user\\Index','del')},
+                    multi:{:$auth->check('app\\admin\\controller\\user\\Index','multi')},
+                }"
+                :extend="extend">
+        </yun-table>
+    </el-card>
+</template>
+<script>
+    import table from "@components/Table.js";
+    export default{
+        components:{'YunTable':table},
+        data:{
+            extend:{
+                index_url: 'user/index/index',
+                edit_url: 'user/index/edit',
+                del_url: 'user/index/del',
+                multi_url: 'user/index/multi',
+                download_url: 'user/index/download'
+            },
+            columns:[
+                {checkbox: true},
+                {field: 'id',title: __('ID'),width:80,sortable: true},
+                {field: 'username',title: __('用户名'),width:120,operate:'='},
+                {field: 'avatar', title: __('头像'), width:90,formatter: Yunqi.formatter.image, operate: false},
+                {field: 'nickname',title: __('昵称'),operate: 'LIKE',formatter: Yunqi.formatter.tag},
+                {field: 'sex', title: __('性别'),width:100, searchList: {1: __('男'), 2: __('女')},operate:'select',formatter:Yunqi.formatter.select},
+                {field: 'email',title: __('邮箱'),operate:'LIKE',width:250},
+                {field: 'mobile',title: __('手机'),width:130,operate: '='},
+                {field: 'level', title: __('等级'),width:120,sortable: true,operate:'selects',searchList:{0:'普通',1:'1级',2:'2级',3:'3级',4:'4级'}},
+                {field: 'score', title: __('积分'),width:80,sortable: true,operate:'between'},
+                {field: 'balance', title: __('余额'),width:80,sortable: true,operate:'between'},
+                {field: 'status', title: __('状态'),width:100,searchList: {'normal': __('正常'),'hidden': __('隐藏')},formatter:Yunqi.formatter.switch,operate:'select'},
+                {field: 'createtime', title: __('创建时间'), width:160,formatter: Yunqi.formatter.datetime,operate:false,sortable: true},
+                {
+                    field: 'operate',
+                    title: __('操作'),
+                    width:180,
+                    fixed:'right',
+                    action:{
+                        recharge:{
+                            tooltip:true,
+                            icon:'fa fa-plug',
+                            type:'warning',
+                            text:__('会员充值'),
+                            method:'recharge'
+                        },
+                        detail:{
+                            tooltip:true,
+                            icon:'fa fa-list',
+                            type:'info',
+                            text:__('会员明细'),
+                            method:'detail'
+                        },
+                        edit:true,
+                        del:true
+                    }
+                }
+            ]
+        },
+        methods: {
+            detail:function (row){
+                Yunqi.api.open({
+                    url:'user/index/detail?ids='+row.id,
+                    width:1000,
+                    title:__('会员明细'),
+                    icon:'fa fa-list'
+                });
+            },
+            recharge:function (row){
+                Yunqi.api.open({
+                    url:'user/index/recharge?ids='+row.id,
+                    title:__('会员充值'),
+                    icon:'fa fa-plug',
+                    close:()=>{
+                        this.$refs.yuntable.reload();
+                    }
+                });
+            }
+        }
+    }
+</script>
+<style>
+
+</style>

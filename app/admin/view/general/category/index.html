@@ -1,16 +1,66 @@
-<el-card shadow="never">
-    <template #header>
-        <el-alert effect="dark" :closable="false">在表单中组件中，可以通过{form:"cascader",options:"ajax/category"}来读取多级分类</el-alert>
-    </template>
-    <yun-table
-            :columns="columns"
-            :common-search="false"
-            :is-tree="true"
-            :tree-expand-all="true"
-            :pagination="false"
-            tabs="type"
-            toolbar="refresh,add,edit,del,more"
-            :extend="extend">
-    </yun-table>
-</el-card>
+<template>
+    <el-card shadow="never">
+        <template #header>
+            <el-alert effect="dark" :closable="false">在表单中组件中，可以通过{form:"cascader",options:"ajax/category"}来读取多级分类</el-alert>
+        </template>
+        <yun-table
+                :columns="columns"
+                :common-search="false"
+                :is-tree="true"
+                :tree-expand-all="true"
+                :pagination="false"
+                tabs="type"
+                toolbar="refresh,add,edit,del,more"
+                :extend="extend">
+        </yun-table>
+    </el-card>
+</template>
+<script>
+    import table from "@components/Table.js";
+    export default{
+        components:{'YunTable':table},
+        data:{
+            extend:{
+                index_url: 'general/category/index',
+                add_url: 'general/category/add',
+                edit_url: 'general/category/edit',
+                del_url: 'general/category/del',
+                multi_url: 'general/category/multi'
+            },
+            columns:[
+                {checkbox: true},
+                {field: 'id',title:'ID',width:80},
+                {field: 'type', title: __('所属分组'),width:120,searchList:Yunqi.data.typeList,formatter:Yunqi.formatter.tag},
+                {field: 'name',title:__('名称'),formatter:function(data){
+                    let html=Yunqi.formatter.html;
+                    html.value=data.replace(/&nbsp;/g,'&nbsp;&nbsp;');
+                    return html;
+                }},
+                {field: 'nickname',title:__('昵称')},
+                {field: 'image', title: __('图片'),width:90,formatter: function (data){
+                    let image=Yunqi.formatter.image;
+                    image.value=data;
+                    image.width=30;
+                    image.height=30;
+                    return image;
+                }},
+                {field: 'weigh', title: __('权重'),width:80},
+                {field: 'status', title: __('状态'),width:120,searchList: {'normal': __('正常'),'hidden': __('隐藏')},formatter:Yunqi.formatter.switch},
+                {treeExpand:true},
+                {
+                    field: 'operate',
+                    title: __('操作'),
+                    width:150,
+                    action:{sort:true,edit:true,del:true}
+                }
+            ]
+        },
+        methods: {
+
+        }
+    }
+</script>
+<style>
+
+</style>
 

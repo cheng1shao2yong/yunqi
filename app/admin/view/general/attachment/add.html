@@ -1,4 +1,153 @@
-<component is="style">
+<template>
+    <el-card shadow="never" style="border: 0;">
+        <div class="form-body">
+            <el-form ref="formRef" :model="addform" :rules="addformRules" label-width="120px">
+                <el-form-item label="{:__('所属类别')}:">
+                       <el-select v-model="addform.category" placeholder="请选择所属类别" :clearable="true" style="width: 100%">
+                            {foreach name="categoryList" id="item"}
+                            <el-option key="{$key}" label="{$item}" value="{$key}"></el-option>
+                            {/foreach}
+                       </el-select>
+                </el-form-item>
+                <el-form-item label="{:__('存储方式')}:" prop="disks">
+                        <el-select v-model="addform.disks" placeholder="请选择存储方式" :clearable="true" style="width: 100%">
+                              {foreach name="disksList" id="item"}
+                              <el-option key="{$key}" label="{$item}" value="{$key}"></el-option>
+                              {/foreach}
+                        </el-select>
+                </el-form-item>
+                <el-form-item label="{:__('上传文件')}:" prop="files">
+                    <el-upload
+                            :multiple="true"
+                            ref="uploadRef"
+                            :accept="accept"
+                            :limit="10"
+                            :on-change="fileUploadChange"
+                            action="{$config.baseUrl}{$config.upload.uploadurl}"
+                            :data="{disks:addform.disks,category:addform.category}"
+                            :auto-upload="false"
+                            list-type="picture-card">
+                            <i class="fa fa-plus"></i>
+                            <template #file="{file}">
+                                <div class="fileupload-thumb">
+                                    <i class="fa fa-times" @click.stop="removeFile(file)"></i>
+                                    <img :src="showFileThumb(file)" class="thumb" style="width: 100%;height: 100%"/>
+                                    <el-progress status="success" :text-inside="true" :stroke-width="20" :percentage="file.percentage"></el-progress>
+                                </div>
+                            </template>
+                    </el-upload>
+                </el-form-item>
+                <el-form-item class="form-footer">
+                    <el-button type="primary" @click="submit"><i class="fa fa-check"></i>&nbsp;提交</el-button>
+                    <el-button type="info"  @click="reset"><i class="fa fa-reply"></i>&nbsp;重置</el-button>
+                </el-form-item>
+            </el-form>
+        </div>
+    </el-card>
+</template>
+<script>
+    import form from "@components/Form.js";
+    import {inArray} from "@util.js";
+    export default{
+        components:{'YunForm':form},
+        data:{
+            addform:{
+                category:'',
+                disks:'',
+                ready:0,
+                success:0
+            },
+            addformRules:{
+                disks:[{required:true,message:'请选择存储方式',trigger:'change'}],
+                ready:[{required:true,min:1,message:'请上传文件',trigger:'change'}]
+            },
+            accept:''
+        },
+        onLoad:function (){
+            let mimetype=Yunqi.config.upload.mimetype.split(',');
+            let accept=[];
+            mimetype.forEach(res=>{
+                accept.push('.'+res);
+            });
+            this.accept=accept.join(',');
+        },
+        methods: {
+            //添加页面
+            showFileThumb:function (file) {
+                let filename=file.name.toLowerCase();
+                let icon=filename.slice(filename.lastIndexOf('.')+1);
+                if(inArray(['jpg','jpeg','png','gif','bmp'],icon)){
+                    return file.url;
+                }else if(inArray(['doc','docx'],icon)){
+                    let iconpath=location.origin+'/assets/img/fileicon/doc.png';
+                    return iconpath;
+                }else if(inArray(['ppt','pptx'],icon)){
+                    let iconpath=location.origin+'/assets/img/fileicon/ppt.png';
+                    return iconpath;
+                }else if(inArray(['xls','xlsx'],icon)){
+                    let iconpath=location.origin+'/assets/img/fileicon/xls.png';
+                    return iconpath;
+                }else if(inArray(['mp3','wav','wma','ogg'],icon)){
+                    let iconpath=location.origin+'/assets/img/fileicon/audio.png';
+                    return iconpath;
+                }else if(inArray(['mp4', 'avi', 'rmvb','swf', 'flv','rm', 'ram', 'mpeg', 'mpg', 'wmv', 'mov'],icon)){
+                    let iconpath=location.origin+'/assets/img/fileicon/video.png';
+                    return iconpath;
+                }else if(inArray(['zip', 'rar', '7z', 'gz', 'tar'],icon)){
+                    let iconpath=location.origin+'/assets/img/fileicon/zip.png';
+                    return iconpath;
+                }else if(inArray(['apk','tiff','exe','html','pdf','psd','visio','svg','txt','xml'],icon)){
+                    let iconpath=location.origin+'/assets/img/fileicon/'+icon+'.png';
+                    return iconpath;
+                }else{
+                    let iconpath=location.origin+'/assets/img/fileicon/wz.png';
+                    return iconpath;
+                }
+            },
+            submit:function (){
+                let elloading=Yunqi.loading({background:'rgba(255,255,255,0.3)',text:'请求中..'});
+                this.$refs.formRef.validate((valid, fields)=>{
+                    if(valid){
+                        this.$refs.uploadRef.submit();
+                        setInterval(()=>{
+                            if(this.addform.success==this.addform.ready){
+                                Yunqi.api.closelayer(Yunqi.config.window.id,true);
+                                elloading.close();
+                            }
+                        },100);
+                    }else{
+                        elloading.close();
+                    }
+                });
+            },
+            reset:function () {
+                this.addform={
+                    category:'',
+                    disks:'',
+                    files:[]
+                };
+            },
+            removeFile:function (file) {
+                this.$refs.uploadRef.handleRemove(file);
+                this.addform.ready--;
+            },
+            fileUploadChange:function (file) {
+                if(file.status=='ready'){
+                    let maxsize=Number(Yunqi.config.upload.maxsize);
+                    if(file.size>1024*1024*maxsize){
+                        Yunqi.message.error(__('文件大小不能超过'+maxsize+'mb'));
+                        return false;
+                    }
+                    this.addform.ready++;
+                }
+                if(file.status=='success'){
+                    this.addform.success++;
+                }
+            }
+        }
+    }
+</script>
+<style>
     .fileupload-thumb{
         overflow: hidden;
         position: relative;
@@ -13,49 +162,4 @@
         border-radius: 50%;
         cursor: pointer;
     }
-</component>
-<el-card shadow="never" style="border: 0;">
-    <div class="form-body">
-        <el-form ref="formRef" :model="addform" :rules="addformRules" label-width="120px">
-            <el-form-item label="{:__('所属类别')}:">
-                   <el-select v-model="addform.category" placeholder="请选择所属类别" :clearable="true" style="width: 100%">
-                        {foreach name="categoryList" id="item"}
-                        <el-option key="{$key}" label="{$item}" value="{$key}"></el-option>
-                        {/foreach}
-                   </el-select>
-            </el-form-item>
-            <el-form-item label="{:__('存储方式')}:" prop="disks">
-                    <el-select v-model="addform.disks" placeholder="请选择存储方式" :clearable="true" style="width: 100%">
-                          {foreach name="disksList" id="item"}
-                          <el-option key="{$key}" label="{$item}" value="{$key}"></el-option>
-                          {/foreach}
-                    </el-select>
-            </el-form-item>
-            <el-form-item label="{:__('上传文件')}:" prop="files">
-                <el-upload
-                        :multiple="true"
-                        ref="uploadRef"
-                        :accept="accept"
-                        :limit="10"
-                        :on-change="fileUploadChange"
-                        action="{$config.baseUrl}{$config.upload.uploadurl}"
-                        :data="{disks:addform.disks,category:addform.category}"
-                        :auto-upload="false"
-                        list-type="picture-card">
-                        <i class="fa fa-plus"></i>
-                        <template #file="{file}">
-                            <div class="fileupload-thumb">
-                                <i class="fa fa-times" @click.stop="removeFile(file)"></i>
-                                <img :src="showFileThumb(file)" class="thumb" style="width: 100%;height: 100%"/>
-                                <el-progress status="success" :text-inside="true" :stroke-width="20" :percentage="file.percentage"></el-progress>
-                            </div>
-                        </template>
-                </el-upload>
-            </el-form-item>
-            <el-form-item class="form-footer">
-                <el-button type="primary" @click="submit"><i class="fa fa-check"></i>&nbsp;提交</el-button>
-                <el-button type="info"  @click="reset"><i class="fa fa-reply"></i>&nbsp;重置</el-button>
-            </el-form-item>
-        </el-form>
-    </div>
-</el-card>
+</style>

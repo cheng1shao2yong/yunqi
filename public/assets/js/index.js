@@ -1,11 +1,11 @@
-import menulist from "../components/index/Menulist.js";
-import breadcrumb from "../components/index/Breadcrumb.js";
-import tabs from "../components/index/Tabs.js";
-import themesetting from "../components/index/ThemeSetting.js";
-import message from "../components/index/Message.js";
-import fullscreen from "../components/index/Fullscreen.js";
-import trash from "../components/index/Trash.js";
-import userinfo from "../components/index/Userinfo.js";
+import menulist from "./components/index/Menulist.js";
+import breadcrumb from "./components/index/Breadcrumb.js";
+import tabs from "./components/index/Tabs.js";
+import themesetting from "./components/index/ThemeSetting.js";
+import message from "./components/index/Message.js";
+import fullscreen from "./components/index/Fullscreen.js";
+import trash from "./components/index/Trash.js";
+import userinfo from "./components/index/Userinfo.js";
 const findBreadcrumbById=function(tree, targetId, result = []) {
     for (let i = 0; i < tree.length; i++) {
         const node = tree[i];
@@ -100,12 +100,10 @@ export default{
             mainFrameExpand:false
         }
     },
-    onLoad:{
-        index:function (){
-            this.elementUi=Yunqi.getElementUi();
-            this.menuList=Yunqi.data.menulist;
-            this.initMainContentFrame();
-        }
+    onLoad:function (){
+        this.elementUi=Yunqi.getElementUi();
+        this.menuList=Yunqi.data.menulist;
+        this.initMainContentFrame();
     },
     onShow:function (){
         this.clickMenu(Yunqi.data.selected);

@@ -560,18 +560,6 @@ window.Yunqi=(function(){
                 let onUnload=function(){};
                 let onShow=function(){};
                 let onHide=function(){};
-                if(Pageinfo.onLoad!=undefined && typeof Pageinfo.onLoad=='object' && Pageinfo.onLoad[Yunqi.config.route[2]]){
-                    onLoad=Pageinfo.onLoad[Yunqi.config.route[2]];
-                }
-                if(Pageinfo.onUnload!=undefined && typeof Pageinfo.onUnload=='object' && Pageinfo.onUnload[Yunqi.config.route[2]]){
-                    onUnload=Pageinfo.onUnload[Yunqi.config.route[2]];
-                }
-                if(Pageinfo.onShow!=undefined && typeof Pageinfo.onShow=='object' && Pageinfo.onShow[Yunqi.config.route[2]]){
-                    onShow=Pageinfo.onShow[Yunqi.config.route[2]];
-                }
-                if(Pageinfo.onHide!=undefined && typeof Pageinfo.onHide=='object' && Pageinfo.onHide[Yunqi.config.route[2]]){
-                    onHide=Pageinfo.onHide[Yunqi.config.route[2]];
-                }
                 if(Pageinfo.onLoad!=undefined && typeof Pageinfo.onLoad=='function'){
                     onLoad=Pageinfo.onLoad;
                 }

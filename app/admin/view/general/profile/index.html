@@ -1,36 +1,82 @@
-<el-row>
-    <el-col :md="6" style="padding: 5px;">
-        <el-card header="个人资料" style="height: 100%;" shadow="never">
-            <yun-form
-                    ref="yunform"
-                    @submit="onSubmit"
-                    :columns="columns"
-                    :action="extend.edit_url"
-                    :data='{:json_encode($auth->userinfo())}'
-                    label-position="top">
-                <template #default>
-                    {:token_field()}
-                    <div style="display: flex;justify-content: center;padding: 15px 0;">
-                        <upload-img :image-url="avatar" :is-circle="true" @change="changeImg">
-                            <template #title>
-                                <i class="fa fa-user-circle"></i>
-                                <span>请上传头像</span>
-                            </template>
-                        </upload-img>
-                    </div>
-                </template>
-            </yun-form>
-        </el-card>
-    </el-col>
-    <el-col :md="18" style="padding: 5px;">
-        <el-card header="操作日志" style="height: 100%;" shadow="never">
-            <yun-table
-                  :columns="log"
-                  :common-search="false"
-                  toolbar="refresh"
-                  :extend="extend">
-            </yun-table>
-        </el-card>
-    </el-col>
-</el-row>
+<template>
+    <el-row>
+        <el-col :md="6" style="padding: 5px;">
+            <el-card header="个人资料" style="height: 100%;" shadow="never">
+                <yun-form
+                        ref="yunform"
+                        @submit="onSubmit"
+                        :columns="columns"
+                        :action="extend.edit_url"
+                        :data='{:json_encode($auth->userinfo())}'
+                        label-position="top">
+                    <template #default>
+                        {:token_field()}
+                        <div style="display: flex;justify-content: center;padding: 15px 0;">
+                            <upload-img :image-url="avatar" :is-circle="true" @change="changeImg">
+                                <template #title>
+                                    <i class="fa fa-user-circle"></i>
+                                    <span>请上传头像</span>
+                                </template>
+                            </upload-img>
+                        </div>
+                    </template>
+                </yun-form>
+            </el-card>
+        </el-col>
+        <el-col :md="18" style="padding: 5px;">
+            <el-card header="操作日志" style="height: 100%;" shadow="never">
+                <yun-table
+                        :columns="log"
+                        :common-search="false"
+                        toolbar="refresh"
+                        :extend="extend">
+                </yun-table>
+            </el-card>
+        </el-col>
+    </el-row>
+</template>
+<script>
+    import table from "@components/Table.js";
+    import form from "@components/Form.js";
+    import uploadimg from "@components/UploadImg.js";
+    export default{
+        components:{'YunTable':table,'YunForm':form,'UploadImg':uploadimg},
+        data:{
+            extend:{
+                index_url: 'general/profile/index',
+                edit_url: 'general/profile/update'
+            },
+            columns:[
+                {field: 'username', title: __('用户名'),edit:'readonly'},
+                {field: 'mobile', title: __('手机号'),edit:'text',rules:'required;mobile'},
+                {field: 'nickname', title: __('昵称'),edit:'text',rules:'required'},
+                {field: 'password', title: __('密码'),edit: {form:'input',type:'password',placeholder:'不修改密码请留空'}},
+            ],
+            log:[
+                {field: 'id',title: __('ID'),width:70},
+                {field: 'title',title: __('标题')},
+                {field: 'url',title: __('链接'),formatter: Yunqi.formatter.link,width:240},
+                {field: 'ip',title: __('IP'),width:140},
+                {field: 'createtime',title: __('访问时间'),sortable: true,width:150,formatter:Yunqi.formatter.datetime},
+            ],
+            avatar:'',
+        },
+        onShow:function (){
+            this.avatar=this.$refs.yunform.data.avatar;
+        },
+        methods: {
+            changeImg:function (r){
+                this.avatar=r;
+            },
+            onSubmit:function (data){
+                data.avatar=this.avatar;
+                return true;
+            }
+        }
+    }
+</script>
+<style>
+
+</style>
+
 

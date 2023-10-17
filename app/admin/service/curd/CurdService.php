@@ -24,7 +24,6 @@ class CurdService extends BaseService
     private $table;
     private $controller;
     private $model;
-    private $menu;
     private $reduced;
     private $actions;
     private $actionList;
@@ -44,13 +43,9 @@ class CurdService extends BaseService
         $error='';
         Db::startTrans();
         try{
-            if($this->actions['menu']){
-                $this->createMenu();
-            }
             $model=$this->createModel();
             $controller=$this->createController();
             $view=$this->createView();
-            $js=$this->createJs();
             Db::commit();
         }catch (\Exception $e){
             $error=$e->getMessage();
@@ -59,7 +54,7 @@ class CurdService extends BaseService
         if($error){
             throw new \Exception($error);
         }
-        $r=compact('model','controller','view','js');
+        $r=compact('model','controller','view');
         return $r;
     }
     public function volidate()
@@ -154,41 +149,6 @@ class CurdService extends BaseService
         $pack=str_replace('\\','/',substr($this->controller,strpos($this->controller,'controller\\')+11));
         $pack=strtolower(preg_replace('/(?<=[a-z])([A-Z])/', '_$1', $pack));
         return request()->domain().build_url($pack.'/index','admin');
-    }
-
-    private function createMenu()
-    {
-        $title=trim($this->menu['title']);
-        if(!$title){
-            throw new \Exception(__('菜单标题未定义'));
-        }
-        $menu=AuthRule::where(['controller'=>$this->controller])->count();
-        if($menu){
-            throw new \Exception(__('菜单已存在'));
-        }
-        $rule=new AuthRule();
-        $rule->save([
-            'controller'=>$this->controller,
-            'action'=>$this->menu['action'],
-            'pid'=>$this->menu['pid'],
-            'title'=>$title,
-            'menutype'=>$this->menu['menutype'],
-            'status'=>'normal',
-            'extend'=>'',
-            'icon'=>$this->menu['icon'],
-            'ismenu'=>1
-        ]);
-        $pid=$rule->id;
-        $action=array_keys($this->actionList);
-        $xtitle=array_values($this->actionList);
-        $rule->insert([
-            'controller'=>$this->controller,
-            'action'=>json_encode($action,JSON_UNESCAPED_UNICODE),
-            'pid'=>$pid,
-            'title'=>json_encode($xtitle,JSON_UNESCAPED_UNICODE),
-            'ismenu'=>0
-        ]);
-        Cache::delete('admin_rule_list');
     }
 
     private function rollback()
@@ -287,23 +247,30 @@ class CurdService extends BaseService
                 $controller=str_replace('\\','\\\\',$this->controller);
                 $summary=$this->summary;
                 $expand=$this->expand;
-                $replace=compact('title','reduced','table','form','slot','expand','weigh','search','summary','controller','toolbar','toolbarStr','commonSearch','pagination','tabs','isTree');
+                $js=$this->getJsContent('js-index');
+                $replace=compact('title','reduced','table','slot','expand','weigh','search','summary','controller','toolbar','toolbarStr','commonSearch','pagination','tabs','isTree','js');
                 $content=$this->getContent('view-index',$replace);
-            }else if($key=='add' || $key=='edit'){
-                $temp='';
-                if($key=='edit'){
-                    $temp=str_replace('\\','/',substr($this->controller,strpos($this->controller,'controller\\')+11));
-                    $temp=strtolower(preg_replace('/(?<=[a-z])([A-Z])/', '_$1', $temp)).'/add';
-                }
+            }else if($key=='add'){
                 $slot='';
                 foreach ($this->fields as $value){
                     $slot.=getFormslot($value,$isTree,$treeTitle);
                 }
                 $slot=rtrim($slot);
-                $replace=compact('action','title','reduced','table','slot','form','temp');
-                $content=$this->getContent('view-add-edit',$replace);
+                $js=$this->getJsContent('js-add');
+                $replace=compact('title','reduced','slot','form','js');
+                $content=$this->getContent('view-add',$replace);
+            }else if($key=='edit'){
+                $temp='';
+                if($key=='edit'){
+                    $temp=str_replace('\\','/',substr($this->controller,strpos($this->controller,'controller\\')+11));
+                    $temp=strtolower(preg_replace('/(?<=[a-z])([A-Z])/', '_$1', $temp)).'/add';
+                }
+                $js=$this->getJsContent('js');
+                $replace=compact('title','reduced','form','temp','js');
+                $content=$this->getContent('view-edit',$replace);
             }else{
-                $replace=compact('title');
+                $js=$this->getJsContent('js');
+                $replace=compact('title','js');
                 $content=$this->getContent('view-method',$replace);
             }
             if($this->type=='file'){
@@ -315,7 +282,7 @@ class CurdService extends BaseService
         return $viewContent;
     }
 
-    private function createJs()
+    private function getJsContent(string $jsfile)
     {
         $reduced=$this->reduced;
         $table=$this->actions['table'];
@@ -324,28 +291,22 @@ class CurdService extends BaseService
         $actions=array_keys($this->actionList);
         $pack=str_replace('\\','/',substr($this->controller,strpos($this->controller,'controller\\')+11));
         $pack=strtolower(preg_replace('/(?<=[a-z])([A-Z])/', '_$1', $pack));
-        $dian='';
-        for($i=0;$i<count(explode('/',$pack));$i++){
-            $dian.='../';
-        }
         $sort='';
         $fields='';
         $isTree=$this->isTree;
         $treeTitle=$this->treeTitle;
         foreach ($this->fields as $value){
-            $fields.=getFields($value,$table,$form,$isTree,$treeTitle);
+            $istable=($jsfile=='js-index');
+            $isform=($jsfile=='js-add');
+            $fields.=getFields($value,$istable,$isform,$isTree,$treeTitle);
             if($value['field']=='weigh' && $value['type']=='int'){
                 $sort=true;
             }
         }
         $fields=rtrim($fields);
         $isTree=$this->isTree;
-        $replace=compact('dian','pack','reduced','table','form','actions','expand','sort','isTree','fields');
-        $content=$this->getContent('js',$replace);
-        if($this->type=='file'){
-            $file=$this->buildFile('js');
-            create_file($file,$content);
-        }
+        $replace=compact('pack','reduced','table','form','actions','expand','sort','isTree','fields');
+        $content=$this->getContent($jsfile,$replace);
         return $content;
     }
 

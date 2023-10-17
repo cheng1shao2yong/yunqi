@@ -1,86 +1,236 @@
-<component is="style">
+<template>
+    <el-card shadow="never">
+        <template #header>
+            <el-alert effect="dark" :closable="false" title="使用说明">任务队列为异步执行，通常用于定时任务，循环任务，发送消息等，让队列任务与主业务进行解耦，使其不阻塞主业务的操作</el-alert>
+        </template>
+        <el-form label-width="120px" label-position="top">
+            <el-form-item label="{:__('服务状态')}:">
+                <el-alert style="margin-bottom:10px;" type="warning">
+                    如果服务启动不成功，请在根目录下手动执行命令:<el-tag style="margin:0 10px;">php think Queue</el-tag>linux环境下使用nohup让服务在后台运行<el-tag style="margin:0 10px;">nohup php think Queue > queue.log &</el-tag>windows环境下请勿关闭进程窗口。
+                </el-alert>
+                <div class="status" v-if="!status">
+                    <i class="fa fa-spinner fa-spin"></i>
+                    <span style="margin-left: 5px;">服务检测中..</span>
+                </div>
+                <div class="status" v-if="status == 'normal'">
+                    <el-tag  type="success">{:__('正常运行')}</el-tag>
+                    <span style="margin-left: 30px;margin-right: 30px;">运行时长：{{parseTime(keeptime)}}</span>
+                    <el-button size="small" type="danger" @click="changeStatus(0)">停止运行</el-button>
+                </div>
+                <div class="status" v-if="status == 'hidden'">
+                    <el-tag type="info">{:__('已经停止')}</el-tag>
+                    <span style="margin-left: 30px;margin-right: 30px;">停止时间：{{stoptime}}</span>
+                    <el-button size="small" type="success" @click="changeStatus(1)">启动服务</el-button>
+                </div>
+            </el-form-item>
+            <el-divider></el-divider>
+            <el-form-item label="{:__('添加任务')}:">
+                <el-alert style="margin-bottom:10px;" type="warning">添加新任务需要完成一个处理类，该处理类实现了接口<el-tag>app\admin\command\queueEvent\EventInterFace</el-tag>接口。</el-alert>
+                <el-button type="success" size="small" @click="addEvent">{:__('添加')}</el-button>
+            </el-form-item>
+            <el-divider></el-divider>
+            <el-form-item label="{:__('当前任务')}:">
+                <el-alert style="margin-bottom:10px;" type="warning">运行中的任务，每5分钟刷新一次。</el-alert>
+                <el-table :data="eventList" style="width: 100%">
+                    <el-table-column prop="title" label="{:__('任务名称')}"></el-table-column>
+                    <el-table-column prop="function" label="{:__('处理类')}"></el-table-column>
+                    <el-table-column label="{:__('任务类型')}">
+                        <template #default="{row}">
+                            <el-tag v-if="row.limit == 0">{:__('循环任务')}</el-tag>
+                            <el-tag v-else type="warning">{:__('定时任务')}-{{row.limit}}{:__('次')}</el-tag>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="times" label="{:__('已执行次数')}"></el-table-column>
+                    <el-table-column label="{:__('执行间隔')}">
+                        <template #default="{row}">
+                            {{parseTime(row.delay) || '立即执行'}}
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="{:__('规则限制')}">
+                        <template #default="{row}">
+                            {{parseFilter(row.filter)}}
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="{:__('上次执行时间')}" width="200">
+                        <template #default="{row}">
+                            {{parseLasttime(row.lasttime)}}
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="{:__('错误')}" width="300">
+                        <template #default="{row}">
+                            <el-tag type="danger" v-if="row.error">{{row.error}}</el-tag>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="{:__('状态')}" width="120">
+                        <template #default="{row}">
+                            <el-switch active-value="normal" inactive-value="hidden" v-model="row.status"></el-switch>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="{:__('操作')}" width="120">
+                        <template #default="{row}">
+                            <el-button type="danger" size="small" @click="delEvent(row.id)">{:__('删除')}</el-button>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </el-form-item>
+            <el-form-item label="{:__('运行日志')}:">
+                <el-input type="textarea" autosize v-model="log.content" style="margin-bottom: 10px;"></el-input>
+                <el-pagination :current-page="log.currentPage" :small="true" background @current-change="getLog" layout="prev, pager, next" :page-count="log.total" />
+            </el-form-item>
+        </el-form>
+    </el-card>
+</template>
+<script>
+    let inter;
+    export default{
+        data:{
+            eventList:[],
+            log:{
+                currentPage:1,
+                content:'',
+                total:1
+            },
+            status:'',
+            keeptime:0,
+            stoptime:''
+        },
+        onLoad:function(){
+            Yunqi.ajax.get('develop/queueLog',{type:'total'}).then(res=>{
+                this.log.total=res;
+                this.log.currentPage=res;
+            });
+            Yunqi.ajax.get('develop/queue').then(res=>{
+                this.eventList=res;
+            });
+            this.getStatus();
+        },
+        methods: {
+            changeStatus:function (status){
+                Yunqi.ajax.post('develop/queueStatus',{status:status}).then(res=>{
+                    this.getStatus();
+                    if(status){
+                        this.log.total=1;
+                        this.log.currentPage=1;
+                    }
+                }).catch(err=>{
+                    this.getStatus();
+                });
+            },
+            getLog:function (e){
+                this.log.currentPage=e;
+                Yunqi.ajax.get('develop/queueLog',{type:'content',page:e}).then(res=>{
+                    this.log.content=res;
+                });
+            },
+            getStatus:function (){
+                if(inter){
+                    clearInterval(inter);
+                }
+                Yunqi.ajax.get('develop/queueStatus').then(res=>{
+                    this.status=res.status;
+                    this.keeptime=res.keeptime;
+                    this.stoptime=res.stoptime;
+                    inter=setInterval(()=>{
+                        if(this.keeptime%5===0 && this.log.currentPage==this.log.total){
+                            this.getLog(this.log.total);
+                        }
+                        this.keeptime++;
+                    },1000)
+                });
+            },
+            delEvent:function (id){
+                Yunqi.ajax.post('develop/delQueue',{id:id}).then(res=>{
+                    this.eventList=res;
+                });
+            },
+            addEvent:function (){
+                let that=this;
+                Yunqi.api.open({
+                    url:'develop/addQueue',
+                    title:'添加任务',
+                    close:function (){
+                        Yunqi.ajax.get('develop/queue').then(res=>{
+                            that.eventList=res;
+                        });
+                    }
+                });
+            },
+            parseTime:function (second){
+                if(second===0){
+                    return 0;
+                }
+                if(second>0 && second<60){
+                    return second+'秒';
+                }
+                if(second>=60 && second<3600){
+                    let r=Math.floor(second/60)+'分钟';
+                    if(second%60>0){
+                        r+=second%60+'秒';
+                    }
+                    return r;
+                }
+                if(second>=3600 && second<86400){
+                    let r=Math.floor(second/3600)+'小时';
+                    if(second%3600>60){
+                        r+=Math.floor(second%3600/60)+'分钟';
+                    }
+                    if(second%3600%60>0){
+                        r+=second%3600%60+'秒';
+                    }
+                    return r;
+                }
+                if(second>=86400){
+                    let r=Math.floor(second/86400)+'天';
+                    if(second%86400>3600){
+                        r+=Math.floor(second%86400/3600)+'小时';
+                    }
+                    if(second%86400%3600>60){
+                        r+=Math.floor(second%86400%3600/60)+'分钟';
+                    }
+                    if(second%86400%3600%60>0){
+                        r+=second%86400%3600%60+'秒';
+                    }
+                    return r;
+                }
+            },
+            parseFilter:function (obj){
+                if(!obj){
+                    return '-';
+                }
+                let r='';
+                if(obj.Y!==undefined){
+                    r+='year:'+obj.Y+' ';
+                }
+                if(obj.m!==undefined){
+                    r+='month:'+obj.m+' ';
+                }
+                if(obj.d!==undefined){
+                    r+='day:'+obj.d+' ';
+                }
+                if(obj.H!==undefined){
+                    r+='hours:'+obj.H+' ';
+                }
+                if(obj.i!==undefined){
+                    r+='minute:'+obj.i+' ';
+                }
+                if(obj.s!==undefined){
+                    r+='second:'+obj.s+' ';
+                }
+                //去掉r最后的空格
+                return r.replace(/\s*$/,'');
+            },
+            parseLasttime:function (data){
+                if(!data){
+                    return '-';
+                }
+                return data;
+            }
+        }
+    }
+</script>
+<style>
     .status{
         display: flex;
         align-items: center;
     }
-</component>
-<el-card shadow="never">
-    <template #header>
-        <el-alert effect="dark" :closable="false" title="使用说明">任务队列为异步执行，通常用于定时任务，循环任务，发送消息等，让队列任务与主业务进行解耦，使其不阻塞主业务的操作</el-alert>
-    </template>
-    <el-form label-width="120px" label-position="top">
-        <el-form-item label="{:__('服务状态')}:">
-            <el-alert style="margin-bottom:10px;" type="warning">
-                如果服务启动不成功，请在根目录下手动执行命令:<el-tag style="margin:0 10px;">php think Queue</el-tag>linux环境下使用nohup让服务在后台运行<el-tag style="margin:0 10px;">nohup php think Queue > queue.log &</el-tag>windows环境下请勿关闭进程窗口。
-            </el-alert>
-            <div class="status" v-if="!status">
-                <i class="fa fa-spinner fa-spin"></i>
-                <span style="margin-left: 5px;">服务检测中..</span>
-            </div>
-            <div class="status" v-if="status == 'normal'">
-                <el-tag  type="success">{:__('正常运行')}</el-tag>
-                <span style="margin-left: 30px;margin-right: 30px;">运行时长：{{parseTime(keeptime)}}</span>
-                <el-button size="small" type="danger" @click="changeStatus(0)">停止运行</el-button>
-            </div>
-            <div class="status" v-if="status == 'hidden'">
-                <el-tag type="info">{:__('已经停止')}</el-tag>
-                <span style="margin-left: 30px;margin-right: 30px;">停止时间：{{stoptime}}</span>
-                <el-button size="small" type="success" @click="changeStatus(1)">启动服务</el-button>
-            </div>
-        </el-form-item>
-        <el-divider></el-divider>
-        <el-form-item label="{:__('添加任务')}:">
-            <el-alert style="margin-bottom:10px;" type="warning">添加新任务需要完成一个处理类，该处理类实现了接口<el-tag>app\admin\command\queueEvent\EventInterFace</el-tag>接口。</el-alert>
-            <el-button type="success" size="small" @click="addEvent">{:__('添加')}</el-button>
-        </el-form-item>
-        <el-divider></el-divider>
-        <el-form-item label="{:__('当前任务')}:">
-            <el-alert style="margin-bottom:10px;" type="warning">运行中的任务，每5分钟刷新一次。</el-alert>
-            <el-table :data="eventList" style="width: 100%">
-                <el-table-column prop="title" label="{:__('任务名称')}"></el-table-column>
-                <el-table-column prop="function" label="{:__('处理类')}"></el-table-column>
-                <el-table-column label="{:__('任务类型')}">
-                    <template #default="{row}">
-                        <el-tag v-if="row.limit == 0">{:__('循环任务')}</el-tag>
-                        <el-tag v-else type="warning">{:__('定时任务')}-{{row.limit}}{:__('次')}</el-tag>
-                    </template>
-                </el-table-column>
-                <el-table-column prop="times" label="{:__('已执行次数')}"></el-table-column>
-                <el-table-column label="{:__('执行间隔')}">
-                    <template #default="{row}">
-                    {{parseTime(row.delay) || '立即执行'}}
-                    </template>
-                </el-table-column>
-                <el-table-column label="{:__('规则限制')}">
-                    <template #default="{row}">
-                        {{parseFilter(row.filter)}}
-                    </template>
-                </el-table-column>
-                <el-table-column label="{:__('上次执行时间')}" width="200">
-                    <template #default="{row}">
-                        {{parseLasttime(row.lasttime)}}
-                    </template>
-                </el-table-column>
-                <el-table-column label="{:__('错误')}" width="300">
-                    <template #default="{row}">
-                        <el-tag type="danger" v-if="row.error">{{row.error}}</el-tag>
-                    </template>
-                </el-table-column>
-                <el-table-column label="{:__('状态')}" width="120">
-                    <template #default="{row}">
-                        <el-switch active-value="normal" inactive-value="hidden" v-model="row.status"></el-switch>
-                    </template>
-                </el-table-column>
-                <el-table-column label="{:__('操作')}" width="120">
-                    <template #default="{row}">
-                    <el-button type="danger" size="small" @click="delEvent(row.id)">{:__('删除')}</el-button>
-                    </template>
-                </el-table-column>
-            </el-table>
-        </el-form-item>
-        <el-form-item label="{:__('运行日志')}:">
-            <el-input type="textarea" autosize v-model="log.content" style="margin-bottom: 10px;"></el-input>
-            <el-pagination :current-page="log.currentPage" :small="true" background @current-change="getLog" layout="prev, pager, next" :page-count="log.total" />
-        </el-form-item>
-    </el-form>
-</el-card>
+</style>

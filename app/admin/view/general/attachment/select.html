@@ -1,4 +1,275 @@
-<component is="style">
+<template>
+    <div class="filebox">
+        <el-card shadow="never">
+            <div class="left">
+                <el-button type="primary" @click="addCate">添加分类</el-button>
+                <el-input placeholder="请输入分类搜索" style="margin: 15px 0;"></el-input>
+                <el-scrollbar height="320px" style="margin:0 -10px;">
+                    <div :class="['li',category=='all'?'active':'']" @click="checkCategory('all');">
+                        <i :class="['fa',category=='all'?'fa-folder-open-o':'fa-folder-o']"></i>&nbsp;&nbsp;全部
+                    </div>
+                    <div :class="['li',category=='unclassed'?'active':'']" @click="checkCategory('unclassed');">
+                        <i :class="['fa',category==''?'fa-folder-open-o':'fa-folder-o']"></i>&nbsp;&nbsp;未归类
+                    </div>
+                    <template  v-for="(item,key) in catelist">
+                        <div :class="['li',category==key?'active':'']" @click="checkCategory(key);">
+                            <i :class="['fa',category==key?'fa-folder-open-o':'fa-folder-o']"></i>&nbsp;&nbsp;{{item}}
+                            <div class="fr"><span @click.stop="editCate(key,item)">编辑</span>|<span @click.stop="delCate(key,item)">删除</span></div>
+                        </div>
+                    </template>
+                </el-scrollbar>
+            </div>
+            <div class="right">
+                <el-input placeholder="请输入名称搜索" style="width: 725px;margin-left: 7px;" v-model="keywords">
+                    <template #append>
+                        <el-button type="primary" size="small" @click="refresh">搜索</el-button>
+                    </template>
+                </el-input>
+                <el-upload
+                        :multiple="true"
+                        accept="image/*"
+                        action="{$config.baseUrl}{$config.upload.uploadurl}"
+                        :data="{category:category,disks:'local_public'}"
+                        :headers="{'x-requested-with': 'XMLHttpRequest'}"
+                        list-type="picture-card"
+                        :on-success="beforeUploadSuccess"
+                        :file-list="list">
+                    <i class="fa fa-cloud-upload"></i>
+                    <template #file="{file}">
+                        <div :class="inArray(file.fullurl)!==false?'checked':''" @click="checkImg(file)">
+                            <div class="img">
+                                <img @load="parseImg" class="upload-file-img" :data-url="file.thumburl" style="width: 100%"/>
+                            </div>
+                            <span>{{file.filename}}</span>
+                            <i class="fa fa-check"></i>
+                        </div>
+                    </template>
+                </el-upload>
+                <el-pagination
+                        style="position: absolute;bottom: 15px;right: 15px"
+                        @current-change="pageChange"
+                        small
+                        :page-size="17"
+                        :current-page="page"
+                        background
+                        layout="prev, pager, next"
+                        :total="total"
+                ></el-pagination>
+            </div>
+        </el-card>
+        <div class="footer">
+            <el-button type="danger" @click="delPic">删除</el-button>
+            <el-button type="warning" @click="setCategory">归类</el-button>
+            <el-button type="primary" @click="confirmImg">选定</el-button>
+            <el-button type="success" @click="refresh">刷新</el-button>
+        </div>
+    </div>
+    <el-dialog
+            v-model="editCateForm.show"
+            destroy-on-close
+            :lock-scroll="false"
+            :title="editCateForm.title"
+            width="50%"
+            :modal="false"
+            align-center>
+        <el-select style="width: 100%" v-model="editCateForm.key" v-if="editCateForm.type=='set'">
+            <el-option
+                    v-for="(item,key) in catelist"
+                    :key="key"
+                    :label="item"
+                    :value="key">
+            </el-option>
+        </el-select>
+        <el-input placeholder="请输入分类名称" v-model="editCateForm.value" v-else></el-input>
+        <template #footer>
+              <span class="dialog-footer">
+                <el-button type="danger" @click="editCateForm.show=false">取消</el-button>
+                <el-button type="primary" @click="confirm">确认</el-button>
+              </span>
+        </template>
+    </el-dialog>
+</template>
+<script>
+    export default{
+        data:{
+            list:[],
+            page:1,
+            category:'all',
+            catelist:Yunqi.data.categoryList,
+            checked:[],
+            keywords:'',
+            total:0,
+            editCateForm:{
+                show:false,
+                type:'add',
+                key:'',
+                value:''
+            },
+            loading:false,
+            limit:Yunqi.data.limit,
+        },
+        onLoad:function (){
+            this.getImglist();
+        },
+        methods: {
+            inArray:function (url) {
+                let r=false;
+                for(let i=0;i<this.checked.length;i++){
+                    if(this.checked[i].fullurl==url){
+                        r=i;
+                        break;
+                    }
+                }
+                return r;
+            },
+            beforeUploadSuccess:function (res,file) {
+                if(res.code===0){
+                    Yunqi.message.error(__(res.msg));
+                }
+                this.list=[];
+                setTimeout(()=>{
+                    this.refresh();
+                },500);
+            },
+            checkCategory:function (key) {
+                this.category=key;
+                this.refresh();
+            },
+            addCate:function () {
+                this.editCateForm.type='add';
+                this.editCateForm.title='添加分类';
+                this.editCateForm.key='fold-'+(this.catelist.length+1);
+                this.editCateForm.show=true;
+            },
+            editCate:function (key,value) {
+                this.editCateForm.type='edit';
+                this.editCateForm.title='编辑分类';
+                this.editCateForm.key=key;
+                this.editCateForm.value=value;
+                this.editCateForm.show=true;
+            },
+            delCate:function (key,value) {
+                this.editCateForm.type='del';
+                this.editCateForm.key=key;
+                this.editCateForm.value=value;
+                Yunqi.confirm('确定删除分类【'+value+'】吗？').then(res=>{
+                    Yunqi.ajax.post('general/attachment/setcate',this.editCateForm).then(res=>{
+                        this.catelist=res;
+                        this.category='all';
+                        this.refresh();
+                    });
+                });
+            },
+            confirm:function () {
+                if(this.editCateForm.type=='set'){
+                    let ids=[];
+                    this.checked.forEach(item=>{
+                        ids.push(item.id);
+                    });
+                    if (ids.length==0){
+                        Yunqi.message.error('请选择要删除的图片!');
+                        return;
+                    }
+                    Yunqi.ajax.post('general/attachment/classify', {
+                        ids:ids.join(','),
+                        category:this.editCateForm.key
+                    }).then(res=>{
+                        this.editCateForm.show=false;
+                        this.category=this.editCateForm.key;
+                        this.checked=[];
+                        this.refresh();
+                    });
+                }else{
+                    Yunqi.ajax.post('general/attachment/setcate',this.editCateForm).then(res=>{
+                        this.catelist=res;
+                        this.editCateForm.show=false;
+                        this.category=this.editCateForm.key;
+                        this.refresh();
+                    });
+                }
+            },
+            delPic:function () {
+                let ids=[];
+                this.checked.forEach(item=>{
+                    ids.push(item.id);
+                });
+                if (ids.length==0){
+                    Yunqi.message.error('请选择要删除的图片!');
+                    return;
+                }
+                Yunqi.confirm('确定删除这'+ids.length+'张图片吗？').then(res=>{
+                    Yunqi.ajax.post('general/attachment/del',{ids:ids.join(',')}).then(res=>{
+                        this.getImglist();
+                        this.checked=[];
+                    });
+                });
+            },
+            setCategory:function () {
+                if (this.checked.length===0){
+                    Yunqi.message.error('请选择要归类的图片!');
+                    return;
+                }
+                this.editCateForm.type='set';
+                this.editCateForm.title='图片归类';
+                this.editCateForm.show=true;
+            },
+            refresh:function () {
+                this.page=1;
+                this.getImglist();
+            },
+            pageChange:function (page) {
+                this.page=page;
+                this.getImglist();
+            },
+            getImglist:function () {
+                this.loading=true;
+                Yunqi.ajax.get('general/attachment/select',{
+                    page:this.page,
+                    category:this.category,
+                    keywords:this.keywords,
+                }).then(res=>{
+                    this.total=res.total;
+                    this.list=res.rows;
+                    this.loading=false;
+                    Vue.nextTick(()=>{
+                        this.parseImg();
+                    });
+                });
+            },
+            parseImg:function(){
+                if(this.loading){
+                    return;
+                }
+                let imgs=document.querySelectorAll('img[class="upload-file-img"]');
+                if(imgs.length==0){
+                    return;
+                }
+                let url=imgs[0].dataset.url;
+                imgs[0].setAttribute('src',url);
+                imgs[0].removeAttribute('class');
+            },
+            confirmImg:function () {
+                let imgs=[];
+                this.checked.forEach(res=>{
+                    imgs.push(res.fullurl);
+                });
+                Yunqi.api.closelayer(Yunqi.config.window.id,imgs);
+            },
+            checkImg:function (file) {
+                let xi=this.inArray(file.fullurl);
+                if(xi!==false){
+                    this.checked.splice(xi,1);
+                }else{
+                    if(this.checked.length==this.limit){
+                        this.checked.shift();
+                    }
+                    this.checked.push(file);
+                }
+            }
+        }
+    }
+</script>
+<style>
     .filebox{
         padding: 10px;
     }
@@ -34,7 +305,7 @@
         color: var(--el-color-primary);
     }
     .el-card__body>.left .li .fr span:hover{
-        color: var(--el-color-primary-light-2);
+        color: var(--el-color-primary-light-3);
     }
     .el-card__body>.right{
         width: 80%;
@@ -112,93 +383,4 @@
         position: relative;
         top:7px;
     }
-</component>
-<div class="filebox">
-    <el-card shadow="never">
-        <div class="left">
-            <el-button type="primary" @click="addCate">添加分类</el-button>
-            <el-input placeholder="请输入分类搜索" style="margin: 15px 0;"></el-input>
-            <el-scrollbar height="320px" style="margin:0 -10px;">
-                <div :class="['li',category=='all'?'active':'']" @click="checkCategory('all');">
-                    <i :class="['fa',category=='all'?'fa-folder-open-o':'fa-folder-o']"></i>&nbsp;&nbsp;全部
-                </div>
-                <div :class="['li',category=='unclassed'?'active':'']" @click="checkCategory('unclassed');">
-                    <i :class="['fa',category==''?'fa-folder-open-o':'fa-folder-o']"></i>&nbsp;&nbsp;未归类
-                </div>
-                <template  v-for="(item,key) in catelist">
-                <div :class="['li',category==key?'active':'']" @click="checkCategory(key);">
-                    <i :class="['fa',category==key?'fa-folder-open-o':'fa-folder-o']"></i>&nbsp;&nbsp;{{item}}
-                    <div class="fr"><span @click.stop="editCate(key,item)">编辑</span>|<span @click.stop="delCate(key,item)">删除</span></div>
-                </div>
-                </template>
-            </el-scrollbar>
-        </div>
-        <div class="right">
-            <el-input placeholder="请输入名称搜索" style="width: 725px;margin-left: 7px;" v-model="keywords">
-                <template #append>
-                    <el-button type="primary" size="small" @click="refresh">搜索</el-button>
-                </template>
-            </el-input>
-            <el-upload
-                    :multiple="true"
-                    accept="image/*"
-                    action="{$config.baseUrl}{$config.upload.uploadurl}"
-                    :data="{category:category,disks:'local_public'}"
-                    :headers="{'x-requested-with': 'XMLHttpRequest'}"
-                    list-type="picture-card"
-                    :on-success="beforeUploadSuccess"
-                    :file-list="list">
-                <i class="fa fa-cloud-upload"></i>
-                <template #file="{file}">
-                    <div :class="inArray(file.fullurl)!==false?'checked':''" @click="checkImg(file)">
-                        <div class="img">
-                            <img @load="parseImg" class="upload-file-img" :data-url="file.thumburl" style="width: 100%"/>
-                        </div>
-                        <span>{{file.filename}}</span>
-                        <i class="fa fa-check"></i>
-                    </div>
-                </template>
-            </el-upload>
-            <el-pagination
-                    style="position: absolute;bottom: 15px;right: 15px"
-                    @current-change="pageChange"
-                    small
-                    :page-size="17"
-                    :current-page="page"
-                    background
-                    layout="prev, pager, next"
-                    :total="total"
-            ></el-pagination>
-        </div>
-    </el-card>
-    <div class="footer">
-        <el-button type="danger" @click="delPic">删除</el-button>
-        <el-button type="warning" @click="setCategory">归类</el-button>
-        <el-button type="primary" @click="confirmImg">选定</el-button>
-        <el-button type="success" @click="refresh">刷新</el-button>
-    </div>
-</div>
-<el-dialog
-        v-model="editCateForm.show"
-        destroy-on-close
-        :lock-scroll="false"
-        :title="editCateForm.title"
-        width="50%"
-        :modal="false"
-        align-center>
-        <el-select style="width: 100%" v-model="editCateForm.key" v-if="editCateForm.type=='set'">
-            <el-option
-                    v-for="(item,key) in catelist"
-                    :key="key"
-                    :label="item"
-                    :value="key">
-            </el-option>
-        </el-select>
-        <el-input placeholder="请输入分类名称" v-model="editCateForm.value" v-else></el-input>
-        <template #footer>
-              <span class="dialog-footer">
-                <el-button type="danger" @click="editCateForm.show=false">取消</el-button>
-                <el-button type="primary" @click="confirm">确认</el-button>
-              </span>
-        </template>
-</el-dialog>
+</style>

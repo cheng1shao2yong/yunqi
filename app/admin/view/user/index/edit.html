@@ -1,3 +1,30 @@
-<el-card shadow="never" style="border: 0;">
-   <yun-form :data="row" :columns="columns"></yun-form>
-</el-card>
+<template>
+    <el-card shadow="never" style="border: 0;">
+        <yun-form :data="row" :columns="columns"></yun-form>
+    </el-card>
+</template>
+<script>
+    import form from "@components/Form.js";
+    export default{
+        components:{'YunForm':form},
+        data:{
+            row:Yunqi.data.row,
+            columns:[
+                {field: 'id',title: __('ID'),edit:'hidden'},
+                {field: 'username',title: __('用户名'),edit:'text',rules:'required'},
+                {field: 'nickname',title: __('昵称'),edit:'readonly',rules:'required'},
+                {field: 'sex', title: __('性别'), edit: 'radio',rules:"required",searchList: {1: __('男'), 2: __('女')}},
+                {field: 'email',title: __('邮箱'),rules:'email',edit:'text'},
+                {field: 'mobile',title: __('手机'),edit:'text',rules:'mobile'},
+                {field: 'level', title: __('等级'),edit:{form:'select', value:1},searchList:{0:'普通',1:'1级',2:'2级',3:'3级',4:'4级'}},
+                {field: 'status', title: __('状态'), edit:'switch',searchList: {'normal': __('正常'),'hidden': __('隐藏')}},
+            ]
+        },
+        methods: {
+
+        }
+    }
+</script>
+<style>
+
+</style>

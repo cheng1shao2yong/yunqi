@@ -1,14 +1,52 @@
-<el-card shadow="never">
-   <el-tabs v-model="activeType" type="card" @tab-change="refreshLog">
-      {foreach $moduletype as $key=>$type}
-      <el-tab-pane label="{$type}" name="{$key}"></el-tab-pane>
-      {/foreach}
-   </el-tabs>
-   <yun-table
-           v-if="recharge_url"
-           :columns="rechargeDetail"
-           toolbar="refresh"
-           :search-form-visible="false"
-           :extend="recharge_url">
-   </yun-table>
-</el-card>
+<template>
+    <el-card shadow="never">
+        <el-tabs v-model="activeType" type="card" @tab-change="refreshLog">
+            {foreach $moduletype as $key=>$type}
+            <el-tab-pane label="{$type}" name="{$key}"></el-tab-pane>
+            {/foreach}
+        </el-tabs>
+        <yun-table
+                v-if="recharge_url"
+                :columns="rechargeDetail"
+                toolbar="refresh"
+                :search-form-visible="false"
+                :extend="recharge_url">
+        </yun-table>
+    </el-card>
+</template>
+<script>
+    import table from "@components/Table.js";
+    export default{
+        components:{'YunTable':table},
+        data:{
+            rechargeDetail: [
+                {field: 'createtime', title: __('时间'),operate: {form:'date-picker',type:'daterange',size:'large'}},
+                {field: 'before', title: __('交易前'),operate:false},
+                {field: 'change', title: __('变化数目'),operate:false},
+                {field: 'after', title: __('交易后'),operate:false},
+                {field: 'order_no', title: __('订单编号')},
+                {field: 'remark', title: __('备注'),operate:false}
+            ],
+            activeType:'',
+            recharge_url:''
+        },
+        onLoad:function (){
+            this.activeType=Object.keys(Yunqi.data.moduletype)[0];
+            this.refreshLog();
+        },
+        methods: {
+            refreshLog:function (){
+                this.recharge_url='';
+                Vue.nextTick(()=>{
+                    this.recharge_url={
+                        index_url:'user/index/detail?type='+this.activeType+'&ids='+Yunqi.data.user.id
+                    };
+                });
+            }
+        }
+    }
+</script>
+<style>
+
+</style>
+

@@ -29,7 +29,7 @@ class Index extends Backend
         $this->assign('menulist',$menulist);
         $this->assign('selected',$selected);
         $this->assign('referer',$referer);
-        return $this->fetch();
+        return $this->fetch('',[],false);
     }
 
     #[Route('GET','captcha')]
@@ -50,7 +50,6 @@ class Index extends Backend
             $this->assign('sitename',site_config("basic.sitename"));
             $this->assign('login_captcha',config('yunqi.login_captcha'));
             $this->assign('referer',$this->request->get('referer',''));
-            $this->assignJsFile('user/login.js');
             return $this->fetch();
         }
         $username = $this->request->post('username');

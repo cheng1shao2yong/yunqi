@@ -1,17 +1,45 @@
-<el-card shadow="never" style="border: 0;">
-    <yun-form
-        ref="yunform"
-        :columns="columns">
-        <template #default>
-            {:token_field()}
-        </template>
-        <template #filter="{rows}">
-            <el-form-item label="{:__('规则限制')}:">
-                <el-alert type="warning">
-                    规则限制表示在执行任务时，只有满足规则限制的条件才会执行，否则跳过执行，如【日为10，时为12】表示该任务只有在日期为10号，时间在12:00:00~12:59:59才会执行，规则的优先级高于间隔时间。
-                </el-alert>
-                <Fieldlist :value="{年:'',月:'',日:'',时:'',分:'',秒:''}" @change="changeFilter"></Fieldlist>
-            </el-form-item>
-        </template>
-    </yun-form>
-</el-card>
+<template>
+    <el-card shadow="never" style="border: 0;">
+        <yun-form
+            ref="yunform"
+            :columns="columns">
+            <template #default>
+                {:token_field()}
+            </template>
+            <template #filter="{rows}">
+                <el-form-item label="{:__('规则限制')}:">
+                    <el-alert type="warning">
+                        规则限制表示在执行任务时，只有满足规则限制的条件才会执行，否则跳过执行，如【日为10，时为12】表示该任务只有在日期为10号，时间在12:00:00~12:59:59才会执行，规则的优先级高于间隔时间。
+                    </el-alert>
+                    <Fieldlist :value="{年:'',月:'',日:'',时:'',分:'',秒:''}" @change="changeFilter"></Fieldlist>
+                </el-form-item>
+            </template>
+        </yun-form>
+    </el-card>
+</template>
+<script>
+    import fieldlist from '@components/Fieldlist.js';
+    import form from "@components/Form.js";
+    let inter;
+    export default{
+        components:{'Fieldlist':fieldlist,'YunForm':form},
+        data:{
+            columns:[
+                {"field":"title","title":__("任务名称"),"edit":"text","rules":"required"},
+                {"field":"function","title":__("处理类"),"edit":"text","rules":"required"},
+                {"field":"limit","title":__("限制次数"),"edit":{form:'input',type:'number',placeholder:'任务执行的次数，0为循环无限执行'},"rules":"required;range(0~)"},
+                {"field":"filter","title":__("规则限制"),"edit":"slot"},
+                {"field":"delay","title":__("间隔时间"),"edit":{form:'input',type:'number',placeholder:'两次执行间隔时间，0为立即执行',append:'秒'},"rules":"required;range(0~)"},
+                {"field":"status","title":__("状态"),"edit":"switch","searchList":{"normal":"正常","hidden":"隐藏"},"formatter":Yunqi.formatter.switch},
+            ]
+        },
+        methods: {
+            changeFilter:function (e){
+                this.$refs.yunform.setValue('filter',e);
+            }
+        }
+    }
+</script>
+<style>
+
+</style>

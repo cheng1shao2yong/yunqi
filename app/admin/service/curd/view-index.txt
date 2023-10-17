@@ -1,68 +1,75 @@
-<el-card shadow="never">
-    <#if table#>
-    <yun-table
-            :columns="columns"
-            <#if !reduced#>
-            ref="yuntable"
-            @render="onTableRender"
-            <#endif#>
-            <#if search#>
-            search="nickname,mobile"
-            <#endif#>
-            <#if !commonSearch#>
-            :common-search="false"
-            <#endif#>
-            <#if !pagination#>
-            :pagination="false"
-            <#endif#>
-            <#if tabs#>
-            tabs="<#tabs#>"
-            <#endif#>
-            <#if isTree#>
-            :is-tree="true"
-            :tree-expand-all="true"
-            <#endif#>
-            <#if summary#>
-            :show-summary="true"
-            <#endif#>
-            <#if weigh#>
-            sort-name="weigh,id"
-            order="desc,desc"
-            <#endif#>
-            toolbar="<#toolbarStr#>"
-            :auth="{
-                <#if in_array('add',toolbar)#>
-                add:{:$auth->check('<#controller#>','add')},
+<template>
+    <el-card shadow="never">
+        <#if table#>
+        <yun-table
+                :columns="columns"
+                <#if !reduced#>
+                ref="yuntable"
+                @render="onTableRender"
                 <#endif#>
-                <#if in_array('edit',toolbar)#>
-                edit:{:$auth->check('<#controller#>','edit')},
+                <#if search#>
+                search="nickname,mobile"
                 <#endif#>
-                <#if in_array('del',toolbar)#>
-                del:{:$auth->check('<#controller#>','del')},
+                <#if !commonSearch#>
+                :common-search="false"
                 <#endif#>
-                multi:{:$auth->check('<#controller#>','multi')},
-                <#if in_array('import',toolbar)#>
-                import:{:$auth->check('<#controller#>','import')},
+                <#if !pagination#>
+                :pagination="false"
                 <#endif#>
-                <#if in_array('download',toolbar)#>
-                download:{:$auth->check('<#controller#>','download')},
+                <#if tabs#>
+                tabs="<#tabs#>"
                 <#endif#>
-                <#if in_array('recyclebin',toolbar)#>
-                recyclebin:{:$auth->check('<#controller#>','recyclebin')},
+                <#if isTree#>
+                :is-tree="true"
+                :tree-expand-all="true"
                 <#endif#>
-            }"
-            :extend="extend">
-            <#if expand#>
-            <template #expand="{rows}">
-                <span>扩展内容</span>
-            </template>
-            <#endif#>
-            <#if slot#>
+                <#if summary#>
+                :show-summary="true"
+                <#endif#>
+                <#if weigh#>
+                sort-name="weigh,id"
+                order="desc,desc"
+                <#endif#>
+                toolbar="<#toolbarStr#>"
+                :auth="{
+                    <#if in_array('add',toolbar)#>
+                    add:{:$auth->check('<#controller#>','add')},
+                    <#endif#>
+                    <#if in_array('edit',toolbar)#>
+                    edit:{:$auth->check('<#controller#>','edit')},
+                    <#endif#>
+                    <#if in_array('del',toolbar)#>
+                    del:{:$auth->check('<#controller#>','del')},
+                    <#endif#>
+                    multi:{:$auth->check('<#controller#>','multi')},
+                    <#if in_array('import',toolbar)#>
+                    import:{:$auth->check('<#controller#>','import')},
+                    <#endif#>
+                    <#if in_array('download',toolbar)#>
+                    download:{:$auth->check('<#controller#>','download')},
+                    <#endif#>
+                    <#if in_array('recyclebin',toolbar)#>
+                    recyclebin:{:$auth->check('<#controller#>','recyclebin')},
+                    <#endif#>
+                }"
+                :extend="extend">
+                <#if expand#>
+                <template #expand="{rows}">
+                    <span>扩展内容</span>
+                </template>
+                <#endif#>
+                <#if slot#>
 <#slot#>
-            <#endif#>
-    </yun-table>
-    <#endif#>
-    <#if !table#>
-    <#title#>
-    <#endif#>
-</el-card>
+                <#endif#>
+        </yun-table>
+        <#endif#>
+        <#if !table#>
+        <#title#>
+        <#endif#>
+    </el-card>
+</template>
+<script>
+<#js#>
+</script>
+<style>
+</style>

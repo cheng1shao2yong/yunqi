@@ -1,32 +1,101 @@
-<el-card shadow="never" style="border: 0;">
-    <yun-form
-        :token="true"
-        :data="data"
-        ref="yunform"
-        @render="onRender"
-        :columns="eidtColumns">
-        <template #default>
-            {:token_field()}
-        </template>
-        <template v-slot:pid="item">
-            <el-form-item label="{:__('父级')}:" prop="pid">
-                <el-select placeholder="{:__('请选择父级')}" v-model="item.rows.pid" :clearable="true" style="width: 100%">
-                    {foreach $ruledata as $key=>$value}
-                    <el-option key="{$key}" label="{:str_replace('&amp;','&',$value)}" value="{$key}"></el-option>
-                    {/foreach}
-                </el-select>
-            </el-form-item>
-        </template>
-        <template v-slot:icon="{rows}">
-            <el-form-item label="{:__('菜单图标')}:" prop="icon" v-if="rows.ismenu=='1'">
-                <el-input v-model="rows.icon">
-                    <template #prepend><i :class="rows.icon"></i></template>
-                    <template #append>
-                        <el-button size="small" @click="openIconPanel">{:__('选择图标')}</el-button>
-                    </template>
-                </el-input>
-            </el-form-item>
-        </template>
-    </yun-form>
-</el-card>
-<check-icon ref="checkicon" @selected="selectIcon"></check-icon>
+<template>
+    <el-card shadow="never" style="border: 0;">
+        <yun-form
+            :token="true"
+            :data="data"
+            ref="yunform"
+            @render="onRender"
+            :columns="eidtColumns">
+            <template #default>
+                {:token_field()}
+            </template>
+            <template #pid="item">
+                <el-form-item label="{:__('父级')}:" prop="pid">
+                    <el-select placeholder="{:__('请选择父级')}" v-model="item.rows.pid" :clearable="true" style="width: 100%">
+                        {foreach $ruledata as $key=>$value}
+                        <el-option key="{$key}" label="{:str_replace('&amp;','&',$value)}" value="{$key}"></el-option>
+                        {/foreach}
+                    </el-select>
+                </el-form-item>
+            </template>
+            <template #icon="{rows}">
+                <el-form-item label="{:__('菜单图标')}:" prop="icon" v-if="rows.ismenu=='1'">
+                    <el-input v-model="rows.icon">
+                        <template #prepend><i :class="rows.icon"></i></template>
+                        <template #append>
+                            <el-button size="small" @click="openIconPanel">{:__('选择图标')}</el-button>
+                        </template>
+                    </el-input>
+                </el-form-item>
+            </template>
+        </yun-form>
+    </el-card>
+    <check-icon ref="checkicon" @selected="selectIcon"></check-icon>
+</template>
+<script>
+import form from "@components/Form.js";
+import checkicon from "@components/CheckIcon.js";
+export default{
+    components:{'YunForm':form,'CheckIcon':checkicon},
+    data:{
+        data:Yunqi.data.row || {},
+        eidtColumns:[
+            {field: 'id',edit:'hidden'},
+            {field: 'ismenu',title: __('菜单'),edit: {form:'radio',change:'changeMenu',value:'1'},searchList: {'1':__('是'),'0':__('否')}},
+            {field: 'pid',title: __('父级'),edit:'slot',rules:'required'},
+            {field: 'title', title: __('名称'),edit:'text'},
+            {field: 'controller', title: __('控制器'),edit:'text'},
+            {field: 'action', title: __('方法'),edit:'text'},
+            {
+                field: 'actions',
+                title: __('方法'),
+                edit: {
+                    form:'fieldlist',
+                    label:[__('方法名'),__('功能描述')],
+                    visible:false,
+                    value:{index:__('查看'),add:__('添加'),edit:__('编辑'),multi:__('更新'),del:__('删除'),import:__('导入'),download:__('下载')}
+                }
+            },
+            {field: 'menutype', title: __('类型'),edit:{form:'radio',value:'addtabs'},searchList: Yunqi.data.menutypeList},
+            {field: 'icon', title: __('图标'),edit: {form:'slot',value: 'fa fa-th-large'}},
+            {field: 'extend', title: __('扩展属性'),edit: {form:'input',type:'textarea',placeholder:'请输入菜单的扩展属性，格式为json'}},
+            {field: 'weigh', title: __('权重'),edit:Yunqi.config.route[2]=='edit'?'number':false},
+            {field: 'status', title: __('状态'),edit: {form:'radio',value:'normal'},searchList: {'normal': __('正常'),'hidden': __('隐藏')}}
+        ],
+        pageinit:false
+    },
+    methods: {
+        changeMenu:function (data){
+            data=parseInt(data);
+            if(data){
+                this.$refs.yunform.showField('title');
+                this.$refs.yunform.showField('action');
+                this.$refs.yunform.showField('icon');
+                this.$refs.yunform.showField('extend');
+                (Yunqi.config.route[2]=='edit') && this.$refs.yunform.showField('weigh');
+                this.$refs.yunform.showField('menutype');
+                this.$refs.yunform.showField('status');
+                this.$refs.yunform.hideField('actions');
+            }else{
+                this.$refs.yunform.hideField('title');
+                this.$refs.yunform.hideField('action');
+                this.$refs.yunform.hideField('icon');
+                this.$refs.yunform.hideField('extend');
+                (Yunqi.config.route[2]=='edit') && this.$refs.yunform.hideField('weigh');
+                this.$refs.yunform.hideField('menutype');
+                this.$refs.yunform.hideField('status');
+                this.$refs.yunform.showField('actions');
+            }
+        },
+        openIconPanel:function (){
+            this.$refs.checkicon.open();
+        },
+        selectIcon:function (i){
+            this.$refs.yunform.form_.data.icon=i;
+        }
+    }
+}
+</script>
+<style>
+
+</style>

@@ -1,153 +1,5 @@
-<!DOCTYPE html>
-<html>
-<head>
-    {include file="common/meta" /}
-    <style>
-        body {
-            color: #999;
-            padding: 0;
-            margin: 0;
-        }
-        #ClCache{
-            display: none;
-        }
-        .login-container {
-            height: 100%;
-            min-height: 550px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: fixed;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            top: 0;
-            background-color: #eeeeee;
-            background-image: url("/assets/img/bg.svg");
-            background-size: 100% 100%;
-            background-size: cover;
-        }
-
-        .login-container .login-box {
-            position: relative;
-            box-sizing: border-box;
-            display: flex;
-            align-items: center;
-            justify-content: space-around;
-            width: 96.5%;
-            height: 94%;
-            padding: 0 50px;
-            background-color: rgba(255, 255, 255, 0.8);
-            border-radius: 10px;
-        }
-
-        .login-container .login-box .under {
-            position: absolute;
-            top: 13px;
-            left: 18px;
-        }
-
-        .login-container .login-box .under a{
-            text-decoration:none;
-            font-size: 16px;
-            color: #4c4c4c;
-        }
-
-        .login-container .login-box .under span{
-            font-size: 16px;
-            color: #4c4c4c;
-            margin-left: 20px;
-            cursor: pointer;
-        }
-
-        .login-container .login-box .login-left {
-            width: 800px;
-            margin-right: 10px;
-            text-align: center;
-        }
-
-        .login-container .login-box .login-left .login-left-img {
-            width: 80%;
-        }
-
-        .login-container .login-box .login-form {
-            width: 420px;
-            padding: 50px 40px 0px;
-            background-color: var(--el-bg-color);
-            border-radius: 10px;
-            box-shadow: rgba(0, 0, 0, 0.1) 0 2px 10px 2px;
-        }
-
-        .login-container .login-box .login-form .login-logo {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 45px;
-        }
-
-        .login-container .login-box .login-form .login-logo .login-icon {
-            width: 80px;
-        }
-
-        .login-container .login-box .login-form .login-logo .logo-text {
-            padding: 0 0 0 25px;
-            margin: 0;
-            font-size: 42px;
-            font-weight: bold;
-            color: #34495e;
-            white-space: nowrap;
-        }
-        .login-container .login-box .login-form .el-form-item {
-            margin-bottom: 20px;
-        }
-
-        .login-container .login-box .login-form .login-btn {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            margin-top: 40px;
-            white-space: nowrap;
-        }
-
-        .login-container .login-box .login-form .login-btn .el-button {
-            width: 185px;
-        }
-        .captcha-img img{
-            width: 140px;
-        }
-
-        @media screen and (max-width: 1250px) {
-            .login-left {
-                display: none;
-            }
-        }
-
-        @media screen and (max-width: 600px) {
-            .login-box{
-                padding: 0 20px!important;
-            }
-            .login-form {
-                width: 100% !important;
-                padding: 10px !important;
-            }
-            .captcha-img img{
-                width: 120px;
-            }
-            .login-icon {
-                width: 20%!important;
-            }
-            .login-logo{
-                margin: 20px 0!important;
-            }
-            .logo-text {
-                font-size: 32px!important;
-            }
-        }
-    </style>
-</head>
-<body>
-<div id="app">
-    <div class="login-container" id="container" style="display: none;">
+<template>
+    <div class="login-container">
         <div class="login-box">
             <div class="login-left">
                 <img class="login-left-img" src="/assets/img/banner.png" alt="login" />
@@ -185,14 +37,16 @@
                             </el-col>
                             <el-col :span="8" :xs="10">
                                 <div class="captcha-img">
-                                   <img :src="captchaUrl" @click="refreshCaptcha"/>
+                                    <img :src="captchaUrl" @click="refreshCaptcha"/>
                                 </div>
                             </el-col>
                         </el-row>
                     </el-form-item>
                     {/if}
                     <el-form-item label="" prop="savepassword" style="margin-bottom:10px;">
-                        <el-checkbox v-model="loginForm.savepassword" label="{:__('记住密码')}" />
+                        <el-checkbox-group v-model="loginForm.savepassword">
+                            <el-checkbox :label="1">{:__('记住密码')}</el-checkbox>
+                        </el-checkbox-group>
                     </el-form-item>
                     <el-form-item>
                         <el-button type="primary" size="large" style="width: 100%" @click="login">登陆</el-button>
@@ -201,7 +55,202 @@
             </div>
         </div>
     </div>
-</div>
-</body>
-{include file="common/script" /}
-</html>
+</template>
+<script>
+export default{
+    data(){
+        return {
+            captchaUrl:'',
+            loginForm:{
+                __token__:'',
+                username: '',
+                password: '',
+                captcha: '',
+                savepassword:[1]
+            },
+            rules:{
+                username:[{required:true,message:'用户名不能为空！',}],
+                password:[{required:true,message:'密码不能为空！',}],
+            }
+        }
+    },
+    onLoad:function (){
+        this.refreshCaptcha();
+    },
+    onShow:function (){
+        this.loginForm.__token__=document.getElementsByTagName('input')[0].value;
+        this.loginForm.username= localStorage.getItem('username') || '';
+        this.loginForm.password= localStorage.getItem('password') || '';
+        this.loginForm.savepassword= localStorage.getItem('savepassword')? [1] : [];
+    },
+    methods:{
+        refreshCaptcha:function (){
+            this.captchaUrl=Yunqi.config.baseUrl+"captcha?"+Math.random();
+        },
+        login:function (){
+            this.$refs.loginForm.validate((valid)=>{
+                if(valid){
+                    Yunqi.ajax.post('login',this.loginForm,true).then(res=>{
+                        let savepassword=this.loginForm.savepassword.length>0?1:0;
+                        if(savepassword){
+                            localStorage.setItem('username',this.loginForm.username);
+                            localStorage.setItem('password',this.loginForm.password);
+                            localStorage.setItem('savepassword',savepassword);
+                        }else{
+                            localStorage.removeItem('username');
+                            localStorage.removeItem('password');
+                            localStorage.removeItem('savepassword');
+                        }
+                        if(Yunqi.data.referer){
+                            location.href=Yunqi.data.referer;
+                        }else{
+                            location.href=Yunqi.config.baseUrl+'index';
+                        }
+                    }).catch(err=>{
+                        if(err.data){
+                            this.refreshCaptcha();
+                        }
+                    });
+                }
+            });
+        }
+    }
+}
+</script>
+<style>
+body {
+    color: #999;
+}
+.login-container {
+    height: 100%;
+    min-height: 550px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: 0;
+    background-color: #eeeeee;
+    background-image: url("/assets/img/bg.svg");
+    background-size: 100% 100%;
+    background-size: cover;
+}
+
+.login-container .login-box {
+    position: relative;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    width: 96.5%;
+    height: 94%;
+    padding: 0 50px;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 10px;
+}
+
+.login-container .login-box .under {
+    position: absolute;
+    top: 13px;
+    left: 18px;
+}
+
+.login-container .login-box .under a{
+    text-decoration:none;
+    font-size: 16px;
+    color: #4c4c4c;
+}
+
+.login-container .login-box .under span{
+    font-size: 16px;
+    color: #4c4c4c;
+    margin-left: 20px;
+    cursor: pointer;
+}
+
+.login-container .login-box .login-left {
+    width: 800px;
+    margin-right: 10px;
+    text-align: center;
+}
+
+.login-container .login-box .login-left .login-left-img {
+    width: 80%;
+}
+
+.login-container .login-box .login-form {
+    width: 420px;
+    padding: 50px 40px 0px;
+    background-color: var(--el-bg-color);
+    border-radius: 10px;
+    box-shadow: rgba(0, 0, 0, 0.1) 0 2px 10px 2px;
+}
+
+.login-container .login-box .login-form .login-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 45px;
+}
+
+.login-container .login-box .login-form .login-logo .login-icon {
+    width: 80px;
+}
+
+.login-container .login-box .login-form .login-logo .logo-text {
+    padding: 0 0 0 25px;
+    margin: 0;
+    font-size: 42px;
+    font-weight: bold;
+    color: #34495e;
+    white-space: nowrap;
+}
+.login-container .login-box .login-form .el-form-item {
+    margin-bottom: 20px;
+}
+
+.login-container .login-box .login-form .login-btn {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 40px;
+    white-space: nowrap;
+}
+
+.login-container .login-box .login-form .login-btn .el-button {
+    width: 185px;
+}
+.captcha-img img{
+    width: 140px;
+}
+
+@media screen and (max-width: 1250px) {
+    .login-left {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    .login-box{
+        padding: 0 20px!important;
+    }
+    .login-form {
+        width: 100% !important;
+        padding: 10px !important;
+    }
+    .captcha-img img{
+        width: 120px;
+    }
+    .login-icon {
+        width: 20%!important;
+    }
+    .login-logo{
+        margin: 20px 0!important;
+    }
+    .logo-text {
+        font-size: 32px!important;
+    }
+}
+</style>

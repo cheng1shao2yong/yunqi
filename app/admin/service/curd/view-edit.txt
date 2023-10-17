@@ -1,0 +1,15 @@
+<#if form#>
+{include vue="<#temp#>" /}
+<#endif#>
+<#if !form#>
+<template>
+    <el-card shadow="never" style="border: 0;">
+       <#title#>
+    </el-card>
+</template>
+<script>
+<#js#>
+</script>
+<style>
+</style>
+<#endif#>

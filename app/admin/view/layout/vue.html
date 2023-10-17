@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html {if $config.elementUi.dark}class="dark"{/if}>
+<head>
+{include file="common/meta" /}
+<link rel="stylesheet" href="{:request()->domain()}/assets/css/yunqi.css" />
+{__CSS__}
+</head>
+<body>
+    <div id="app">
+        <el-container id="container" style="display: none;">
+            <el-main style="padding: 0px;border-radius:4px;">
+                <el-scrollbar id="mainScrollbar">
+                    {__CONTENT__}
+                </el-scrollbar>
+            </el-main>
+        </el-container>
+    </div>
+</body>
+<script type="text/javascript" src="{:request()->domain()}/assets/js/yunqi.js?v={$config.version}"></script>
+<script type="text/javascript">
+    Yunqi.setConfig({:json_encode($config,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)});
+    Yunqi.setData({:build_var_json(get_defined_vars())});
+</script>
+<script type="module">
+    import pageinfo from '{$config.baseUrl}ajax/js/{__JS__}';
+    import zhcn from '{:request()->domain()}/assets/js/zh-cn.js';
+    try{
+        Yunqi.setUp(pageinfo,zhcn);
+    }catch (e){
+        console.error(e);
+    }
+</script>
+</html>

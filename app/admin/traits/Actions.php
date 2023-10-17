@@ -357,7 +357,7 @@ trait Actions
                     $this->assign('search', implode(',',$search));
                     $this->assign('columns', $this->recyclebinColumns);
                     $this->assign('columnsType', $this->recyclebinColumnsType);
-                    return $this->fetch('/common/recyclebin');
+                    return $this->fetch('common/recyclebin');
                 }
                 [$where, $order, $limit, $with] = $this->buildparams();
                 $list = $this->model

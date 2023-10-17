@@ -1,19 +1,55 @@
-<el-card shadow="never" style="border: 0;">
-   <yun-form v-if="rechargeData" :data="rechargeData" :columns="rechargeColumn">
-      <template #default>
-         {:token_field()}
-      </template>
-      <template #now="{rows}">
-         {foreach $moduletype as $key=>$type}
-         <el-form-item label="当前{$type}:" v-if="rows.module_type=='{$key}'">
-            <el-input value="{$user[$key]}" :disabled="true"></el-input>
-         </el-form-item>
-         {/foreach}
-      </template>
-      <template #change="{rows}">
-         <el-form-item :label="'变化'+getModuleTypeName(rows.module_type)+':'" prop="change">
-            <el-input v-model="rows.change" type="number"></el-input>
-         </el-form-item>
-      </template>
-   </yun-form>
-</el-card>
+<template>
+    <el-card shadow="never" style="border: 0;">
+        <yun-form v-if="rechargeData" :data="rechargeData" :columns="rechargeColumn">
+            <template #default>
+                {:token_field()}
+            </template>
+            <template #now="{rows}">
+                {foreach $moduletype as $key=>$type}
+                <el-form-item label="当前{$type}:" v-if="rows.module_type=='{$key}'">
+                    <el-input value="{$user[$key]}" :disabled="true"></el-input>
+                </el-form-item>
+                {/foreach}
+            </template>
+            <template #change="{rows}">
+                <el-form-item :label="'变化'+getModuleTypeName(rows.module_type)+':'" prop="change">
+                    <el-input v-model="rows.change" type="number"></el-input>
+                </el-form-item>
+            </template>
+        </yun-form>
+    </el-card>
+</template>
+<script>
+    import form from "@components/Form.js";
+    export default{
+        components:{'YunForm':form},
+        data:{
+            rechargeColumn:[
+                {field: 'user_id',title: __('会员ID'),edit:'hidden'},
+                {field: 'nickname',title: __('充值会员'),edit:'readonly'},
+                {field: 'module_type',title: __('充值类型'),edit:'radio',searchList:Yunqi.data.moduletype},
+                {field: 'now',title: __('当前'),edit:'slot'},
+                {field: 'recharge_type',title: __('充值方式'),edit:'radio',searchList: {add:'增加',minus:'减少',last:'最终'}},
+                {field: 'change',title: __('变化'),edit:'slot',rules:'required;range(0~)'},
+                {field: 'remark',title: __('备注'),edit:'textarea'}
+            ],
+            rechargeData:''
+        },
+        onLoad:function (){
+            this.rechargeData={
+                user_id:Yunqi.data.user.id,
+                nickname:Yunqi.data.user.nickname,
+                module_type:Object.keys(Yunqi.data.moduletype)[0],
+                recharge_type:'add'
+            };
+        },
+        methods: {
+            getModuleTypeName:function (type){
+                return  Yunqi.data.moduletype[type];
+            }
+        }
+    }
+</script>
+<style>
+
+</style>

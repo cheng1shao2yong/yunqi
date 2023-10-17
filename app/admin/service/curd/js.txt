@@ -1,155 +1,29 @@
-<#if table#>
-import table from "<#dian#>components/Table.js";
-<#endif#>
-<#if form#>
-import form from "<#dian#>components/Form.js";
-<#endif#>
 export default{
     components:{
-        <#if table#>
-        'YunTable':table,
-        <#endif#>
-        <#if form#>
-        'YunForm':form
-        <#endif#>
+
     },
     data:{
-        <#if table#>
-        extend:{
-            index_url: '<#pack#>/index',
-            <#if form#>
-            add_url: '<#pack#>/add',
-            edit_url: '<#pack#>/edit',
-            <#endif#>
-            <#if in_array('del',actions)#>
-            del_url: '<#pack#>/del',
-            <#endif#>
-            multi_url: '<#pack#>/multi',
-            <#if in_array('download',actions)#>
-            download_url: '<#pack#>/download',
-            <#endif#>
-            <#if in_array('import',actions)#>
-            import_url: '<#pack#>/import',
-            <#endif#>
-            <#if in_array('recyclebin',actions)#>
-            recyclebin_url:'<#pack#>/recyclebin'
-            <#endif#>
-        },
-        <#endif#>
-        <#if table || form#>
-        columns:[
-            <#if table#>
-            <#if reduced#>
-            {checkbox: true},
-            <#endif#>
-            <#if !reduced#>
-            {checkbox: true,selectable:function (row,index){
-                //可以根据业务需求返回false让某些行不可选中
-                return true;
-            }},
-            <#endif#>
-            <#endif#>
-<#fields#>
-            <#if isTree#>
-            {treeExpand: true},
-            <#endif#>
-            <#if table#>
-            {
-                field: 'operate',
-                title: __('操作'),
-                width:130,
-                action:{
-                    <#if in_array('edit',actions)#>
-                    <#if reduced#>
-                    edit:true,
-                    <#endif#>
-                    <#if !reduced#>
-                    edit:function(row){
-                        //可以根据业务需求返回false让按钮不显示
-                        return true
-                    },
-                    <#endif#>
-                    <#endif#>
-                    <#if in_array('del',actions)#>
-                    del:true,
-                    <#endif#>
-                    <#if sort#>
-                    sort:true,
-                    <#endif#>
-                    <#if expand#>
-                    expand:true,
-                    <#endif#>
-                },
-            }
-            <#endif#>
-        ],
-        <#endif#>
-        <#if form#>
-        row:Yunqi.data.row,
-        <#endif#>
+
     },
     <#if !reduced#>
     //页面加载完成时执行
-    //如果多个操作方法都执行相同的代码，可以定义为函数，onLoad:function(){...}
-    onLoad:{
-        //操作方法
-        index:function(query){
-            console.log(query);
-        }
-        //其他方法...
+    onLoad:function(query){
+        console.log(query);
     },
     //页面初始显示或在框架内显示时执行
-    onShow:{
+    onShow:function(){
 
     },
     //页面在框架内隐藏时执行
-    onHide:{
+    onHide:function(){
 
     },
     //页面在框架内关闭时执行
-    onUnload:{
+    onUnload:function(){
 
     },
     <#endif#>
     methods: {
-        <#if !reduced#>
-        <#if table#>
-        onTableRender:function(list){
-            //表格渲染完成后执行
-            /**
-             * table常用方法
-             * this.$refs.yuntable.reset();//重新渲染整个组件，当columns修改时，需要重新渲染表格才能生效，可以执行该方法。
-             * this.$refs.yuntable.reload();//保持当前的page，重新获取数据
-             * this.$refs.yuntable.submit();//返回第一页，重新获取数据
-             * this.$refs.yuntable.expandAllTree();//树形表格展开所有节点
-             * this.$refs.yuntable.expandTree(topid);//树形表格展开指定节点
-             */
-        },
-        <#endif#>
-        <#if form#>
-        onFormRender:function(rows){
-            //表单渲染完成后执行
-        },
-        onSubmit:function(rows){
-            //表单提交前执行，返回false可以阻止表单提交
-            /**
-             * form常用方法
-             * this.$refs.yunform.setError(field,message);//聚焦表单项并显示错误信息
-             * this.$refs.yunform.hideField(field);//隐藏表单项
-             * this.$refs.yunform.showField(field);//显示表单项
-             * this.$refs.yunform.setValue(field,value);//为表单项设置值
-             * this.$refs.yunform.getValue(field);//为获取表单项的值
-             * this.$refs.yunform.setField(field,key,value);//修改表单json的其他属性值，比如rules,title,searchList等
-             */
-            return true;
-        },
-        onSuccess:function(response){
-            //表单提交成功后执行
-        },
-        onFail:function(err){
-            //表单提交失败后执行
-        },
-        <#endif#>
-        <#endif#>
+
     }
 }

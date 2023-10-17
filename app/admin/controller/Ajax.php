@@ -20,11 +20,14 @@ use app\common\service\msg\BackendMsg;
 use think\annotation\route\Group;
 use think\annotation\route\Route;
 use think\facade\Cache;
+use think\facade\Config;
+use think\Response;
 
 #[Group("ajax")]
 class Ajax extends Backend{
 
     protected $noNeedRight = ['*'];
+    protected $noNeedLogin = ['js'];
     /**
      *上传文件
      */
@@ -218,5 +221,29 @@ class Ajax extends Backend{
         $pid = $this->request->get("pid");
         $provincelist = \app\common\model\Area::where('pid',$pid)->field('id,name')->select();
         $this->success('', $provincelist);
+    }
+
+    /**
+     * 获取js文件
+     */
+    #[Route('GET','js/:name')]
+    public function js($name)
+    {
+        $header = ['Content-Type' => 'application/javascript'];
+        if (!Config::get('app.app_debug')) {
+            $offset = 30 * 60 * 60 * 24; // 缓存一个月
+            $header['Cache-Control'] = 'public';
+            $header['Pragma'] = 'cache';
+            $header['Expires'] = gmdate("D, d M Y H:i:s", time() + $offset) . " GMT";
+        }
+        // 页面缓存
+        ob_start();
+        ob_implicit_flush(false);
+        require(root_path().'runtime'.DS.'admin'.DS.'temp'.DS.$name.'-js.php');
+        // 获取并清空缓存
+        $content = ob_get_clean();
+        $response = Response::create(trim($content))->header($header);
+        $response->send();
+        exit;
     }
 }

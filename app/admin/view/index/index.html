@@ -63,5 +63,18 @@
     </el-image-viewer>
 </div>
 </body>
-{include file="common/script" /}
+<script type="text/javascript" src="{:request()->domain()}/assets/js/yunqi.js?v={$config.version}"></script>
+<script type="text/javascript">
+    Yunqi.setConfig({:json_encode($config,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)});
+    Yunqi.setData({:build_var_json(get_defined_vars())});
+</script>
+<script type="module">
+    import pageinfo from '{:request()->domain()}/assets/js/index.js?v={$config.version}';
+    import zhcn from '{:request()->domain()}/assets/js/zh-cn.js';
+    try{
+        Yunqi.setUp(pageinfo,zhcn);
+    }catch (e){
+        console.error(e);
+    }
+</script>
 </html>

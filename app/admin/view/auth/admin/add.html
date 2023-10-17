@@ -1,28 +1,59 @@
-<el-card shadow="never" style="border: 0;">
-    {if $config.route[2]=='edit'}
-    <template #header>
-        <el-alert
-            type="warning"
-            show-icon>
-            非调试模式下，提交后请清空缓存才能生效！
-        </el-alert>
-    </template>
-    {/if}
-    <yun-form
-        :data="data"
-        ref="yunform"
-        :columns="columns">
-        <template #default>
-            {:token_field()}
+<template>
+    <el-card shadow="never" style="border: 0;">
+        {if $config.route[2]=='edit'}
+        <template #header>
+            <el-alert
+                    type="warning"
+                    show-icon>
+                非调试模式下，提交后请清空缓存才能生效！
+            </el-alert>
         </template>
-        <template #groupids="item">
-            <el-form-item label="{:__('所属组别')}:" prop="groupids">
-                <el-select placeholder="请选择{:__('所属组别')}" multiple v-model="item.rows.groupids" :clearable="true" style="width: 100%">
-                    {foreach $groupdata as $key=>$value}
-                    <el-option key="{$value.id}" label="{:str_replace('&amp;','&',$value.name)}" value="{$value.id}"></el-option>
-                    {/foreach}
-                </el-select>
-            </el-form-item>
-        </template>
-    </yun-form>
-</el-card>
+        {/if}
+        <yun-form
+                :data="data"
+                ref="yunform"
+                :columns="columns">
+            <template #default>
+                {:token_field()}
+            </template>
+            <template #groupids="item">
+                <el-form-item label="{:__('所属组别')}:" prop="groupids">
+                    <el-select placeholder="请选择{:__('所属组别')}" multiple v-model="item.rows.groupids" :clearable="true" style="width: 100%">
+                        {foreach $groupdata as $key=>$value}
+                        <el-option key="{$value.id}" label="{:str_replace('&amp;','&',$value.name)}" value="{$value.id}"></el-option>
+                        {/foreach}
+                    </el-select>
+                </el-form-item>
+            </template>
+        </yun-form>
+    </el-card>
+</template>
+<script>
+    import form from "@components/Form.js";
+    export default{
+        components:{'YunForm':form},
+        data:{
+            data:Yunqi.data.row || {},
+            columns:[
+                {field: 'id',title: __('ID'),width:80,edit:'hidden'},
+                {field: 'username', title: __('用户名'),edit:'text',rules:'required'},
+                {field: 'nickname', title: __('昵称'),edit:'text',rules:'required'},
+                {field: 'mobile', title: __('手机号'),edit:'text',rules:'required;mobile'},
+                {
+                    field: 'groupids',
+                    title: __('所属组别'),
+                    edit:{form:'slot',value:[]},
+                    rules:'required'
+                },
+                {field: 'password', title: __('密码'),edit:'password'},
+                {field: 'status', title: __('状态'),searchList: {'normal': __('正常'),'hidden': __('隐藏')},edit:{form:'radio',value:'normal'}}
+            ]
+        },
+        methods: {
+
+        }
+    }
+</script>
+<style>
+
+</style>

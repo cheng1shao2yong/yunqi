@@ -1,87 +1,423 @@
-<component is="style">
-.install:hover{
-    background:var(--el-color-primary-light-9);
-    border:1px solid var(--el-color-primary-light-5);
-}
-.paycode{
-    text-align:center;
-}
-.message{
-    margin-top:5px;
-}
-.footer{
-    margin-top:15px;
-}
-</component>
-<el-card shadow="never">
-    <template #header>
-        {if $plugins_host!='www.56q7.com'}
-        <el-alert effect="dark" :closable="false">扩展可以为系统提供丰富的功能，支持通过更换扩展服务地址来安装其他开发者的扩展程序，同时你也可以打包好的扩展程序开放给别人使用，如需要开放本地扩展，请下载插件【开放扩展支持】</el-alert>
-        {else}
-        <el-alert effect="dark" :closable="false" type="error" title="温馨提醒">您当前未使用官方服务端，为了避免不必要的损失，请勿在正式环境上安装扩展，如有人违法销售涉及“赌博、色情、盗版”等违法扩展程序，<a style="color: #fff;text-decoration: underline;" target="_blank" href="https://bbs.56q7.com/">点击这里举报</a>。</el-alert>
-        {/if}
-    </template>
-    <yun-table
-            :columns="columns"
-            :common-search="false"
-            search="title"
-            tabs="type"
-            ref="yuntable"
-            toolbar="refresh,install,create"
-            :extend="extend">
-            <template #toolbar="{tool}">
-                <template v-if="tool=='install'">
-                    <el-button type="primary" plain class="install hide-600">
-                        <el-radio-group v-model="plain" @change="changePlain">
-                            <el-radio label="all">全部</el-radio>
-                            <el-radio label="free" class="hide-1000">免费</el-radio>
-                            <el-radio label="not-free" class="hide-1000">付费</el-radio>
-                            <el-radio label="local">本地</el-radio>
-                        </el-radio-group>
-                    </el-button>
+<template>
+    <el-card shadow="never">
+        <template #header>
+            {if $plugins_host!='www.56q7.com'}
+            <el-alert effect="dark" :closable="false">扩展可以为系统提供丰富的功能，支持通过更换扩展服务地址来安装其他开发者的扩展程序，同时你也可以打包好的扩展程序开放给别人使用，如需要开放本地扩展，请下载插件【开放扩展支持】</el-alert>
+            {else}
+            <el-alert effect="dark" :closable="false" type="error" title="温馨提醒">您当前未使用官方服务端，为了避免不必要的损失，请勿在正式环境上安装扩展，如有人违法销售涉及“赌博、色情、盗版”等违法扩展程序，<a style="color: #fff;text-decoration: underline;" target="_blank" href="https://bbs.56q7.com/">点击这里举报</a>。</el-alert>
+            {/if}
+        </template>
+        <yun-table
+                :columns="columns"
+                :common-search="false"
+                search="title"
+                tabs="type"
+                ref="yuntable"
+                toolbar="refresh,install,create"
+                :extend="extend">
+                <template #toolbar="{tool}">
+                    <template v-if="tool=='install'">
+                        <el-button type="primary" plain class="install hide-600">
+                            <el-radio-group v-model="plain" @change="changePlain">
+                                <el-radio label="all">全部</el-radio>
+                                <el-radio label="free" class="hide-1000">免费</el-radio>
+                                <el-radio label="not-free" class="hide-1000">付费</el-radio>
+                                <el-radio label="local">本地</el-radio>
+                            </el-radio-group>
+                        </el-button>
+                    </template>
+                    <template v-if="tool=='create'">
+                        <el-button type="primary" @click="createAddon">
+                            创建扩展
+                        </el-button>
+                    </template>
                 </template>
-                <template v-if="tool=='create'">
-                    <el-button type="primary" @click="createAddon">
-                        创建扩展
-                    </el-button>
+                <template #header="{field}">
+                    <div v-if="field=='packed'">
+                        打包
+                        <el-tooltip
+                                effect="dark"
+                                content="仅支持打包安装好的扩展"
+                                placement="top-start">
+                            <i class="fa fa-info-circle"></i>
+                        </el-tooltip>
+                    </div>
+                    <div v-if="field=='open'">
+                        开放
+                        <el-tooltip
+                                effect="dark"
+                                content="打包好的扩展才能开放给其他开发者使用，禁止销售涉及“赌博、色情、盗版”等违法扩展程序，禁止销售未取得版权，其他开发者的付费程序"
+                                placement="top-start">
+                            <i class="fa fa-info-circle"></i>
+                        </el-tooltip>
+                    </div>
                 </template>
-            </template>
-            <template #header="{field}">
-                <div v-if="field=='packed'">
-                    打包
-                    <el-tooltip
-                            effect="dark"
-                            content="仅支持打包安装好的扩展"
-                            placement="top-start">
-                        <i class="fa fa-info-circle"></i>
-                    </el-tooltip>
-                </div>
-                <div v-if="field=='open'">
-                    开放
-                    <el-tooltip
-                            effect="dark"
-                            content="打包好的扩展才能开放给其他开发者使用，禁止销售涉及“赌博、色情、盗版”等违法扩展程序，禁止销售未取得版权，其他开发者的付费程序"
-                            placement="top-start">
-                        <i class="fa fa-info-circle"></i>
-                    </el-tooltip>
-                </div>
-            </template>
-    </yun-table>
-</el-card>
-<el-dialog :width="500" v-model="buyDialog.show" @close="closeBuyDialog" :title="'购买'+type[buyDialog.row.type]+'【'+buyDialog.row.name+'】'">
-    <div class="paycode">
-        <el-alert type="warning">购买后，可以通过微信的支付凭证交易单号重复下载，有效期为30天</el-alert>
-        <img v-if="buyDialog.code_url" :src="buyDialog.code_url" style="width: 150px;height: 150px;"/>
-        <div style="margin-bottom: 10px;">￥{{buyDialog.row.price}}</div>
-    </div>
-    <div class="transaction_id">
-        <el-input v-model="buyDialog.transaction_id" placeholder="请输入交易单号" @change="checkTransactionId"></el-input>
-    </div>
-    <div class="message" v-if="buyDialog.message">
-        <el-tag type="success" v-if="buyDialog.expire_time>0">{{buyDialog.message}}</el-tag>
-        <el-tag type="info" v-else>{{buyDialog.message}}</el-tag>
-    </div>
-    <div class="footer" v-if="buyDialog.status && buyDialog.expire_time>0">
-        <el-button size="large" type="primary" style="width: 100%" @click="payDownload">下载</el-button>
-    </div>
-</el-dialog>
+        </yun-table>
+    </el-card>
+    <el-dialog :width="500" v-model="buyDialog.show" @close="closeBuyDialog" :title="'购买'+type[buyDialog.row.type]+'【'+buyDialog.row.name+'】'">
+        <div class="paycode">
+            <el-alert type="warning">购买后，可以通过微信的支付凭证交易单号重复下载，有效期为30天</el-alert>
+            <img v-if="buyDialog.code_url" :src="buyDialog.code_url" style="width: 150px;height: 150px;"/>
+            <div style="margin-bottom: 10px;">￥{{buyDialog.row.price}}</div>
+        </div>
+        <div class="transaction_id">
+            <el-input v-model="buyDialog.transaction_id" placeholder="请输入交易单号" @change="checkTransactionId"></el-input>
+        </div>
+        <div class="message" v-if="buyDialog.message">
+            <el-tag type="success" v-if="buyDialog.expire_time>0">{{buyDialog.message}}</el-tag>
+            <el-tag type="info" v-else>{{buyDialog.message}}</el-tag>
+        </div>
+        <div class="footer" v-if="buyDialog.status && buyDialog.expire_time>0">
+            <el-button size="large" type="primary" style="width: 100%" @click="payDownload">下载</el-button>
+        </div>
+    </el-dialog>
+</template>
+<script>
+    import table from "@components/Table.js";
+    import {rand} from "@util.js";
+    //生成订单号
+    function create_out_trade_no()
+    {
+        let date=new Date();
+        let year=date.getFullYear();
+        let month=date.getMonth()+1;
+        let day=date.getDate();
+        if(day<10){
+            date='0'+day;
+        }
+        let hour=date.getHours();
+        if(hour<10){
+            hour='0'+hour;
+        }
+        let minute=date.getMinutes();
+        if(minute<10){
+            minute='0'+minute;
+        }
+        let seconds=date.getSeconds();
+        if(seconds<10){
+            seconds='0'+seconds;
+        }
+        let r=''+year+month+day+hour+minute+seconds+rand(10000,99999);
+        return r;
+    }
+    function formatTime(seconds)
+    {
+        let interval = Math.floor(seconds / 31536000);
+        if (interval >= 1) {
+            return `${interval}年后`;
+        }
+        interval = Math.floor(seconds / 2592000);
+        if (interval >= 1) {
+            return `${interval}月后`;
+        }
+        interval = Math.floor(seconds / 86400);
+        if (interval >= 1) {
+            return `${interval}天后`;
+        }
+        interval = Math.floor(seconds / 3600);
+        if (interval >= 1) {
+            return `${interval}小时后`;
+        }
+        interval = Math.floor(seconds / 60);
+        if (interval >= 1) {
+            return `${interval}分钟后`;
+        }
+        return `${Math.floor(seconds)}秒后`;
+    }
+    export default{
+        components:{'YunTable':table},
+        data:{
+            extend:{
+                index_url: 'addons/index',
+                multi_url: 'addons/multi'
+            },
+            type:Yunqi.data.type,
+            tabsValue:'plugin',
+            plain:'all',
+            columns:[
+                {field:"plain",visible:'none',operate:{form:'hidden',value:function (){return Yunqi.app.plain},filter:false}},
+                {field:"name",title:"扩展名称",width: 180},
+                {field:"type",title:"扩展类型",width: 100,searchList:Yunqi.data.type,operate:false},
+                {field:"author",title:"作者",width: 150},
+                {field:"price",title:"价格",width: 80,formatter:function (data) {
+                        let tag=Yunqi.formatter.tag;
+                        if (data) {
+                            tag.type='';
+                            tag.value='￥'+data;
+                        }else{
+                            tag.type='success';
+                            tag.value='免费';
+                        }
+                        return tag;
+                    }},
+                {field:"version",title:"版本号",width: 80},
+                {field:"document",title:"说明文档",formatter: function (data){
+                        if(data) {
+                            let link=Yunqi.formatter.link;
+                            link.value = data;
+                            return link;
+                        }else{
+                            return '';
+                        }
+                    }},
+                {field:"description",title:"简介",width:400},
+                {
+                    field:"local",
+                    title:"本地",
+                    width: 80,
+                    formatter: function (data){
+                        let tag=Yunqi.formatter.tag;
+                        if(data){
+                            tag.value='是';
+                            tag.type='success';
+                        }else{
+                            tag.value='否';
+                            tag.type='danger';
+                        }
+                        return tag;
+                    }
+                },
+                {
+                    field:"packed",
+                    title:"打包",
+                    width: 80,
+                    formatter:function (data,row){
+                        if(!row.local){
+                            return '';
+                        }
+                        let tag=Yunqi.formatter.tag;
+                        if(data){
+                            tag.value='是';
+                            tag.type='';
+                        }else{
+                            tag.value='否';
+                            tag.type='danger';
+                        }
+                        return tag;
+                    }
+                },
+                {
+                    field:"open",
+                    title:"开放",
+                    width: 80,
+                    formatter:function (data,row){
+                        if(!row.local){
+                            return '';
+                        }
+                        let sw=Yunqi.formatter.switch;
+                        sw.activeValue=1;
+                        sw.inactiveValue=0;
+                        sw.value=row.packed?data:0;
+                        sw.disabled=true;
+                        if(row.packed){
+                            sw.disabled=false;
+                        }
+                        return sw;
+                    }
+                },
+                {
+                    field: 'operate',
+                    title: __('操作'),
+                    direction:'column',
+                    width:100,
+                    action:{
+                        download:{
+                            text:__('下载'),
+                            type:'primary',
+                            tooltip:false,
+                            icon:'fa fa-download',
+                            method:'downloadAddon',
+                            visible:function (row) {
+                                return !row.download;
+                            }
+                        },
+                        install:{
+                            text:__('安装'),
+                            type:'primary',
+                            tooltip:false,
+                            icon:'fa fa-wrench',
+                            method:'installAddon',
+                            visible:function (row) {
+                                return row.download && !row.install;
+                            }
+                        },
+                        pack:{
+                            text:__('打包'),
+                            type:'primary',
+                            tooltip:false,
+                            icon:'fa fa-briefcase',
+                            method:'packAddon',
+                            visible:function (row) {
+                                return row.download && row.install && !row.packed;
+                            }
+                        },
+                        uninstall:{
+                            text:__('卸载'),
+                            type:'danger',
+                            tooltip:false,
+                            icon:'fa fa-remove',
+                            method:'uninstallAddon',
+                            visible:function (row) {
+                                return row.install;
+                            }
+                        },
+                        remove:{
+                            text:__('删除'),
+                            type:'danger',
+                            tooltip:false,
+                            icon:'fa fa-remove',
+                            method:'delAddon',
+                            visible:function (row) {
+                                return row.download && !row.install;
+                            }
+                        },
+                    },
+                }
+            ],
+            buyDialog:{
+                show:false,
+                out_trade_no:'',
+                transaction_id:'',
+                expire_time:0,
+                status:0,
+                message:'',
+                code_url:'',
+                row:''
+            }
+        },
+        onLoad:function (){
+            setInterval(()=>{
+                this.checkPayStatus();
+            },2000)
+        },
+        methods:{
+            changePlain:function (plain) {
+                this.plain = plain;
+                this.$refs.yuntable.submit();
+            },
+            packAddon:function(row) {
+                Yunqi.ajax.post('addons/pack',{key:row.key}).then(res=>{
+                    this.$refs.yuntable.reload();
+                });
+            },
+            downloadAddon:function(row){
+                if(row.price>0){
+                    this.buyDialog.out_trade_no=create_out_trade_no();
+                    this.buyDialog.code_url=Yunqi.config.baseUrl+'addons/payCode?key='+row.key+'&out_trade_no='+this.buyDialog.out_trade_no;
+                    this.buyDialog.show=true;
+                    this.buyDialog.row=row;
+                }else{
+                    Yunqi.ajax.post('addons/download',row).then(res=>{
+                        this.$refs.yuntable.reload();
+                    });
+                }
+            },
+            payDownload:function (){
+                let postdata={...this.buyDialog.row,transaction_id:this.buyDialog.transaction_id}
+                Yunqi.ajax.post('addons/download',postdata).then(res=>{
+                    this.closeBuyDialog();
+                    this.$refs.yuntable.reload();
+                });
+            },
+            checkPayStatus:function (){
+                if(this.buyDialog.show){
+                    Yunqi.ajax.get('addons/checkPayStatus',{out_trade_no:this.buyDialog.out_trade_no,key:this.buyDialog.row.key}).then(res=>{
+                        if(res){
+                            this.buyDialog.transaction_id=res.transaction_id;
+                            this.buyDialog.expire_time=res.expire_time;
+                            this.buyDialog.message='支付成功';
+                            this.buyDialog.status=1;
+                        }
+                    });
+                }
+            },
+            checkTransactionId:function (){
+                let postdata={
+                    pack:this.buyDialog.row.pack,
+                    transaction_id:this.buyDialog.transaction_id
+                };
+                Yunqi.ajax.get('addons/checkTransactionId',postdata).then(res=>{
+                    this.buyDialog.status=res.status;
+                    this.buyDialog.expire_time=res.expire_time;
+                    if(res.status==0){
+                        this.buyDialog.message='交易单号不存在';
+                    }else{
+                        if(res.expire_time>0){
+                            this.buyDialog.message=formatTime(res.expire_time)+'过期';
+                        }else{
+                            this.buyDialog.message='交易单号已经过期';
+                        }
+                    }
+                });
+            },
+            closeBuyDialog:function () {
+                this.buyDialog={
+                    show:false,
+                    out_trade_no:'',
+                    transaction_id:'',
+                    expire_time:0,
+                    status:0,
+                    message:'',
+                    code_url:'',
+                    row:''
+                }
+            },
+            installAddon:function(row)
+            {
+                Yunqi.ajax.post('addons/install',{key:row.key}).then(res=>{
+                    this.$refs.yuntable.reload();
+                });
+            },
+            uninstallAddon:function(row)
+            {
+                let that=this;
+                Yunqi.api.open({
+                    title: __('卸载扩展'),
+                    url: 'addons/uninstall?key='+row.key,
+                    icon:'fa fa-remove',
+                    close:function (r) {
+                        if(r){
+                            that.$refs.yuntable.reload();
+                        }
+                    }
+                });
+            },
+            delAddon:function (row){
+                let that=this;
+                Yunqi.confirm('删除扩展将会清空掉所有文件，重新下载扩展可能会再次收取费用，你确定要删除吗？','提醒').then(res=>{
+                    Yunqi.ajax.post('addons/del',{key:row.key}).then(res=>{
+                        that.$refs.yuntable.reload();
+                    });
+                });
+            },
+            createAddon:function(){
+                let that=this;
+                Yunqi.api.open({
+                    title: __('创建本地扩展'),
+                    url: 'addons/create',
+                    icon:'fa fa-plus',
+                    close:function (r) {
+                        if(r){
+                            that.$refs.yuntable.reload();
+                        }
+                    }
+                });
+            }
+        }
+    }
+</script>
+<style>
+    .install:hover{
+        background:var(--el-color-primary-light-9);
+        border:1px solid var(--el-color-primary-light-5);
+    }
+    .paycode{
+        text-align:center;
+    }
+    .message{
+        margin-top:5px;
+    }
+    .footer{
+        margin-top:15px;
+    }
+</style>

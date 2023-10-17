@@ -1,26 +1,129 @@
-<el-card shadow="never">
-    <yun-table
-            :columns="columns"
-            tabs="category"
-            search="filename"
-            toolbar="refresh,add,del,guilei"
-            :auth="{
-                del:{:$auth->check('app\\admin\\controller\\general\\Attachment','del')},
-                add:{:$auth->check('app\\admin\\controller\\general\\Attachment','add')},
-                multi:{:$auth->check('app\\admin\\controller\\general\\Attachment','multi')},
-            }"
-            :extend="extend">
-            <template #toolbar="{tool,selections}">
-                <el-dropdown trigger="click" v-if="tool=='guilei'">
-                    <el-button type="warning" :disabled="selections.length?false:true"><i class="fa fa-arrow-right"></i>&nbsp;归类</el-button>
-                    <template #dropdown>
-                        <el-dropdown-menu>
-                            {foreach name="categoryList" id="item"}
-                            <el-dropdown-item @click.stop="changeCategory(selections,'{$key}')"><i class="fa fa-eye"></i> {$item}</el-dropdown-item>
-                            {/foreach}
-                        </el-dropdown-menu>
-                    </template>
-                </el-dropdown>
-            </template>
-    </yun-table>
-</el-card>
+<template>
+    <el-card shadow="never">
+        <yun-table
+                :columns="columns"
+                tabs="category"
+                search="filename"
+                toolbar="refresh,add,del,guilei"
+                :auth="{
+                    del:{:$auth->check('app\\admin\\controller\\general\\Attachment','del')},
+                    add:{:$auth->check('app\\admin\\controller\\general\\Attachment','add')},
+                    multi:{:$auth->check('app\\admin\\controller\\general\\Attachment','multi')},
+                }"
+                :extend="extend">
+                <template #toolbar="{tool,selections}">
+                    <el-dropdown trigger="click" v-if="tool=='guilei'">
+                        <el-button type="warning" :disabled="selections.length?false:true"><i class="fa fa-arrow-right"></i>&nbsp;归类</el-button>
+                        <template #dropdown>
+                            <el-dropdown-menu>
+                                {foreach name="categoryList" id="item"}
+                                <el-dropdown-item @click.stop="changeCategory(selections,'{$key}')"><i class="fa fa-eye"></i> {$item}</el-dropdown-item>
+                                {/foreach}
+                            </el-dropdown-menu>
+                        </template>
+                    </el-dropdown>
+                </template>
+                <template #formatter="{field,rows}">
+                    <div v-if="field=='filename'">
+                        <el-tooltip
+                                effect="dark"
+                                :content="rows.filename"
+                                placement="top">
+                                <el-tag style="cursor: pointer;">{{formateName(rows.filename)}}</el-tag>
+                        </el-tooltip>
+                    </div>
+                </template>
+        </yun-table>
+    </el-card>
+</template>
+<script>
+    import table from "@components/Table.js";
+    export default{
+        components:{'YunTable':table},
+        data:{
+            //列表页面
+            extend:{
+                index_url: 'general/attachment/index',
+                add_url: 'general/attachment/add',
+                del_url: 'general/attachment/del',
+                multi_url: 'general/attachment/multi'
+            },
+            columns:[
+                {checkbox: true},
+                {field: 'id',title:'ID',width:80,operate:false,edit:'hidden'},
+                {field: 'category', title: __('类别'),visible:false,width:100, operate: false, formatter: Yunqi.formatter.tag, searchList:Yunqi.data.categoryList},
+                {field: 'admin_id', title: __('管理员ID'), width:120, visible: false,operate:false},
+                {field: 'user_id', title: __('会员ID'), visible: false,operate:false},
+                {field: 'thumburl', title: __('缩略图'), width:120,operate: false,formatter: Yunqi.formatter.image},
+                {field: 'filename', title: __('文件名'),align:'left',operate: 'like',width:200,formatter: Yunqi.formatter.slot},
+                {field: 'fullurl', title: __('源文件'),align:'left',operate: false,width:300,formatter: Yunqi.formatter.link},
+                {
+                    field: 'filesize', title: __('文件大小'), width: 120,operate: false, sortable: true, formatter: function (value, row) {
+                        var size = parseFloat(value);
+                        var i = Math.floor(Math.log(size) / Math.log(1024));
+                        return (size / Math.pow(1024, i)).toFixed(i < 2 ? 0 : 2) * 1 + ' ' + ['B', 'KB', 'MB', 'GB', 'TB'][i];
+                    }
+                },
+                {field: 'is_image', title: __('图片'), width: 80,operate: false,searchList: {1: __('是'), 0: __('否')},formatter: function(data,row){
+                        let tag=Yunqi.formatter.tag;
+                        if(row.is_image){
+                            tag.value='是';
+                            tag.type='success';
+                        }else{
+                            tag.value='否';
+                            tag.type='danger';
+                        }
+                        return tag;
+                    }},
+                {field: 'imagetype', title: __('图片类型'), width: 120,operate: false},
+                {field: 'imagewidth', title: __('宽度'), width: 100,operate: false},
+                {field: 'imageheight', title: __('高度'), width: 100,operate: false},
+                {field: 'storage', title: __('存储方式'), width: 150,operate: false,searchList: Yunqi.data.disksList,formatter: Yunqi.formatter.tag},
+                {
+                    field: 'createtime',
+                    title: __('创建时间'),
+                    formatter: Yunqi.formatter.datetime,
+                    operate: {form:'date-picker',type:'daterange'},
+                    sortable: true,
+                    width: 150
+                },
+                {
+                    field: 'operate',
+                    fixed: 'right',
+                    title: __('操作'),
+                    width:60,
+                    action:{
+                        del:true
+                    }
+                }
+            ]
+        },
+        methods: {
+            changeCategory:function (selections,key){
+                if(selections.length==0){
+                    return;
+                }
+                let ids=[];
+                selections.forEach(res=>{
+                    ids.push(res.id);
+                });
+                Yunqi.api.multi(this.extend.multi_url,{ids:ids,field:'category',value:key},function(){
+                    location.reload();
+                });
+            },
+            formateName:function (data){
+                //获取data的后缀名
+                let ext=data.substring(data.lastIndexOf('.')+1);
+                let name=data.substring(0,data.lastIndexOf('.'));
+                if(name.length>8){
+                    //取末尾5个字符
+                    return name.substring(0,3)+'...'+name.substring(name.length-5)+'.'+ext;
+                }
+                return data;
+            }
+        }
+    }
+</script>
+<style>
+
+</style>

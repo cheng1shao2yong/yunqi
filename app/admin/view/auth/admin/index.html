@@ -1,21 +1,101 @@
-<el-card shadow="never">
-    <yun-table
-            :columns="columns"
-            toolbar="refresh,add,del"
-            order="asc"
-            :auth="{
+<template>
+    <el-card shadow="never">
+        <yun-table
+                :columns="columns"
+                toolbar="refresh,add,del"
+                order="asc"
+                :auth="{
                 add:{:$auth->check('app\\admin\\controller\\auth\\Admin','add')},
                 edit:{:$auth->check('app\\admin\\controller\\auth\\Admin','edit')},
                 del:{:$auth->check('app\\admin\\controller\\auth\\Admin','del')},
                 multi:{:$auth->check('app\\admin\\controller\\auth\\Admin','multi')},
             }"
-            :extend="extend">
+                :extend="extend">
             <template #formatter="{field,rows}">
                 <div v-if="field=='groupids'">
                     <template v-for="item in rows.groupids">
-                    <el-tag :type="item.status=='normal'?'':'info'" effect="dark" style="margin-right: 5px;">{{item.name}}</el-tag>
+                        <el-tag :type="item.status=='normal'?'':'info'" effect="dark" style="margin-right: 5px;">{{item.name}}</el-tag>
                     </template>
                 </div>
             </template>
-    </yun-table>
-</el-card>
+        </yun-table>
+    </el-card>
+</template>
+<script>
+    import table from "@components/Table.js";
+    import {inArray} from "@util.js";
+    export default{
+        components:{'YunTable':table},
+        data:{
+            extend:{
+                index_url: 'auth/admin/index',
+                add_url: 'auth/admin/add',
+                edit_url: 'auth/admin/edit',
+                del_url: 'auth/admin/del',
+                multi_url: 'auth/admin/multi'
+            },
+            columns:[
+                {checkbox: true,selectable:function (row,index){
+                    for(let i in row.groupids){
+                        if(inArray(Yunqi.data.groupids,row.groupids[i].id)){
+                            return false;
+                        }
+                    }
+                    return true;
+                }},
+                {field: 'id',title: __('ID'),width:80,operate:false},
+                {field: 'username', title: __('用户名'),operate:'like'},
+                {field: 'nickname', title: __('昵称'),operate:'like'},
+                {field: 'mobile', title: __('手机号')},
+                {
+                    field: 'groupids',
+                    title: __('所属组别'),
+                    formatter:Yunqi.formatter.slot,
+                    operate:false
+                },
+                {field: 'status', title: __('状态'),operate:false, searchList: {'normal': __('正常'),'hidden': __('隐藏')},formatter:function(data,row){
+                        let sw=Yunqi.formatter.switch;
+                        sw.activeValue='normal';
+                        sw.inactiveValue='hidden';
+                        sw.value=row.status;
+                        sw.disabled=false;
+                        for(let i in row.groupids){
+                            if(inArray(Yunqi.data.groupids,row.groupids[i].id)){
+                                sw.disabled=true;
+                            }
+                        }
+                        return sw;
+                    }},
+                {
+                    field: 'operate',
+                    title: __('操作'),
+                    width:100,
+                    action:{
+                        edit:function(row){
+                            for(let i in row.groupids){
+                                if(inArray(Yunqi.data.groupids,row.groupids[i].id)){
+                                    return false;
+                                }
+                            }
+                            return true;
+                        },
+                        del:function(row){
+                            for(let i in row.groupids){
+                                if(inArray(Yunqi.data.groupids,row.groupids[i].id)){
+                                    return false;
+                                }
+                            }
+                            return true;
+                        }
+                    }
+                }
+            ]
+        },
+        methods: {
+
+        }
+    }
+</script>
+<style>
+
+</style>

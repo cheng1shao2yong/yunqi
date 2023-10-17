@@ -13,11 +13,7 @@ namespace app\common\controller;
 
 use app\common\event\AppEvent;
 use app\common\listener\WriteLog;
-use app\common\service\LangService;
-use think\facade\Cookie;
-use think\facade\Lang;
 use think\facade\View;
-use think\facade\Loader;
 use think\Request;
 use think\Response;
 
@@ -107,10 +103,10 @@ class BaseController
             unset($header['statuscode']);
         }
         if(!$this->request->isAjax()) {
-             View::engine()->layout(false);
              $modulename=app('http')->getName();
              $result['modulename'] = $modulename;
              $result['modulealis'] = get_module_alis($modulename);
+             View::layout(false);
              View::assign('result',$result);
              $result=View::fetch('common@/msg');
         }

@@ -1,22 +1,51 @@
-<el-card shadow="never" style="border: 0;">
-    <template #header>
-        <el-alert type="warning" :closable="false">{:__('【所属分组】请前往常规管理->系统配置->配置分组中进行管理')}</el-alert>
-    </template>
-    <yun-form
-        :data="data"
-        :columns="columns">
-        <template #default>
-            {:token_field()}
+<template>
+    <el-card shadow="never" style="border: 0;">
+        <template #header>
+            <el-alert type="warning" :closable="false">{:__('【所属分组】请前往常规管理->系统配置->配置分组中进行管理')}</el-alert>
         </template>
-        <template v-slot:pid="{rows}">
-            <el-form-item label="{:__('父级')}:" prop="pid">
-                <el-select placeholder="{:__('请选择父级')}" v-model="rows.pid" :clearable="true" style="width: 100%">
-                    <el-option key="all" label="无" value="0"></el-option>
-                    {foreach name="parentList" item="vo"}
-                    <el-option v-if="rows.type=='{$vo.type}'" key="{$key}" label="{:str_replace('&amp;','&',$vo.name)}" value="{$key}"></el-option>
-                    {/foreach}
-                </el-select>
-            </el-form-item>
-        </template>
-    </yun-form>
-</el-card>
+        <yun-form
+            :data="data"
+            :columns="columns">
+            <template #default>
+                {:token_field()}
+            </template>
+            <template v-slot:pid="{rows}">
+                <el-form-item label="{:__('父级')}:" prop="pid">
+                    <el-select placeholder="{:__('请选择父级')}" v-model="rows.pid" :clearable="true" style="width: 100%">
+                        <el-option key="all" label="无" value="0"></el-option>
+                        {foreach name="parentList" item="vo"}
+                        <el-option v-if="rows.type=='{$vo.type}'" key="{$key}" label="{:str_replace('&amp;','&',$vo.name)}" value="{$key}"></el-option>
+                        {/foreach}
+                    </el-select>
+                </el-form-item>
+            </template>
+        </yun-form>
+    </el-card>
+</template>
+<script>
+    import form from "@components/Form.js";
+    export default{
+        components:{'YunForm':form},
+        data:{
+            data:Yunqi.data.row || {},
+            columns:[
+                {field: 'id',title:'ID',edit:'hidden'},
+                {field: 'type', title: __('所属分组'),searchList:Yunqi.data.typeList,edit: {form:'select',change:'changeType'},rules:'required'},
+                {field: 'pid',title:__('父级'),edit: {form:'slot',value:'0'}},
+                {field: 'name',title:__('名称'),edit:'text',rules:'required'},
+                {field: 'nickname',title:__('昵称'),edit:'text'},
+                {field: 'image', title: __('图片'),edit:'image'},
+                {field: 'weigh', title: __('权重'),edit:(Yunqi.config.route[2]=='edit')?'number':false},
+                {field: 'status', title: __('状态'),edit:'switch',searchList: {'normal': __('正常'),'hidden': __('隐藏')}},
+            ]
+        },
+        methods: {
+            changeType:function (data,row){
+                row.pid='0';
+            }
+        }
+    }
+</script>
+<style>
+
+</style>

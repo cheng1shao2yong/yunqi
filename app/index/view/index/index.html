@@ -19,6 +19,9 @@
             margin: 0;
             padding: 0;
         }
+        #ClCache{
+            display: none;
+        }
         header{
             box-shadow: 0.33333rem 0 1.33333rem rgba(87, 87, 87, .1);
         }
@@ -70,7 +73,6 @@
             background-image: url("/assets/img/bg.svg");
             background-size: 100% 100%;
             background-size: cover;
-            height: 80vh
         }
         .dark .el-main{
             color: #fff;
@@ -82,17 +84,27 @@
             background-size: 400px;
             background-position:bottom right;
         }
+        .desbox p{
+            font-size: 1.5rem;
+        }
         .imgbox{
             display: flex;
             justify-content: space-around;
-            width: 450px;
             margin:0 auto;
+        }
+        @media screen and (max-width: 800px) {
+            .header-menu{
+                display: none;
+            }
+            .desbox p{
+                font-size: 1.2rem;
+            }
         }
     </style>
 </head>
 <body>
 <div id="app">
-    <el-container>
+    <el-container style="height: 100vh">
         <el-header height="80">
             <div class="header">
                 <div class="header-left">
@@ -122,29 +134,33 @@
             </div>
         </el-header>
         <el-main>
+            <el-scrollbar>
             <div class="desbox">
                 <div style="text-align: center;">
                     <h1 style="font-size: 3rem;">云起开发平台</h1>
-                    <p style="font-size: 1.5rem;">基于ThinkPHP8.0+Vue3.0+ElementPlus的后台管理系统</p>
-                    <p style="font-size: 1.5rem;">开源免费，支持二次开发</p>
-                    <p style="font-size: 1.5rem;">QQ交流群：123456789</p>
-                    <p style="font-size: 1.5rem;">最新版本：v{$version}</p>
-                    <p style="font-size: 1.5rem;margin-bottom: 0">行到水穷处，坐看云起时，做软件，找贵阳云起信息科技</p>
+                    <p>基于ThinkPHP8.0+Vue3.0+ElementPlus的后台管理系统</p>
+                    <p>开源免费，支持二次开发</p>
+                    <p>QQ交流群：237626046</p>
+                    <p>最新版本：v{$version}</p>
+                    <p style="margin-bottom: 0">行到水穷处，坐看云起时，做软件，找贵阳云起信息科技</p>
                     <div class="imgbox">
-                        <div>
-                            <p style="font-size: 1.5rem;">联系我们:</p>
-                            <p style="font-size: 1.5rem;"><img style="width: 180px" src="/assets/img/qrcode.jpg"/></p>
-                        </div>
-                        <div>
-                            <p style="font-size: 1.5rem;">打赏我们:</p>
-                            <p style="font-size: 1.5rem;"><img style="width: 180px" src="/assets/img/pay.png"/></p>
-                        </div>
+                        <el-row :gutter="24">
+                            <el-col :xs="24" :sm="24" :md="12">
+                                <p>联系我们:</p>
+                                <p><img style="width: 180px" src="/assets/img/qrcode.jpg"/></p>
+                            </el-col>
+                            <el-col :xs="24" :sm="24" :md="12">
+                                <p>打赏我们:</p>
+                                <p><img style="width: 180px" src="/assets/img/pay.png"/></p>
+                            </el-col>
+                        </el-row>
                     </div>
                 </div>
             </div>
+            </el-scrollbar>
         </el-main>
         <el-footer>
-            <div style="text-align: center;">
+            <div style="text-align: center;font-size: 14px;">
                 <p>Copyright © 2023-2030，<a href="/" target="_blank">贵阳云起信息科技有限公司</a></p>
                 <p><a href="http://beian.miit.gov.cn/" target="_blank"> 黔ICP备2020011629号-2</a></p>
             </div>

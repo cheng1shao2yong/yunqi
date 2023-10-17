@@ -1,22 +1,94 @@
-<el-card shadow="never">
-    <template #header>
-        <el-alert effect="dark" :closable="false" title="使用说明">角色组可以有多个,角色有上下级层级关系,如果子角色有角色组和管理员的权限则可以派生属于自己组别的下级角色组或管理员</el-alert>
-    </template>
-    <yun-table
-        :columns="columns"
-        :common-search="false"
-        :pagination="false"
-        order="asc"
-        ref="yuntable"
-        :is-tree="true"
-        :tree-expand-all="true"
-        toolbar="refresh,add,del"
-        :auth="{
-            add:{:$auth->check('app\\admin\\controller\\auth\\Group','add')},
-            edit:{:$auth->check('app\\admin\\controller\\auth\\Group','edit')},
-            del:{:$auth->check('app\\admin\\controller\\auth\\Group','del')},
-            multi:{:$auth->check('app\\admin\\controller\\auth\\Group','multi')},
-        }"
-        :extend="extend">
-    </yun-table>
-</el-card>
+<template>
+    <el-card shadow="never">
+        <template #header>
+            <el-alert effect="dark" :closable="false" title="使用说明">角色组可以有多个,角色有上下级层级关系,如果子角色有角色组和管理员的权限则可以派生属于自己组别的下级角色组或管理员</el-alert>
+        </template>
+        <yun-table
+            :columns="columns"
+            :common-search="false"
+            :pagination="false"
+            order="asc"
+            ref="yuntable"
+            :is-tree="true"
+            :tree-expand-all="true"
+            toolbar="refresh,add,del"
+            :auth="{
+                add:{:$auth->check('app\\admin\\controller\\auth\\Group','add')},
+                edit:{:$auth->check('app\\admin\\controller\\auth\\Group','edit')},
+                del:{:$auth->check('app\\admin\\controller\\auth\\Group','del')},
+                multi:{:$auth->check('app\\admin\\controller\\auth\\Group','multi')},
+            }"
+            :extend="extend">
+        </yun-table>
+    </el-card>
+</template>
+<script>
+import table from "@components/Table.js";
+import {inArray} from "@util.js";
+const doCheck=function (tree,checkKey){
+    tree.forEach(res=>{
+        checkKey.push(res.id);
+        if(res.children && res.children.length>0){
+            doCheck(res.children,checkKey);
+        }
+    });
+}
+export default{
+    components:{'YunTable':table},
+    data:{
+        extend:{
+            index_url: 'auth/group/index',
+            add_url: 'auth/group/add',
+            edit_url: 'auth/group/edit',
+            del_url: 'auth/group/del',
+            multi_url: 'auth/group/multi'
+        },
+        columns:[
+            {checkbox: true,selectable:function (row,index){
+                if(inArray(Yunqi.data.groupids,row.id)){
+                    return false;
+                }
+                return true;
+            }},
+            {field: 'id',title: __('ID'),width:80},
+            {field: 'name', title: __('名称'),formatter:function (data){
+                let html=Yunqi.formatter.html;
+                html.value=data.replace(/&nbsp;/g,'&nbsp;&nbsp;');
+                return html;
+            }},
+            {field: 'status', title: __('状态'),searchList: {'normal': __('正常'),'hidden': __('隐藏')},formatter:function(data,row){
+                let sw=Yunqi.formatter.switch;
+                sw.activeValue='normal';
+                sw.inactiveValue='hidden';
+                sw.value=row.status;
+                if(inArray(Yunqi.data.groupids,row.id)){
+                    sw.disabled=true;
+                }else{
+                    sw.disabled=false;
+                }
+                return sw;
+            }},
+            {treeExpand: true},
+            {
+                field: 'operate',
+                title: __('操作'),
+                width:150,
+                action:{
+                    edit:function(row){
+                        return !inArray(Yunqi.data.groupids,row.id);
+                    },
+                    del:function(row){
+                        return !inArray(Yunqi.data.groupids,row.id);
+                    }
+                }
+            }
+        ]
+    },
+    methods: {
+
+    }
+}
+</script>
+<style>
+
+</style>

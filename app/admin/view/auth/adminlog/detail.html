@@ -1,4 +1,32 @@
-<el-table :data="detail" stripe border style="width: 100%">
-    <el-table-column prop="title" label="{:__('标题')}" width="180"></el-table-column>
-    <el-table-column prop="content" label="{:__('内容')}"></el-table-column>
-</el-table>
+<template>
+    <el-table :data="detail" stripe border style="width: 100%">
+        <el-table-column prop="title" label="{:__('标题')}" width="180"></el-table-column>
+        <el-table-column prop="content" label="{:__('内容')}"></el-table-column>
+    </el-table>
+</template>
+<script>
+    export default {
+        data() {
+            return {
+                detail:[]
+            }
+        },
+        onShow:function () {
+            let detail=[];
+            let row=Yunqi.data.row;
+            for(let k in row){
+                detail.push({
+                    title:k,
+                    content:row[k]
+                });
+            }
+            this.detail=detail;
+        },
+        methods: {
+
+        }
+    }
+</script>
+<style>
+
+</style>

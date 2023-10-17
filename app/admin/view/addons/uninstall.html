@@ -1,29 +1,61 @@
-<el-card shadow="never" style="border: 0;">
-    <yun-form
-        ref="yunform"
-        :columns="unistallField">
-        <template #content>
-            <el-form-item label="插件配置:">
-                <template v-if="conf.length>0">
-                    <el-tag style="margin-right: 10px;" v-for="item in conf">{{item.title}}</el-tag>
-                </template>
-                <span v-else>无</span>
-            </el-form-item>
-            <el-form-item label="插件数据表:">
-                <template v-if="tables.length>0">
-                    <div>
-                        <el-tag style="margin-right: 10px;" v-for="item in tables">{{item}}</el-tag><br>
-                    </div>
-                </template>
-                <span v-else>无</span>
-            </el-form-item>
-            <el-form-item label="插件菜单:">
-                <el-tree v-if="menu.length>0" :default-expand-all="true" :props="{children:'childlist',label:'title'}" node-key="id" :data="menu" style="width: 100%;"></el-tree>
-                <span v-else>无</span>
-            </el-form-item>
-        </template>
-        <template #footer="{step}">
-            <el-button size="large" style="width:100%" type="danger" @click="uninstall">确认卸载</el-button>
-        </template>
-    </yun-form>
-</el-card>
+<template>
+    <el-card shadow="never" style="border: 0;">
+        <yun-form
+                ref="yunform"
+                :columns="unistallField">
+            <template #content>
+                <el-form-item label="插件配置:">
+                    <template v-if="conf.length>0">
+                        <el-tag style="margin-right: 10px;" v-for="item in conf">{{item.title}}</el-tag>
+                    </template>
+                    <span v-else>无</span>
+                </el-form-item>
+                <el-form-item label="插件数据表:">
+                    <template v-if="tables.length>0">
+                        <div>
+                            <el-tag style="margin-right: 10px;" v-for="item in tables">{{item}}</el-tag><br>
+                        </div>
+                    </template>
+                    <span v-else>无</span>
+                </el-form-item>
+                <el-form-item label="插件菜单:">
+                    <el-tree v-if="menu.length>0" :default-expand-all="true" :props="{children:'childlist',label:'title'}" node-key="id" :data="menu" style="width: 100%;"></el-tree>
+                    <span v-else>无</span>
+                </el-form-item>
+            </template>
+            <template #footer="{step}">
+                <el-button size="large" style="width:100%" type="danger" @click="uninstall">确认卸载</el-button>
+            </template>
+        </yun-form>
+    </el-card>
+</template>
+<script>
+import form from "@components/Form.js";
+export default {
+    components:{'YunForm':form},
+    data:{
+        unistallField:[
+            {field:"name",title:"扩展名称",edit: {form:'input',type:'text',readonly:true,value:Yunqi.data.addon.name}},
+            {field:"key",title:"关键字",edit: {form:'input',type:'hidden',value:Yunqi.data.addon.key}},
+            {field:"actions",title:"卸载内容",edit:{form:'checkbox',value:['menu','config','tables']},searchList:{'menu':'菜单','config':'配置','tables':'数据表'}},
+            {field:"content",edit:'slot'},
+        ],
+        menu:Yunqi.data.menu,
+        conf:Yunqi.data.conf,
+        tables:Yunqi.data.tables
+    },
+    methods: {
+        uninstall:function (){
+            let key=this.$refs.yunform.getValue('key');
+            let actions=this.$refs.yunform.getValue('actions');
+            Yunqi.ajax.post('addons/uninstall',{key:key,actions:actions}).then(res=>{
+                Yunqi.api.closelayer(Yunqi.config.window.id,true);
+            });
+        },
+    }
+}
+</script>
+<style>
+
+</style>
+

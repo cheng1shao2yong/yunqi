@@ -1,75 +1,321 @@
-<component is="style">
-    .bolderText{
-        font-weight:bolder;
-    }
-    .form-container{
-        padding: 30px;
-        border:1px solid var(--el-border-color-light);
-        border-top: 0;
-        margin-top: -16px;
-    }
-</component>
-<el-card shadow="never">
-    <template #header>
-        <el-alert effect="dark" :closable="false" title="使用说明">在此处定义的变量可以在全局通过site_config("组名.变量名")使用</el-alert>
-    </template>
-    <el-tabs type="card" v-model="tabValue" @tab-change="tabChange">
-        <el-tab-pane :name="key" v-for="(label,key) in groupList" :label="label"></el-tab-pane>
-        {if $app_debug}
-        <el-tab-pane name="addconfig">
-            <template #label>
-                <i class="fa fa-plus"></i>&nbsp;添加配置
-            </template>
-        </el-tab-pane>
-        {/if}
-    </el-tabs>
-    <div class="form-container">
-        <yun-form
-            label-position="left"
-            require-asterisk-position="right"
-            :label-width="200"
-            @submit="onSubmit"
-            :append-width="8"
-            :action="extend.edit_url"
-            @success="onSuccess"
-            v-if="columns && tabValue!='addconfig'"
-            :columns="columns">
-            <template #default>
-                <el-form-item>
-                    <template #label><span class="bolderText">变量标题</span></template>
-                    <el-row style="width:100%">
-                        <el-col :span="16">
-                            <span class="bolderText">变量值</span>
-                        </el-col>
-                        {if $app_debug}
-                        <el-col :span="8">
-                            <div class="bolderText" style="padding-left: 50px;">读取方式</div>
-                        </el-col>
-                        {/if}
-                    </el-row>
-                </el-form-item>
-            </template>
-            <template #addons="{value}">
-                <el-divider>
-                    <el-tag v-if="value.name">{{value.type}}-{{value.name}}</el-tag>
-                    <el-tag v-else type="warning">未安装扩展-{{value.key}}</el-tag>
-                </el-divider>
-            </template>
+<template>
+    <el-card shadow="never">
+        <template #header>
+            <el-alert effect="dark" :closable="false" title="使用说明">在此处定义的变量可以在全局通过site_config("组名.变量名")使用</el-alert>
+        </template>
+        <el-tabs type="card" v-model="tabValue" @tab-change="tabChange">
+            <el-tab-pane :name="key" v-for="(label,key) in groupList" :label="label"></el-tab-pane>
             {if $app_debug}
-            <template #append="item">
-                <div style="padding-left:30px;">
-                    <span>{{formatVar(item.column.field,item.column.addons)}}</span>
-                    <el-button style="position: absolute;right: 0" @click="delVar(item.column.field)" size="small" type="danger" v-if="item.column.can_delete">{:__('删除')}</el-button>
-                </div>
-            </template>
+            <el-tab-pane name="addconfig">
+                <template #label>
+                    <i class="fa fa-plus"></i>&nbsp;添加配置
+                </template>
+            </el-tab-pane>
             {/if}
-        </yun-form>
-        <yun-form
-            v-if="tabValue=='addconfig'"
-            :action="extend.add_url"
-            @success="onSuccess"
-            ref="yunform"
-            :columns="addconfig">
-        </yun-form>
-    </div>
-</el-card>
+        </el-tabs>
+        <div class="form-container">
+            <yun-form
+                label-position="left"
+                require-asterisk-position="right"
+                :label-width="200"
+                @submit="onSubmit"
+                :append-width="8"
+                :action="extend.edit_url"
+                @success="onSuccess"
+                v-if="columns && tabValue!='addconfig'"
+                :columns="columns">
+                <template #default>
+                    <el-form-item>
+                        <template #label><span class="bolderText">变量标题</span></template>
+                        <el-row style="width:100%">
+                            <el-col :span="16">
+                                <span class="bolderText">变量值</span>
+                            </el-col>
+                            {if $app_debug}
+                            <el-col :span="8">
+                                <div class="bolderText" style="padding-left: 50px;">读取方式</div>
+                            </el-col>
+                            {/if}
+                        </el-row>
+                    </el-form-item>
+                </template>
+                <template #addons="{value}">
+                    <el-divider>
+                        <el-tag v-if="value.name">{{value.type}}-{{value.name}}</el-tag>
+                        <el-tag v-else type="warning">未安装扩展-{{value.key}}</el-tag>
+                    </el-divider>
+                </template>
+                {if $app_debug}
+                <template #append="item">
+                    <div style="padding-left:30px;">
+                        <span>{{formatVar(item.column.field,item.column.addons)}}</span>
+                        <el-button style="position: absolute;right: 0" @click="delVar(item.column.field)" size="small" type="danger" v-if="item.column.can_delete">{:__('删除')}</el-button>
+                    </div>
+                </template>
+                {/if}
+            </yun-form>
+            <yun-form
+                v-if="tabValue=='addconfig'"
+                :action="extend.add_url"
+                @success="onSuccess"
+                ref="yunform"
+                :columns="addconfig">
+            </yun-form>
+        </div>
+    </el-card>
+</template>
+<script>
+    import form from "@components/Form.js";
+    import {inArray} from "@util.js";
+    export default{
+        components:{'YunForm':form},
+        data:{
+            extend:{
+                index_url: 'general/config/index',
+                add_url: 'general/config/add',
+                edit_url: 'general/config/edit',
+                del_url: 'general/config/del'
+            },
+            addconfig:[
+                {field:'group',title:__('分组'),searchList:Yunqi.data.groupList,edit: {form:'select',value:'basic',change:'changeGroup'},rules:'required'},
+                {field:'addons_pack',title:__('扩展包名'),edit:{form:'input',type:'text',visible:false}},
+                {field:'type',title:__('类型'),searchList:Yunqi.data.typeList,edit: {form:'select',change:'changeType',value:'text'},rules:'required'},
+                {field:'title',title:__('变量标题'),edit:'text',rules:'required'},
+                {field:'name',title:__('变量名'),edit:'text',rules:'required'},
+                {field:'url',title:__('分页列表Url'),edit: {form:'input',type:'text',visible:false}},
+                {field:'labelField',title:__('显示字段'),edit: {form:'input',type:'text',placeholder:'请输入显示字段labelField',visible:false}},
+                {field:'keyField',title:__('存储字段'),edit: {form:'input',type:'text',placeholder:'请输入显示字段keyField',visible:false}},
+                {field:'options',title:__('选项'),edit: {form:'fieldlist',label:['键名','键值'],visible:false}},
+                {field:'value',title:__('默认值'),edit:'text'},
+                {field:'label',title:__('数组标题'),edit: {form:'input',type:'text',placeholder:'请输入Fieldlist的标题label，用“,”隔开',visible:false}},
+                {field:'tips',title:__('提示信息'),edit:'text'},
+                {field:'rules',title:__('验证规则'),edit:{form:'input',type:'text',placeholder:'请输入验证规则，多个规则用“,”隔开'}},
+            ],
+            groupList:Yunqi.data.groupList,
+            typeList:Yunqi.data.typeList,
+            tableList:[],
+            fieldList:[],
+            tabValue:'basic',
+            columns:''
+        },
+        onLoad:function (){
+            this.getSiteList();
+        },
+        methods: {
+            getSiteList:function (){
+                Yunqi.ajax.get(this.extend.index_url,{group:this.tabValue}).then(res=>{
+                    if(this.tabValue=='addons'){
+                        let columns=[];
+                        for(let i=0;i<res.length;i++){
+                            let value={key:res[i].key,type:res[i].type,name:res[i].name};
+                            columns.push({field:'addons', edit:{form:'slot',value:value}});
+                            let row=this.formatColumns(res[i].list);
+                            columns=columns.concat(row);
+                        }
+                        this.columns=columns;
+                    }else{
+                        this.columns=this.formatColumns(res);
+                    }
+                });
+            },
+            tabChange:function (tab){
+                this.columns='';
+                this.tabValue=tab;
+                this.getSiteList();
+            },
+            delVar:function (name){
+                Yunqi.ajax.post(this.extend.del_url,{group:this.tabValue,name:name}).then(res=>{
+                    location.reload();
+                });
+            },
+            formatVar:function (field,addons){
+                if(addons){
+                    return 'site_config('+this.tabValue+'.'+addons+'.'+field+'")';
+                }else{
+                    return 'site_config("'+this.tabValue+'.'+field+'")';
+                }
+            },
+            formatColumns:function (list){
+                let one=[];
+                for(let i=0;i<list.length;i++){
+                    let obj={
+                        id:list[i].id,
+                        field:list[i].name,
+                        title:list[i].title,
+                        can_delete:list[i].can_delete,
+                        edit: {}
+                    };
+                    if(list[i].rules){
+                        obj.rules=list[i].rules;
+                    }
+                    if(list[i].type=='text'){
+                        obj.edit.form='input';
+                        obj.edit.type='text';
+                        obj.edit.value=list[i].value;
+                    }
+                    if(list[i].type=='textarea'){
+                        obj.edit.form='input';
+                        obj.edit.type='textarea';
+                        obj.edit.value=list[i].value;
+                    }
+                    if(list[i].type=='password'){
+                        obj.edit.form='input';
+                        obj.edit.type='password';
+                        obj.edit.value=list[i].value;
+                    }
+                    if(list[i].type=='number'){
+                        obj.edit.form='input';
+                        obj.edit.type='number';
+                        obj.edit.value=list[i].value;
+                    }
+                    if(list[i].type=='date'){
+                        obj.edit.form='date-picker';
+                        obj.edit.type='date';
+                        obj.edit.value=list[i].value;
+                    }
+                    if(list[i].type=='time'){
+                        obj.edit.form='time-picker';
+                        obj.edit.value=list[i].value;
+                    }
+                    if(list[i].type=='datetime'){
+                        obj.edit.form='date-picker';
+                        obj.edit.type='datetime';
+                        obj.edit.value=list[i].value;
+                    }
+                    if(list[i].type=='daterange'){
+                        obj.edit.form='date-picker';
+                        obj.edit.type='daterange';
+                        obj.edit.value=list[i].value;
+                    }
+                    if(list[i].type=='timerange'){
+                        obj.edit.form='time-picker';
+                        obj.edit.isRange=true;
+                        obj.edit.value=list[i].value;
+                    }
+                    if(list[i].type=='select'){
+                        obj.searchList=list[i].extend;
+                        obj.edit.form='select';
+                        obj.edit.value=list[i].value.toString();
+                    }
+                    if(list[i].type=='selects'){
+                        obj.edit.form='select';
+                        obj.searchList=list[i].extend;
+                        obj.edit.multiple=true;
+                        obj.edit.value=list[i].value || [];
+                    }
+                    if(list[i].type=='selectpage'){
+                        obj.edit.form='selectpage';
+                        obj.edit.url='general/config/selectpage?id='+list[i].id;
+                        obj.edit.keyField=list[i].setting.primarykey;
+                        obj.edit.labelField=list[i].setting.field;
+                        obj.edit.value=list[i].value;
+                    }
+                    if(list[i].type=='selectpages'){
+                        obj.edit.form='selectpage';
+                        obj.edit.url='general/config/selectpage?id='+list[i].id;
+                        obj.edit.keyField=list[i].setting.primarykey;
+                        obj.edit.labelField=list[i].setting.field;
+                        obj.edit.multiple=true;
+                        obj.edit.value=list[i].value;
+                    }
+                    if(list[i].type=='radio'){
+                        obj.edit.form='radio';
+                        obj.searchList=list[i].extend;
+                        obj.edit.value=list[i].value.toString();
+                    }
+                    if(list[i].type=='checkbox'){
+                        obj.edit.form='checkbox';
+                        obj.searchList=list[i].extend;
+                        obj.edit.value=list[i].value || [];
+                    }
+                    if(list[i].type=='image'){
+                        obj.edit.form='attachment';
+                        obj.edit.limit=1;
+                        obj.edit.value=list[i].value;
+                    }
+                    if(list[i].type=='images'){
+                        obj.edit.form='attachment';
+                        obj.edit.limit=10;
+                        obj.edit.value=list[i].value;
+                    }
+                    if(list[i].type=='file'){
+                        obj.edit.form='files';
+                        obj.edit.limit=1;
+                        let mimetype=Yunqi.config.upload.mimetype.split(',');
+                        let accept=[];
+                        mimetype.forEach(res=>{
+                            accept.push('.'+res);
+                        });
+                        obj.edit.accept=accept;
+                        obj.edit.multiple=false;
+                        obj.edit.value=list[i].value;
+                    }
+                    if(list[i].type=='files'){
+                        obj.edit.form='files';
+                        let mimetype=Yunqi.config.upload.mimetype.split(',');
+                        let accept=[];
+                        mimetype.forEach(res=>{
+                            accept.push('.'+res);
+                        });
+                        obj.edit.accept=accept;
+                        obj.edit.multiple=true;
+                        obj.edit.value=list[i].value;
+                    }
+                    if(list[i].type=='json'){
+                        obj.edit.form='fieldlist';
+                        obj.edit.value=list[i].value;
+                        obj.edit.label=list[i].extend;
+                    }
+                    if(list[i].type=='switch'){
+                        obj.edit.form='switch';
+                        obj.edit.inactiveValue='0';
+                        obj.edit.activeValue='1'
+                        obj.edit.value=list[i].value;
+                    }
+                    if(list[i].tip){
+                        obj.edit.placeholder=list[i].tip;
+                    }
+                    one.push(obj);
+                }
+                return one;
+            },
+            changeType:function (data,row){
+                this.$refs.yunform.hideField(['label','url','labelField','keyField','options']);
+                if(data=='selectpage' || data=='selectpages'){
+                    this.$refs.yunform.showField(['url','labelField','keyField']);
+                }else if(data=='array'){
+                    this.$refs.yunform.showField('label');
+                }else if(inArray(['select','selects','radio','checkbox'],data)){
+                    this.$refs.yunform.showField('options');
+                }
+            },
+            changeGroup:function (data){
+                if(data=='addons'){
+                    this.$refs.yunform.showField('addons_pack');
+                }else{
+                    this.$refs.yunform.hideField('addons_pack');
+                }
+            },
+            onSubmit:function (row){
+                row.group=this.tabValue;
+                return true;
+            },
+            onSuccess:function (){
+                if(this.tabValue=='dictionary'){
+                    location.reload();
+                }
+            }
+        }
+    }
+</script>
+<style>
+.bolderText{
+    font-weight:bolder;
+}
+.form-container{
+    padding: 30px;
+    border:1px solid var(--el-border-color-light);
+    border-top: 0;
+    margin-top: -16px;
+}
+</style>

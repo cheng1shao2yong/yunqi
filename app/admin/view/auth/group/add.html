@@ -1,43 +1,125 @@
-<component is="style">
-    .el-tree{
-        left: -18px;
+<template>
+    <el-card shadow="never" style="border: 0;">
+        {if $config.route[2]=='edit'}
+        <template #header>
+            <el-alert
+                type="warning"
+                show-icon>
+                非调试模式下，提交后请清空缓存才能生效！
+            </el-alert>
+        </template>
+        {/if}
+        <yun-form
+            ref="yunform"
+            :data="data"
+            @submit="onSubmit"
+            :columns="columns">
+            <template #default>
+                {:token_field()}
+            </template>
+            <template #pid="item">
+                <el-form-item label="{:__('父级')}:" prop="pid">
+                    <el-select @change="changePid" placeholder="请选择{:__('父级')}" v-model="item.rows.pid" :clearable="true" style="width: 100%">
+                        {foreach $groupdata as $key=>$value}
+                        <el-option key="{$value.id}" label="{:str_replace('&amp;','&',$value.name)}" value="{$value.id}"></el-option>
+                        {/foreach}
+                    </el-select>
+                </el-form-item>
+            </template>
+            <template v-slot:rules="item">
+                <el-form-item label="{:__('权限')}:">
+                    <div style="position: relative;left: 5px;">
+                        <el-checkbox v-model="checkAll">{:__('全部选中')}</el-checkbox>
+                        <el-checkbox v-model="expandAll">{:__('全部展开')}</el-checkbox>
+                    </div>
+                    <el-tree ref="tree" :props="{children:'childlist',label:'title'}" node-key="id" show-checkbox :default-checked-keys="checkedKey" :data="treedata" style="width: 100%;"></el-tree>
+                </el-form-item>
+            </template>
+        </yun-form>
+    </el-card>
+</template>
+<script>
+import form from "@components/Form.js";
+const doCheck=function (tree,checkKey){
+    tree.forEach(res=>{
+        checkKey.push(res.id);
+        if(res.children && res.children.length>0){
+            doCheck(res.children,checkKey);
+        }
+    });
+}
+export default{
+    components:{'YunForm':form},
+    data:{
+        data:Yunqi.data.row || {pid:Yunqi.data.groupdata?Yunqi.data.groupdata[0].id:0},
+        columns:[
+            {field: 'id',title: __('ID'),edit:'hidden'},
+            {field: 'pid', title: __('父级'),edit:'slot',rules:'required'},
+            {field: 'rules',title: __('权限'),edit:'slot',visible:'none'},
+            {field: 'name', title: __('名称'),edit:'text',rules:'required'},
+            {field: 'status', title: __('状态'), edit:{form:'radio',value:'normal'},searchList: {'normal': __('正常'),'hidden': __('隐藏')}}
+        ],
+        checkAll:false,
+        expandAll:false,
+        checkedKey:[],
+        treedata:[],
+
+    },
+    onShow:function (){
+        if(Yunqi.config.route[2]=='add'){
+            this.roletree(Yunqi.data.groupdata[0].id);
+        }
+        if(Yunqi.config.route[2]=='edit'){
+            this.roletree(Yunqi.data.row.pid);
+            this.checkedKey = Yunqi.data.row.rules.split(',');
+        }
+    },
+    watch:{
+        checkAll:function (data){
+            if (data) {
+                let checkedKey = [];
+                doCheck(this.treedata, checkedKey);
+                this.checkedKey = checkedKey;
+            } else {
+                for(let i=0;i<this.$refs.tree.store._getAllNodes().length;i++){
+                    this.$refs.tree.store._getAllNodes()[i].checked = false;
+                }
+            }
+        },
+        expandAll:function (data) {
+            if (data) {
+                for(let i=0;i<this.$refs.tree.store._getAllNodes().length;i++){
+                    this.$refs.tree.store._getAllNodes()[i].expanded = true;
+                }
+            } else {
+                for(let i=0;i<this.$refs.tree.store._getAllNodes().length;i++){
+                    this.$refs.tree.store._getAllNodes()[i].expanded = false;
+                }
+            }
+        }
+    },
+    methods: {
+        changePid:function (pid){
+            this.roletree(pid);
+        },
+        roletree:function (pid){
+            Yunqi.ajax.get('auth/group/roletree',{groupid:pid},true,false,true).then(res=>{
+                this.treedata=res;
+            });
+        },
+        onSubmit:function (){
+            let row=this.$refs.yunform.form_.data;
+            let s1=this.$refs.tree.getCheckedKeys();
+            let s2=this.$refs.tree.getHalfCheckedKeys();
+            row.rules=s1.join(',');
+            row.auth_rules=s2.concat(s1).join(',');
+            return true;
+        }
     }
-</component>
-<el-card shadow="never" style="border: 0;">
-    {if $config.route[2]=='edit'}
-    <template #header>
-        <el-alert
-            type="warning"
-            show-icon>
-            非调试模式下，提交后请清空缓存才能生效！
-        </el-alert>
-    </template>
-    {/if}
-    <yun-form
-        ref="yunform"
-        :data="data"
-        @submit="onSubmit"
-        :columns="columns">
-        <template #default>
-            {:token_field()}
-        </template>
-        <template #pid="item">
-            <el-form-item label="{:__('父级')}:" prop="pid">
-                <el-select @change="changePid" placeholder="请选择{:__('父级')}" v-model="item.rows.pid" :clearable="true" style="width: 100%">
-                    {foreach $groupdata as $key=>$value}
-                    <el-option key="{$value.id}" label="{:str_replace('&amp;','&',$value.name)}" value="{$value.id}"></el-option>
-                    {/foreach}
-                </el-select>
-            </el-form-item>
-        </template>
-        <template v-slot:rules="item">
-            <el-form-item label="{:__('权限')}:">
-                <div style="position: relative;left: 5px;">
-                    <el-checkbox v-model="checkAll">{:__('全部选中')}</el-checkbox>
-                    <el-checkbox v-model="expandAll">{:__('全部展开')}</el-checkbox>
-                </div>
-                <el-tree ref="tree" :props="{children:'childlist',label:'title'}" node-key="id" show-checkbox :default-checked-keys="checkedKey" :data="treedata" style="width: 100%;"></el-tree>
-            </el-form-item>
-        </template>
-    </yun-form>
-</el-card>
+}
+</script>
+<style>
+.el-tree{
+    left: -18px;
+}
+</style>

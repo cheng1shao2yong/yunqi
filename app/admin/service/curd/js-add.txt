@@ -1,0 +1,62 @@
+<#if form#>
+import form from "@components/Form.js";
+<#endif#>
+export default{
+    components:{
+        <#if form#>
+        'YunForm':form
+        <#endif#>
+    },
+    data:{
+        <#if form#>
+        columns:[
+<#fields#>
+        ],
+        row:Yunqi.data.row
+        <#endif#>
+    },
+    <#if !reduced#>
+    //页面加载完成时执行
+    onLoad:function(query){
+        console.log(query);
+    },
+    //页面初始显示或在框架内显示时执行
+    onShow:function(){
+
+    },
+    //页面在框架内隐藏时执行
+    onHide:function(){
+
+    },
+    //页面在框架内关闭时执行
+    onUnload:function(){
+
+    },
+    <#endif#>
+    methods: {
+        <#if !reduced && form#>
+        onFormRender:function(rows){
+            //表单渲染完成后执行
+        },
+        onSubmit:function(rows){
+            //表单提交前执行，返回false可以阻止表单提交
+            /**
+             * form常用方法
+             * this.$refs.yunform.setError(field,message);//聚焦表单项并显示错误信息
+             * this.$refs.yunform.hideField(field);//隐藏表单项
+             * this.$refs.yunform.showField(field);//显示表单项
+             * this.$refs.yunform.setValue(field,value);//为表单项设置值
+             * this.$refs.yunform.getValue(field);//为获取表单项的值
+             * this.$refs.yunform.setField(field,key,value);//修改表单json的其他属性值，比如rules,title,searchList等
+             */
+            return true;
+        },
+        onSuccess:function(response){
+            //表单提交成功后执行
+        },
+        onFail:function(err){
+            //表单提交失败后执行
+        }
+        <#endif#>
+    }
+}

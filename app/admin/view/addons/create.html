@@ -1,34 +1,94 @@
-<el-card shadow="never" style="border: 0;">
-    <yun-form
-        :steps="['设置基础资料','设置扩展文件','添加菜单与数据']"
-        @submit="onSubmit"
-        :columns="columns">
-        <template #default>
-            {:token_field()}
-        </template>
-        <template #tables="{step,rows}">
-            <el-form-item label="{:__('选择表')}:" v-if="step==2">
-                <el-select v-model="rows.tables" placeholder="请选择" multiple filterable style="width: 100%">
-                    {foreach $table as $value}
-                    <el-option value="{$value}">{$value}</el-option>
-                    {/foreach}
-                </el-select>
-            </el-form-item>
-        </template>
-        <template #config="{step,rows}">
-            <el-form-item label="{:__('选择配置')}:" v-if="step==2">
-                <el-select v-model="rows.config" placeholder="请选择" multiple filterable style="width: 100%">
-                    {foreach $sonfig as $key=>$value}
-                    <el-option :value="{$key}" label="{$value.name}-{$value.title}"></el-option>
-                    {/foreach}
-                </el-select>
-                <el-alert style="margin-top:5px;" type="warning">最好选择【扩展配置】分组中的属性，否则安装的时候容易造成配置冲突</el-alert>
-            </el-form-item>
-        </template>
-        <template #menu="{step}">
-            <el-form-item label="{:__('选择菜单')}:" v-if="step==2">
-                <el-tree ref="tree" :props="{children:'childlist',label:'title'}" node-key="id" show-checkbox :default-checked-keys="checkedKey" :data="treedata" style="width: 100%;"></el-tree>
-            </el-form-item>
-        </template>
-    </yun-form>
-</el-card>
+<template>
+    <el-card shadow="never" style="border: 0;">
+        <yun-form
+                :steps="['设置基础资料','设置扩展文件','添加菜单与数据']"
+                @submit="onSubmit"
+                :columns="columns">
+            <template #default>
+                {:token_field()}
+            </template>
+            <template #tables="{step,rows}">
+                <el-form-item label="{:__('选择表')}:" v-if="step==2">
+                    <el-select v-model="rows.tables" placeholder="请选择" multiple filterable style="width: 100%">
+                        {foreach $table as $value}
+                        <el-option value="{$value}">{$value}</el-option>
+                        {/foreach}
+                    </el-select>
+                </el-form-item>
+            </template>
+            <template #config="{step,rows}">
+                <el-form-item label="{:__('选择配置')}:" v-if="step==2">
+                    <el-select v-model="rows.config" placeholder="请选择" multiple filterable style="width: 100%">
+                        {foreach $sonfig as $key=>$value}
+                        <el-option :value="{$key}" label="{$value.name}-{$value.title}"></el-option>
+                        {/foreach}
+                    </el-select>
+                    <el-alert style="margin-top:5px;" type="warning">最好选择【扩展配置】分组中的属性，否则安装的时候容易造成配置冲突</el-alert>
+                </el-form-item>
+            </template>
+            <template #menu="{step}">
+                <el-form-item label="{:__('选择菜单')}:" v-if="step==2">
+                    <el-tree ref="tree" :props="{children:'childlist',label:'title'}" node-key="id" show-checkbox :default-checked-keys="checkedKey" :data="treedata" style="width: 100%;"></el-tree>
+                </el-form-item>
+            </template>
+        </yun-form>
+    </el-card>
+</template>
+<script>
+    import form from "@components/Form.js";
+    export default {
+        components:{'YunForm':form},
+        data:{
+            columns:[
+                {
+                    field:"pack",
+                    title:"包名",
+                    edit:{form: 'input',type:'text',placeholder: '请输入包名，包名只能由小写字母、数字、下划线组成'},
+                    step:0,
+                    rules: {
+                        required:true,
+                        validator:function(rule, value, callback){
+                            if(!/^[a-z0-9_]+$/.test(value)){
+                                callback(new Error(__('包名必须为小写字母、数字、下划线组成')));
+                            }
+                            callback();
+                        },
+                        trigger: 'blur'
+                    },
+                },
+                {field:"name",title:"扩展名称",edit:'text',step:0,rules:'required;length(2~30)'},
+                {field:"type",title:"扩展类型",searchList:Yunqi.data.type,edit:{form:'select',value:'plugin'},step:0,rules:'required'},
+                {field:"author",title:"作者",edit:'text',step:0},
+                {field:"price",title:"价格",edit:{form:'input',type:'number',append:'元'},step:0,rules:'required;range(0~)'},
+                {field:"version",title:"版本号",edit:{form:'input',type:'number',placeholder: '请输入100到1999之间的数字，对应版本号为1.0.0或19.9.9'},rules:'required;range(100~1999)',step:0},
+                {field:"document",title:"说明文档",edit:{form:'input',type:'text',placeholder:'请输入文档链接'},step:0},
+                {field:"description",title:"简介",edit:'textarea',step:0},
+                {field: "files",title:'扩展文件',edit:{form:'input',type:'textarea',rows:6,placeholder:'请输入扩展文件目录或扩展文件，相对系统根目录路径，每一行一个目录或文件'},step:1,rules:'required'},
+                {field: "unpack",title:'过滤文件',edit:{form:'input',type:'textarea',rows:3,placeholder:'请输入打包时需要过滤掉的目录或文件，每一行一个目录或文件'},step:1},
+                {field: "require",title:'依赖文件',edit:{form:'input',type:'textarea',rows:3,placeholder:'请输入依赖的类，每一行一个完整类名，如\\Yansongda\\Pay\\Pay'},step:1},
+                {field: "tables",title:'选择表',edit:'slot'},
+                {field: "config",title:'选择配置',edit:'slot'},
+                {field: "menu",title:'选择菜单',edit:'slot'},
+            ],
+            checkedKey:[],
+            treedata:[],
+        },
+        onShow:function (){
+            Yunqi.ajax.get('auth/group/roletree',{groupid:1},true,false,true).then(res=>{
+                this.treedata=res;
+            });
+        },
+        methods: {
+            onSubmit:function (row){
+                let s1=this.$refs.tree.getCheckedKeys();
+                let s2=this.$refs.tree.getHalfCheckedKeys();
+                row.menu=s2.concat(s1).join(',');
+                return true;
+            }
+        }
+    }
+</script>
+<style>
+
+</style>
+

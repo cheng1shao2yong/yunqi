@@ -68,7 +68,6 @@ class Develop extends Backend
            $this->assign('ruledata',$ruledata);
            $this->assign('app',['admin']);
            $this->assign('tablePrefix',$prefix);
-           $this->assignJsFile('develop/crud.js');
            return $this->fetch();
        }
     }
@@ -97,7 +96,6 @@ class Develop extends Backend
             $list=Queue::alias('queue')->whereRaw("queue.limit=0 or queue.limit>queue.times")->select();
             $this->success('',$list);
         }
-        $this->assignJsFile('develop/queue.js');
         return $this->fetch();
     }
 
@@ -274,7 +272,6 @@ class Develop extends Backend
             });
             $this->success(__('添加成功'));
         }
-        $this->assignJsFile('develop/queue.js');
         return $this->fetch();
     }
 

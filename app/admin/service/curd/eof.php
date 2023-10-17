@@ -81,11 +81,20 @@ function getFields($rows,$table,$form,$isTree,$treeTitle)
         $arr['searchList']=parseJson($rows['searchList']);
     }
     $json=json_encode($arr,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
-    $json=substr($json,0,-1).getFormatter($rows,$isTree,$treeTitle).'},';
+    if($table){
+        $json=substr($json,0,-1).getFormatter($rows,$isTree,$treeTitle).'},';
+    }
     $str=<<<EOF
             {$json}
 
 EOF;
+    return removeQuotationMarks($str);
+}
+
+//删除key的双引号
+function removeQuotationMarks($str)
+{
+    $str=preg_replace('/"(\w+)":/','$1:',$str);
     return $str;
 }
 
@@ -97,11 +106,11 @@ function getTableslot($rows)
     $field=$rows['field'];
     $title=$rows['title'];
     $str=<<<EOF
-            <template #formatter="{field,rows}">
-                <div v-if="field=='{$field}'">
-                    <span>{$title}插槽内容</span>
-                </div>
-            </template>
+                <template #formatter="{field,rows}">
+                    <div v-if="field=='{$field}'">
+                        <span>{$title}插槽内容</span>
+                    </div>
+                </template>
 
 EOF;
     return $str;

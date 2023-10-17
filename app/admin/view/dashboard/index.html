@@ -1,172 +1,460 @@
-<link rel="stylesheet" href="{:request()->domain()}/assets/css/dashboard.css?v={$config.version}" />
-<el-row>
-    <el-col :md="6" :xs="24" :sm="24">
-        <div class="card-container left">
-            <el-card shadow="always">
-                <div style="font-weight: bold;margin-bottom: 10px;">😀欢迎您，{:$auth->nickname}！</div>
-                <el-alert type="success" :closable="false">行到水穷处，坐看云起时。在线乞讨公司，贵阳云起信息科技，跪求打赏😭</el-alert>
-                <div class="pay">
-                    <img src="{:request()->domain()}/assets/img/pay.png">
-                </div>
-            </el-card>
-        </div>
-        <div class="card-container left">
-            <el-card shadow="always">
-                <template #header>
-                    <div class="header">
-                        <div class="title"><i class="fa fa-caret-right"></i>进度框样式</div>
+<template>
+    <el-row>
+        <el-col :md="6" :xs="24" :sm="24">
+            <div class="card-container left">
+                <el-card shadow="always">
+                    <div style="font-weight: bold;margin-bottom: 10px;">😀欢迎您，{:$auth->nickname}！</div>
+                    <el-alert type="success" :closable="false">行到水穷处，坐看云起时。在线乞讨公司，贵阳云起信息科技，跪求打赏😭</el-alert>
+                    <div class="pay">
+                        <img src="{:request()->domain()}/assets/img/pay.png">
                     </div>
-                </template>
-                <el-row>
-                    <el-col :span="24">
-                        <div class="style-2">
-                            <div class="box">
-                                <el-progress type="circle" :percentage="order.percentage[0]"></el-progress>
-                                <div class="box-title">销售目标</div>
-                                <div class="box-number">{{order.count}}单/{{order.total}}单</div>
-                            </div>
+                </el-card>
+            </div>
+            <div class="card-container left">
+                <el-card shadow="always">
+                    <template #header>
+                        <div class="header">
+                            <div class="title"><i class="fa fa-caret-right"></i>进度框样式</div>
                         </div>
-                    </el-col>
-                    <el-col :span="24">
-                        <div class="style-3">
-                            <div class="box">
-                                <div class="box-title">今日销售额</div>
-                                <div class="box-content">
-                                    <div class="box-content-left">
-                                        <div class="box-number-top">￥{{order.today}}</div>
-                                        <div class="box-number-bottom">昨日销售额：￥{{order.yestoday}}</div>
-                                    </div>
-                                    <div class="icon bkcolor3" v-if="order.percentage[1]<50">
-                                        <i class="fa fa-arrow-down"></i>
-                                    </div>
-                                    <div class="icon bkcolor2" v-if="order.percentage[1]>=50 && order.percentage[1]<100">
-                                        <i class="fa fa-arrow-down"></i>
-                                    </div>
-                                    <div class="icon bkcolor4" v-if="order.percentage[1]>=100">
-                                        <i class="fa fa-arrow-up"></i>
-                                    </div>
+                    </template>
+                    <el-row>
+                        <el-col :span="24">
+                            <div class="style-2">
+                                <div class="box">
+                                    <el-progress type="circle" :percentage="order.percentage[0]"></el-progress>
+                                    <div class="box-title">销售目标</div>
+                                    <div class="box-number">{{order.count}}单/{{order.total}}单</div>
                                 </div>
-                                <el-progress v-if="order.percentage[1]<50" :percentage="order.percentage[1]" color="#F56C6C"></el-progress>
-                                <el-progress v-if="order.percentage[1]>=50 && order.percentage[1]<100" :percentage="order.percentage[1]" color="#E6A23C"></el-progress>
-                                <el-progress v-if="order.percentage[1]>=100" :percentage="order.percentage[1]" color="#45991b"></el-progress>
+                            </div>
+                        </el-col>
+                        <el-col :span="24">
+                            <div class="style-3">
+                                <div class="box">
+                                    <div class="box-title">今日销售额</div>
+                                    <div class="box-content">
+                                        <div class="box-content-left">
+                                            <div class="box-number-top">￥{{order.today}}</div>
+                                            <div class="box-number-bottom">昨日销售额：￥{{order.yestoday}}</div>
+                                        </div>
+                                        <div class="icon bkcolor3" v-if="order.percentage[1]<50">
+                                            <i class="fa fa-arrow-down"></i>
+                                        </div>
+                                        <div class="icon bkcolor2" v-if="order.percentage[1]>=50 && order.percentage[1]<100">
+                                            <i class="fa fa-arrow-down"></i>
+                                        </div>
+                                        <div class="icon bkcolor4" v-if="order.percentage[1]>=100">
+                                            <i class="fa fa-arrow-up"></i>
+                                        </div>
+                                    </div>
+                                    <el-progress v-if="order.percentage[1]<50" :percentage="order.percentage[1]" color="#F56C6C"></el-progress>
+                                    <el-progress v-if="order.percentage[1]>=50 && order.percentage[1]<100" :percentage="order.percentage[1]" color="#E6A23C"></el-progress>
+                                    <el-progress v-if="order.percentage[1]>=100" :percentage="order.percentage[1]" color="#45991b"></el-progress>
+                                </div>
+                            </div>
+                        </el-col>
+                    </el-row>
+                </el-card>
+            </div>
+            <div class="card-container left">
+                <el-card shadow="always">
+                    <template #header>
+                        <div class="header">
+                            <div class="title"><i class="fa fa-caret-right"></i>饼状图</div>
+                        </div>
+                    </template>
+                    <div class="chart2" id="chart2"></div>
+                </el-card>
+            </div>
+        </el-col>
+        <el-col :md="18" :xs="24" :sm="24">
+            <div class="card-container">
+                <el-card shadow="always" body-style="padding-bottom:10px;">
+                    <el-row>
+                        <el-col :md="6" :sm="12" :xs="12">
+                            <div class="style-1 bkcolor1">
+                                <div class="box">
+                                    <div class="box-title">用户总数</div>
+                                    <div class="box-number">{{panel[0]}}</div>
+                                </div>
+                                <i class="fa fa-user-circle-o"></i>
+                            </div>
+                        </el-col>
+                        <el-col :md="6" :sm="12" :xs="12">
+                            <div class="style-1 bkcolor2">
+                                <div class="box">
+                                    <div class="box-title">在线人数</div>
+                                    <div class="box-number">{{panel[1]}}</div>
+                                </div>
+                                <i class="fa fa-tasks"></i>
+                            </div>
+                        </el-col>
+                        <el-col :md="6" :sm="12" :xs="12">
+                            <div class="style-1 bkcolor3">
+                                <div class="box">
+                                    <div class="box-title">月租用户</div>
+                                    <div class="box-number">{{panel[2]}}</div>
+                                </div>
+                                <i class="fa fa-dashcube"></i>
+                            </div>
+                        </el-col>
+                        <el-col :md="6" :sm="12" :xs="12">
+                            <div class="style-1 bkcolor4">
+                                <div class="box">
+                                    <div class="box-title">数据表数量</div>
+                                    <div class="box-number">{{panel[3]}}</div>
+                                </div>
+                                <i class="fa fa-database"></i>
+                            </div>
+                        </el-col>
+                    </el-row>
+                </el-card>
+            </div>
+            <div class="card-container">
+                <el-card shadow="always">
+                    <template #header>
+                        <div class="header">
+                            <div class="title"><i class="fa fa-caret-right"></i>折线图</div>
+                        </div>
+                    </template>
+                    <div class="chart1" id="chart1"></div>
+                </el-card>
+            </div>
+            <div class="card-container">
+                <el-card shadow="always">
+                    <template #header>
+                        <div class="header">
+                            <div class="title"><i class="fa fa-caret-right"></i>表格</div>
+                            <div class="right-filter">
+                                <el-button-group>
+                                    <el-button @click="changeForm('all')" size="small" :type="(filterForm.table=='all')?'primary':''">全部</el-button>
+                                    <el-button @click="changeForm('today')" size="small" :type="(filterForm.table=='today')?'primary':''">今日</el-button>
+                                    <el-button @click="changeForm('week')" size="small" :type="(filterForm.table=='week')?'primary':''">本周</el-button>
+                                    <el-button @click="changeForm('month')" size="small" :type="(filterForm.table=='month')?'primary':''">当月</el-button>
+                                </el-button-group>
                             </div>
                         </div>
-                    </el-col>
-                </el-row>
-            </el-card>
-        </div>
-        <div class="card-container left">
-            <el-card shadow="always">
-                <template #header>
-                    <div class="header">
-                        <div class="title"><i class="fa fa-caret-right"></i>饼状图</div>
-                    </div>
-                </template>
-                <div class="chart2" id="chart2"></div>
-            </el-card>
-        </div>
-    </el-col>
-    <el-col :md="18" :xs="24" :sm="24">
-        <div class="card-container">
-            <el-card shadow="always" body-style="padding-bottom:10px;">
-                <el-row>
-                    <el-col :md="6" :sm="12" :xs="12">
-                        <div class="style-1 bkcolor1">
-                            <div class="box">
-                                <div class="box-title">用户总数</div>
-                                <div class="box-number">{{panel[0]}}</div>
+                    </template>
+                    <el-table :data="table">
+                        <el-table-column label="排名" prop="sort"></el-table-column>
+                        <el-table-column label="会员" prop="name"></el-table-column>
+                        <el-table-column label="下单">
+                            <template #default="{row}">{{row.total}}笔</template>
+                        </el-table-column>
+                        <el-table-column label="金额">
+                            <template #default="{row}">￥{{row.money}}</template>
+                        </el-table-column>
+                    </el-table>
+                </el-card>
+            </div>
+            <div class="card-container">
+                <el-card shadow="always">
+                    <template #header>
+                        <div class="header">
+                            <div class="title"><i class="fa fa-caret-right"></i>柱状图</div>
+                            <div class="right-filter">
+                                <el-form :model="filterForm">
+                                    <el-form-item label="统计时间" style="margin-bottom: 0;">
+                                        <el-select v-model="filterForm.select" style="margin-right: 10px;width: 150px;" @change="changeForm(0)">
+                                            <el-option label="第一项" value="one"></el-option>
+                                            <el-option label="第二项" value="two"></el-option>
+                                            <el-option label="第三项" value="three"></el-option>
+                                        </el-select>
+                                        <el-date-picker @change="changeForm(0)" v-model="filterForm.datepicker" style="width: 250px;" type="daterange" range-separator="到"></el-date-picker>
+                                    </el-form-item>
+                                </el-form>
                             </div>
-                            <i class="fa fa-user-circle-o"></i>
                         </div>
-                    </el-col>
-                    <el-col :md="6" :sm="12" :xs="12">
-                        <div class="style-1 bkcolor2">
-                            <div class="box">
-                                <div class="box-title">在线人数</div>
-                                <div class="box-number">{{panel[1]}}</div>
-                            </div>
-                            <i class="fa fa-tasks"></i>
-                        </div>
-                    </el-col>
-                    <el-col :md="6" :sm="12" :xs="12">
-                        <div class="style-1 bkcolor3">
-                            <div class="box">
-                                <div class="box-title">月租用户</div>
-                                <div class="box-number">{{panel[2]}}</div>
-                            </div>
-                            <i class="fa fa-dashcube"></i>
-                        </div>
-                    </el-col>
-                    <el-col :md="6" :sm="12" :xs="12">
-                        <div class="style-1 bkcolor4">
-                            <div class="box">
-                                <div class="box-title">数据表数量</div>
-                                <div class="box-number">{{panel[3]}}</div>
-                            </div>
-                            <i class="fa fa-database"></i>
-                        </div>
-                    </el-col>
-                </el-row>
-            </el-card>
-        </div>
-        <div class="card-container">
-            <el-card shadow="always">
-                <template #header>
-                    <div class="header">
-                        <div class="title"><i class="fa fa-caret-right"></i>折线图</div>
-                    </div>
-                </template>
-                <div class="chart1" id="chart1"></div>
-            </el-card>
-        </div>
-        <div class="card-container">
-            <el-card shadow="always">
-                <template #header>
-                    <div class="header">
-                        <div class="title"><i class="fa fa-caret-right"></i>表格</div>
-                        <div class="right-filter">
-                            <el-button-group>
-                                <el-button @click="changeForm('all')" size="small" :type="(filterForm.table=='all')?'primary':''">全部</el-button>
-                                <el-button @click="changeForm('today')" size="small" :type="(filterForm.table=='today')?'primary':''">今日</el-button>
-                                <el-button @click="changeForm('week')" size="small" :type="(filterForm.table=='week')?'primary':''">本周</el-button>
-                                <el-button @click="changeForm('month')" size="small" :type="(filterForm.table=='month')?'primary':''">当月</el-button>
-                            </el-button-group>
-                        </div>
-                    </div>
-                </template>
-                <el-table :data="table">
-                    <el-table-column label="排名" prop="sort"></el-table-column>
-                    <el-table-column label="会员" prop="name"></el-table-column>
-                    <el-table-column label="下单">
-                        <template #default="{row}">{{row.total}}笔</template>
-                    </el-table-column>
-                    <el-table-column label="金额">
-                        <template #default="{row}">￥{{row.money}}</template>
-                    </el-table-column>
-                </el-table>
-            </el-card>
-        </div>
-        <div class="card-container">
-            <el-card shadow="always">
-                <template #header>
-                    <div class="header">
-                        <div class="title"><i class="fa fa-caret-right"></i>柱状图</div>
-                        <div class="right-filter">
-                            <el-form :model="filterForm">
-                                <el-form-item label="统计时间" style="margin-bottom: 0;">
-                                    <el-select v-model="filterForm.select" style="margin-right: 10px;width: 150px;" @change="changeForm(0)">
-                                        <el-option label="第一项" value="one"></el-option>
-                                        <el-option label="第二项" value="two"></el-option>
-                                        <el-option label="第三项" value="three"></el-option>
-                                    </el-select>
-                                    <el-date-picker @change="changeForm(0)" v-model="filterForm.datepicker" style="width: 250px;" type="daterange" range-separator="到"></el-date-picker>
-                                </el-form-item>
-                            </el-form>
-                        </div>
-                    </div>
-                </template>
-                <div class="chart3" id="chart3"></div>
-            </el-card>
-        </div>
-    </el-col>
-</el-row>
+                    </template>
+                    <div class="chart3" id="chart3"></div>
+                </el-card>
+            </div>
+        </el-col>
+    </el-row>
+</template>
+<script>
+    export default{
+        data:{
+            echarts:'',
+            panel:[],
+            line:{
+                date:[],
+                data:[]
+            },
+            table:[],
+            bar:{
+                date:[],
+                name:[],
+                data:[]
+            },
+            pie:[],
+            order:{
+                percentage:[0,0]
+            },
+            filterForm:{
+                table:'all',
+                select:'one',
+                datepicker:['2023-01-01','2023-02-01'],
+            }
+        },
+        onLoad:function (){
+            Yunqi.use('/assets/js/echarts.min.js').then(res=>{
+                this.echarts=res;
+                this.parseData();
+            });
+        },
+        methods:{
+            parseData:function (){
+                Yunqi.ajax.get('dashboard/index',{}).then(res=>{
+                    this.panel=res.panel;
+                    this.line=res.line;
+                    this.table=res.table;
+                    this.bar=res.bar;
+                    this.pie=res.pie;
+                    this.order=res.order;
+                    this.chart1();
+                    this.chart2();
+                    this.chart3();
+                });
+            },
+            chart1:function () {
+                let mychart = this.echarts.init(document.getElementById('chart1'), 'walden');
+                mychart.setOption({
+                    title: {text: '每日新增用户数',left: 'center'},
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    toolbox: {
+                        show: false,
+                        feature: {
+                            magicType: {show: true, type: ['stack', 'tiled']},
+                            saveAsImage: {show: true}
+                        }
+                    },
+                    xAxis: {
+                        type: 'category',
+                        boundaryGap: false,
+                        data: this.line.date
+                    },
+                    yAxis: {},
+                    grid: [{
+                        left: 40,
+                        top: 40,
+                        right: 0,
+                        bottom:30
+                    }],
+                    series: [{
+                        name: '注册用户',
+                        type: 'line',
+                        smooth: true,
+                        areaStyle: {
+                            normal: {}
+                        },
+                        lineStyle: {
+                            normal: {
+                                width: 1.5
+                            }
+                        },
+                        data: this.line.data
+                    }]
+                });
+                window.addEventListener('resize',()=>{
+                    mychart.resize();
+                });
+            },
+            chart2:function (){
+                let mychart = this.echarts.init(document.getElementById('chart2'))
+                mychart.setOption({
+                    title: {text: '消费比例图',left: 'center'},
+                    legend: {
+                        orient: 'horizontal',
+                        bottom: 0,
+                    },
+                    series: [{
+                        type: 'pie',
+                        data:this.pie,
+                        label: {
+                            normal: {
+                                show: true,
+                                formatter: "￥{c}",
+                            }
+                        }
+                    }]
+                });
+                window.addEventListener('resize',()=>{
+                    mychart.resize();
+                });
+            },
+            chart3:function (){
+                let mychart = this.echarts.init(document.getElementById('chart3'))
+                mychart.setOption({
+                    title: {text: '消费日历图',left: 'center'},
+                    legend: {
+                        orient: 'vertical',
+                        left: 'left',
+                    },
+                    yAxis: {},
+                    xAxis: {
+                        data: this.bar.date
+                    },
+                    grid: [{
+                        left: 100,
+                        top: 40,
+                        right: 40,
+                        bottom:20
+                    }],
+                    series: [
+                        {
+                            type: 'bar',
+                            name:this.bar.name[0],
+                            data: this.bar.data[0]
+                        },
+                        {
+                            type: 'bar',
+                            name:this.bar.name[1],
+                            data: this.bar.data[1]
+                        },
+                        {
+                            type: 'bar',
+                            name:this.bar.name[2],
+                            data: this.bar.data[2]
+                        }
+                    ]
+                });
+                window.addEventListener('resize',()=>{
+                    mychart.resize();
+                });
+            },
+            changeForm:function (type){
+                if(type){
+                    this.filterForm.table=type;
+                }
+                this.parseData();
+            }
+        }
+    }
+</script>
+<style>
+.pay{
+    text-align: center;
+    padding: 10px;
+}
+.pay img{
+    width: 180px;
+    height: 180px;
+}
+.card-container{
+    margin-bottom: 10px;
+}
+.card-container.left{
+    padding-right: 10px;
+}
+@media screen and (max-width: 992px) {
+    .card-container.left{
+        padding-right: 0;
+    }
+}
+.card-container .el-card__header{
+    padding: 8px 20px;
+}
+.card-container .header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.card-container .el-card__header .title{
+    font-weight: bold;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+}
+.card-container .el-card__header .title i{
+    font-size: 22px;
+    color: var(--el-color-primary);
+    margin-right: 8px;
+}
+.style-1{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-radius: 6px;
+    width: 87%;
+    margin:0 auto 10px;
+    color: #fff;
+}
+.style-1 i{
+    font-size: 42px;
+    color: #fff;
+}
+.style-2{
+    padding: 10px;
+    width: 87%;
+    margin:0 auto;
+    text-align: center;
+}
+.style-3{
+    padding: 10px;
+    width: 87%;
+    margin:0 auto;
+    text-align: center;
+}
+.style-3 .box-title{
+    text-align: left;
+}
+.style-3 .box{
+    height: 190px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+}
+.style-3 .box-content-left{
+    text-align: left;
+}
+.style-3 .box-number-top{
+    font-size: 26px;
+}
+.style-3 .box-number-bottom{
+    color: darkgrey;
+}
+.style-3 .box-content{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.style-3 .icon{
+    color: #fff;
+    width: 60px;
+    height: 60px;
+    line-height: 60px;
+    text-align: center;
+    font-size: 32px;
+}
+.box .box-title{
+    font-size: 18px;
+}
+.bkcolor1{
+    background: linear-gradient(to right,var(--el-color-primary-light-3),var(--el-color-primary));
+}
+.bkcolor2{
+    background: linear-gradient(to right,var(--el-color-warning-light-3),var(--el-color-warning));
+}
+.bkcolor3{
+    background: linear-gradient(to right,var(--el-color-danger-light-3),var(--el-color-danger));
+}
+.bkcolor4{
+    background: linear-gradient(to right,var(--el-color-success-light-3),var(--el-color-success));
+}
+.chart1{
+    width: 100%;
+    height: 305px;
+}
+.chart2{
+    width: 100%;
+    height: 310px;
+    margin: 0 auto;
+}
+.chart3{
+    width: 100%;
+    height: 300px;
+}
+</style>

@@ -91,9 +91,6 @@ class Backend extends BaseController
             event('write_log','游客访问');
         }
         event('write_log',WriteLog::ADMIN);
-        if($controllername!='app\\admin\\controller\\Index'){
-            View::engine()->layout('layout/default');
-        }
         $elementUi=Config::get('yunqi.elementUi');
         if(Cookie::get('layout')){
             $elementUi['layout']=Cookie::get('layout');
@@ -117,7 +114,6 @@ class Backend extends BaseController
                 'id'         => Cookie::get('window-id'),
                 'type'       => Cookie::get('window-type')
             ],
-            'jsFile'         => $this->request->domain().'/assets/js/'.$route[0].'/'.$route[1].'.js?version='.$version,
             'baseUrl'        => $this->request->domain().'/'.$this->auth->getRoute('modulealis').'/',
             'upload'         => Config::get('yunqi.upload'),
             'elementUi'      => $elementUi,
@@ -146,6 +142,19 @@ class Backend extends BaseController
             }
         }
         return '';
+    }
+
+    protected function fetch(string $template = '', array $vars = [], bool $isVue=true)
+    {
+        $controllername = $this->getShortControllerName();
+        $actionname=$this->request->action();
+        if(empty($template)){
+            $template = $controllername.DS.$actionname;
+        }
+        if($isVue){
+            View::layout('layout'.DS.'vue');
+        }
+        return View::fetch($template,$vars);
     }
 
     /**
@@ -378,19 +387,6 @@ class Backend extends BaseController
                 break;
         }
         return $where;
-    }
-
-    /**
-     * 自定义前端的js文件
-     * @param string $file
-     * @return void
-     */
-    protected function assignJsFile(string $file)
-    {
-        $version=Config::get('app.app_debug')?time():site_config("basic.version");
-        $jsFile=$this->request->domain().'/assets/js/admin/'.$file.'?version='.$version;
-        $this->config['jsFile']=$jsFile;
-        $this->assign('config',$this->config);
     }
 
     private function getShortControllerName():string

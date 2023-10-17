@@ -1,16 +1,41 @@
-<el-card shadow="never" style="border:0;">
-    <yun-table
-            :columns='recyclebin_("init")'
-            search="{$search}"
-            ref="yuntable"
-            :common-search="false"
-            :extend="{index_url:extend.recyclebin_url+'?action=list'}"
-            toolbar="refresh,restore,destroy,restoreall,clear">
+<template>
+    <el-card shadow="never" style="border:0;">
+        <yun-table
+                :columns='recyclebin_("init")'
+                search="{$search}"
+                ref="yuntable"
+                :common-search="false"
+                :extend="extend"
+                toolbar="refresh,restore,destroy,restoreall,clear">
             <template #toolbar="{tool,selections}">
                 <el-button v-if="tool=='restore'" type="success" @click.stop="recyclebin_('restore',selections)" :disabled="selections.length == 0"><i class="fa fa-rotate-left"></i>&nbsp;还原</el-button>
                 <el-button v-if="tool=='destroy'" type="danger" @click.stop="recyclebin_('destroy',selections)" :disabled="selections.length == 0"><i class="fa fa-remove"></i>&nbsp;彻底删除</el-button>
                 <el-button v-if="tool=='restoreall'" type="warning" @click.stop="recyclebin_('restoreall')"><i class="fa fa-rotate-left"></i>&nbsp;全部还原</el-button>
                 <el-button v-if="tool=='clear'" type="danger" @click.stop="recyclebin_('clear')"><i class="fa fa-remove"></i>&nbsp;全部清空</el-button>
             </template>
-    </yun-table>
-</el-card>
+        </yun-table>
+    </el-card>
+</template>
+<script>
+    import table from "@components/Table.js";
+    export default{
+        components:{
+            'YunTable':table
+        },
+        data:{
+            extend:{
+                index_url:Yunqi.config.url,
+                recyclebin_url:'',
+            }
+        },
+        onLoad:function (){
+            this.extend.recyclebin_url = Yunqi.config.url.slice(0,Yunqi.config.url.indexOf('?'));
+        },
+        methods: {
+
+        }
+    }
+</script>
+<style>
+
+</style>
