@@ -95,7 +95,7 @@ class Template extends \think\Template
                 $layoutFile = $this->parseTemplateFile($this->config['layout_name']);
                 if ($layoutFile) {
                     $layoutContent=file_get_contents($layoutFile);
-                    if($this->config['layout_name']=='layout/vue'){
+                    if($this->config['layout_name']=='layout'.DS.'vue'){
                         [$content, $jsfile, $cssfile] = $this->parseVue($content,$cacheFile);
                         $layoutContent = str_replace('{__CSS__}', $cssfile, $layoutContent);
                         $layoutContent = str_replace('{__JS__}', $jsfile, $layoutContent);
@@ -182,7 +182,7 @@ EOF;
         $cacheFile=str_replace('.php','-js.php',$cacheFile);
         $this->compilerFileToPhp($script,$cacheFile);
         //获取$cacheFile文件名
-        $cacheFile=substr($cacheFile,strrpos($cacheFile,'/')+1);
+        $cacheFile=substr($cacheFile,strrpos($cacheFile,DS)+1);
         $cacheFile=str_replace('-js.php','',$cacheFile);
         return $cacheFile;
     }
