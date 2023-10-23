@@ -11,38 +11,48 @@
                 </div>
                 <el-form ref="loginForm" :model="loginForm" label-width="0px" :rules="rules">
                     {:token_field()}
-                    <el-form-item label="" prop="username">
-                        <el-input size="large" v-model="loginForm.username" placeholder="用户名">
-                            <template #prepend>
-                                <i class="fa fa-user"></i>
-                            </template>
-                        </el-input>
-                    </el-form-item>
-                    <el-form-item label="" prop="password">
-                        <el-input size="large" type="password" v-model="loginForm.password" placeholder="密码">
-                            <template #prepend>
-                                <i class="fa fa-lock"></i>
-                            </template>
-                        </el-input>
-                    </el-form-item>
-                    {if $login_captcha}
-                    <el-form-item label="" prop="captcha" style="margin-bottom:10px;">
-                        <el-row>
-                            <el-col :span="16" :xs="14">
-                                <el-input size="large" v-model="loginForm.captcha" placeholder="验证码">
-                                    <template #prepend>
-                                        <i class="fa fa-ellipsis-h"></i>
-                                    </template>
-                                </el-input>
-                            </el-col>
-                            <el-col :span="8" :xs="10">
-                                <div class="captcha-img">
-                                    <img :src="captchaUrl" @click="refreshCaptcha"/>
-                                </div>
-                            </el-col>
-                        </el-row>
-                    </el-form-item>
-                    {/if}
+                    <el-row>
+                        <el-col :span="thirdLogin?15:24">
+                        <el-form-item label="" prop="username">
+                            <el-input size="large" v-model="loginForm.username" placeholder="用户名">
+                                <template #prepend>
+                                    <i class="fa fa-user"></i>
+                                </template>
+                            </el-input>
+                        </el-form-item>
+                        <el-form-item label="" prop="password">
+                            <el-input size="large" type="password" v-model="loginForm.password" placeholder="密码">
+                                <template #prepend>
+                                    <i class="fa fa-lock"></i>
+                                </template>
+                            </el-input>
+                        </el-form-item>
+                        {if $login_captcha}
+                        <el-form-item label="" prop="captcha" style="margin-bottom:10px;">
+                            <el-row>
+                                <el-col :span="12" :xs="14">
+                                    <el-input size="large" v-model="loginForm.captcha" placeholder="验证码">
+                                        <template #prepend>
+                                            <i class="fa fa-ellipsis-h"></i>
+                                        </template>
+                                    </el-input>
+                                </el-col>
+                                <el-col :span="12" :xs="10">
+                                    <div class="captcha-img">
+                                        <img :src="captchaUrl" @click="refreshCaptcha"/>
+                                    </div>
+                                </el-col>
+                            </el-row>
+                        </el-form-item>
+                        {/if}
+                        </el-col>
+                        <el-col :span="9" v-if="thirdLogin && qrcode" class="hide-800">
+                            <div class="login-right">
+                                <img class="login-right-img" :src="qrcode" alt="login" />
+                                <span>微信扫码</span>
+                            </div>
+                        </el-col>
+                    </el-row>
                     <el-form-item label="" prop="savepassword" style="margin-bottom:10px;">
                         <el-checkbox-group v-model="loginForm.savepassword">
                             <el-checkbox :label="1">{:__('记住密码')}</el-checkbox>
@@ -60,13 +70,15 @@
 export default{
     data(){
         return {
+            thirdLogin:false,
+            qrcode:'',
             captchaUrl:'',
             loginForm:{
                 __token__:'',
                 username: '',
                 password: '',
                 captcha: '',
-                savepassword:[1]
+                savepassword:[1],
             },
             rules:{
                 username:[{required:true,message:'用户名不能为空！',}],
@@ -76,16 +88,41 @@ export default{
     },
     onLoad:function (){
         this.refreshCaptcha();
+        let width=document.body.clientWidth;
+        this.thirdLogin=Yunqi.data.thirdLogin && width>800;
+        window.addEventListener('resize',()=>{
+            let width=document.body.clientWidth;
+            this.thirdLogin=Yunqi.data.thirdLogin && width>800;
+        });
+        this.qrcode=Yunqi.data.qrcode;
     },
     onShow:function (){
         this.loginForm.__token__=document.getElementsByTagName('input')[0].value;
         this.loginForm.username= localStorage.getItem('username') || '';
         this.loginForm.password= localStorage.getItem('password') || '';
         this.loginForm.savepassword= localStorage.getItem('savepassword')? [1] : [];
+        this.checklogin();
     },
     methods:{
         refreshCaptcha:function (){
             this.captchaUrl=Yunqi.config.baseUrl+"captcha?"+Math.random();
+        },
+        checklogin:function (){
+            if(!this.thirdLogin){
+                return;
+            }
+            let token=document.querySelector('input[name="__token__"]').value;
+            Yunqi.ajax.get('qrcodeLogin', {token:token},false,false).then(res=>{
+                if(Yunqi.data.referer){
+                    location.href=Yunqi.data.referer;
+                }else{
+                    location.href=Yunqi.config.baseUrl+'index';
+                }
+            }).catch(err=>{
+                setTimeout(()=>{
+                    this.checklogin();
+                },2000);
+            });
         },
         login:function (){
             this.$refs.loginForm.validate((valid)=>{
@@ -208,7 +245,7 @@ body {
     white-space: nowrap;
 }
 .login-container .login-box .login-form .el-form-item {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
 .login-container .login-box .login-form .login-btn {
@@ -223,7 +260,17 @@ body {
     width: 185px;
 }
 .captcha-img img{
-    width: 140px;
+    width: 125px;
+}
+.login-right{
+    display: flex;
+    flex-direction: column;
+    margin-left: 10px;
+    align-items: center;
+    justify-content: center;
+}
+.login-right-img{
+    width: 125px;
 }
 
 @media screen and (max-width: 1250px) {

@@ -215,20 +215,47 @@ if (!function_exists('create_file')) {
     }
 }
 
-if (!function_exists('getAddons')) {
-    function getAddons(string $key='')
+if (!function_exists('get_addons')) {
+    /**
+     * 获取插件信息
+     * @param string $pack 插件标识
+     * @return array|bool
+     */
+    function get_addons(string $pack='')
     {
         $addons=Cache::get('download-addons');
         if(!$addons){
             $addons=Addons::field('id,key,type,name,install,open')->select();
             Cache::set('download-addons',$addons);
         }
-        if(!$key){
+        if(!$pack){
             return $addons;
         }
         foreach ($addons as $addon){
-            if($addon['key']==$key){
+            if($addon['pack']==$pack){
                 return $addon;
+            }
+        }
+        return false;
+    }
+}
+
+if (!function_exists('addons_installed')) {
+    /**
+     * 判断是否安装插件
+     * @param string $pack 插件标识
+     * @return array|bool
+     */
+    function addons_installed(string $pack)
+    {
+        $addons=Cache::get('download-addons');
+        if(!$addons){
+            $addons=Addons::field('id,key,pack,type,name,install,open')->select();
+            Cache::set('download-addons',$addons);
+        }
+        foreach ($addons as $addon){
+            if($addon['pack']==$pack && $addon['install']==1){
+                return true;
             }
         }
         return false;

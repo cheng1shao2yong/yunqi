@@ -27,9 +27,14 @@ class Admin extends Backend
 {
     protected $groups;
 
+    private $thirdLogin=false;
+
+    protected $noNeedRight='third';
+
     use Actions{
         add as private _add;
         edit as private _edit;
+        del as private _del;
     }
 
     public function _initialize()
@@ -37,6 +42,8 @@ class Admin extends Backend
         parent::_initialize();
         $this->model=new AdminModel();
         $this->groups=AuthGroup::select();
+        $this->thirdLogin=addons_installed('uniapp') && site_config("addons.uniapp_scan_login");
+        $this->assign('thirdLogin',$this->thirdLogin);
     }
 
     #[Route("*","index")]
@@ -44,6 +51,7 @@ class Admin extends Backend
     {
         if (false === $this->request->isAjax()) {
             $this->assign('groupids',$this->auth->groupids);
+            $this->assign('isSuperAdmin',$this->auth->isSuperAdmin());
             return $this->fetch();
         }
         if($this->request->post('selectpage')){
@@ -59,14 +67,25 @@ class Admin extends Backend
             $where[]=[implode(' or ',$or)];
         }
         [$where, $order, $limit, $with] = $this->buildparams($where);
+        $third_ids=[];
         $list = $this->model
             ->where($where)
             ->order($order)
             ->paginate($limit)
-            ->each(function($res){
+            ->each(function($res) use (&$third_ids){
                 $this->formartGroups($res);
+                if($this->thirdLogin){
+                    $third_ids[]=$res->third_id;
+                }
             });
-        $result = ['total' => $list->total(), 'rows' => $list->items()];
+        $rows=$list->items();
+        if($this->thirdLogin){
+            $thirds=\app\common\model\Third::where('id','in',$third_ids)->column('id,openname','id');
+            foreach ($rows as $k=>$v){
+                $rows[$k]['third']=$thirds[$v['third_id']]??'';
+            }
+        }
+        $result = ['total' => $list->total(), 'rows' => $rows];
         return json($result);
     }
 
@@ -141,6 +160,34 @@ class Admin extends Backend
             $this->assign('groupdata',$this->getGroupData());
             return $this->fetch();
         }
+    }
+
+    #[Route('GET,POST','del')]
+    public function del()
+    {
+        if(!$this->auth->isSuperAdmin()){
+            $groupids=$this->auth->getChildrenGroupIds();
+            $ids = $this->request->param("ids");
+            $list = $this->model->where('id', 'in', $ids)->select();
+            foreach ($list as $row){
+                $row->groupids=explode(',',$row->groupids);
+                foreach ($row->groupids as $v){
+                    if(!in_array($v,$groupids)){
+                        $this->error(__('无权操作'));
+                    }
+                }
+            }
+        }
+        return $this->_del();
+    }
+
+    #[Route('JSON','third')]
+    public function third()
+    {
+         $this->model=new \app\common\model\Third();
+         $where=[];
+         $where[]=['platform','=','mpapp'];
+         return $this->selectpage($where);
     }
 
     private function getGroupData()

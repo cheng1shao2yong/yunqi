@@ -14,6 +14,8 @@ use app\common\library\Tree;
 use app\common\model\Admin;
 use app\common\model\AuthGroup;
 use app\common\model\AuthRule;
+use app\common\model\QrcodeScan;
+use app\common\model\Third;
 use app\common\service\AuthService;
 use think\facade\Config;
 use think\facade\Session;
@@ -139,6 +141,28 @@ class AdminAuthService extends AuthService{
         return true;
     }
 
+    public function loginByThird(string $__token__):bool
+    {
+        $scan=QrcodeScan::where(['type'=>'backend-login','foreign_key'=>$__token__])->order('id desc')->find();
+        if($scan){
+            $third=Third::where(['platform'=>Third::PLATFORM('微信公众号'),'openid'=>$scan->openid])->find();
+            if($third){
+                $admin=Admin::where(['third_id'=>$third->id])->find();
+                if($admin && $admin['status'] == 'normal'){
+                    $admin->loginfailure = 0;
+                    $admin->logintime = time();
+                    $admin->loginip = request()->ip();
+                    $admin->token = uuid();
+                    $admin->save();
+                    Session::set('admin',$admin->toArray());
+                    Session::save();
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public function login(string $username, string $password)
     {
         $admin = Admin::where(['username' => $username])->find();
@@ -164,6 +188,7 @@ class AdminAuthService extends AuthService{
         Session::set('admin',$admin->toArray());
         Session::save();
     }
+
     public function getRuleList()
     {
         $rule = AuthRule::field('id,pid,status,controller,action,title,icon,menutype,ismenu,extend')

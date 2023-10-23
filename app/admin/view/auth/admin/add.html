@@ -10,6 +10,7 @@
         </template>
         {/if}
         <yun-form
+                v-if="columns"
                 :data="data"
                 ref="yunform"
                 :columns="columns">
@@ -18,7 +19,7 @@
             </template>
             <template #groupids="item">
                 <el-form-item label="{:__('所属组别')}:" prop="groupids">
-                    <el-select placeholder="请选择{:__('所属组别')}" multiple v-model="item.rows.groupids" :clearable="true" style="width: 100%">
+                    <el-select :disabled="disabled" placeholder="请选择{:__('所属组别')}" multiple v-model="item.rows.groupids" :clearable="true" style="width: 100%">
                         {foreach $groupdata as $key=>$value}
                         <el-option key="{$value.id}" label="{:str_replace('&amp;','&',$value.name)}" value="{$value.id}"></el-option>
                         {/foreach}
@@ -34,9 +35,14 @@
         components:{'YunForm':form},
         data:{
             data:Yunqi.data.row || {},
-            columns:[
-                {field: 'id',title: __('ID'),width:80,edit:'hidden'},
-                {field: 'username', title: __('用户名'),edit:'text',rules:'required'},
+            disabled:false,
+            columns:''
+        },
+        onLoad:function (query){
+            let ids=query.ids;
+            this.columns=[
+                {field: 'id',title: __('ID'),edit:'hidden'},
+                {field: 'username', title: __('用户名'),edit:(ids==1)?'readonly':'text',rules:'required'},
                 {field: 'nickname', title: __('昵称'),edit:'text',rules:'required'},
                 {field: 'mobile', title: __('手机号'),edit:'text',rules:'required;mobile'},
                 {
@@ -45,9 +51,13 @@
                     edit:{form:'slot',value:[]},
                     rules:'required'
                 },
+                {field: 'third_id', title: __('绑定微信'),edit:Yunqi.data.thirdLogin?{form:'selectpage',url:'auth/admin/third',keyField:'id',labelField:'openname'}:false},
                 {field: 'password', title: __('密码'),edit:'password'},
                 {field: 'status', title: __('状态'),searchList: {'normal': __('正常'),'hidden': __('隐藏')},edit:{form:'radio',value:'normal'}}
-            ]
+            ];
+            if(ids==1){
+                this.disabled=true;
+            }
         },
         methods: {
 

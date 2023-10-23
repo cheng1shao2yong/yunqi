@@ -5,19 +5,24 @@
                 toolbar="refresh,add,del"
                 order="asc"
                 :auth="{
-                add:{:$auth->check('app\\admin\\controller\\auth\\Admin','add')},
-                edit:{:$auth->check('app\\admin\\controller\\auth\\Admin','edit')},
-                del:{:$auth->check('app\\admin\\controller\\auth\\Admin','del')},
-                multi:{:$auth->check('app\\admin\\controller\\auth\\Admin','multi')},
-            }"
+                    add:{:$auth->check('app\\admin\\controller\\auth\\Admin','add')},
+                    edit:{:$auth->check('app\\admin\\controller\\auth\\Admin','edit')},
+                    del:{:$auth->check('app\\admin\\controller\\auth\\Admin','del')},
+                    multi:{:$auth->check('app\\admin\\controller\\auth\\Admin','multi')},
+                }"
                 :extend="extend">
-            <template #formatter="{field,rows}">
-                <div v-if="field=='groupids'">
-                    <template v-for="item in rows.groupids">
-                        <el-tag :type="item.status=='normal'?'':'info'" effect="dark" style="margin-right: 5px;">{{item.name}}</el-tag>
-                    </template>
-                </div>
-            </template>
+                <template #formatter="{field,rows}">
+                    <div v-if="field=='groupids'">
+                        <template v-for="item in rows.groupids">
+                            <el-tag :type="item.status=='normal'?'':'info'" effect="dark" style="margin-right: 5px;">{{item.name}}</el-tag>
+                        </template>
+                    </div>
+                    {if $thirdLogin}
+                    <div v-if="field=='third'">
+                        <el-tag effect="dark" v-if="rows.third" style="margin-right: 5px;">{{rows.third.openname}}</el-tag>
+                    </div>
+                    {/if}
+                </template>
         </yun-table>
     </el-card>
 </template>
@@ -36,16 +41,24 @@
             },
             columns:[
                 {checkbox: true,selectable:function (row,index){
+                    let r=true;
                     for(let i in row.groupids){
                         if(inArray(Yunqi.data.groupids,row.groupids[i].id)){
-                            return false;
+                            r=false;
                         }
                     }
-                    return true;
+                    if(Yunqi.data.isSuperAdmin){
+                        r=true;
+                    }
+                    if(row.id==1){
+                        r=false;
+                    }
+                    return r;
                 }},
                 {field: 'id',title: __('ID'),width:80,operate:false},
                 {field: 'username', title: __('用户名'),operate:'like'},
                 {field: 'nickname', title: __('昵称'),operate:'like'},
+                {field: 'third', title: __('绑定微信'),operate:false,visible:Yunqi.data.thirdLogin?true:'none',formatter: Yunqi.formatter.slot},
                 {field: 'mobile', title: __('手机号')},
                 {
                     field: 'groupids',
@@ -64,6 +77,12 @@
                                 sw.disabled=true;
                             }
                         }
+                        if(Yunqi.data.isSuperAdmin){
+                            sw.disabled=false;
+                        }
+                        if(row.id==1){
+                            sw.disabled=true;
+                        }
                         return sw;
                     }},
                 {
@@ -72,6 +91,9 @@
                     width:100,
                     action:{
                         edit:function(row){
+                            if(Yunqi.data.isSuperAdmin){
+                                return true;
+                            }
                             for(let i in row.groupids){
                                 if(inArray(Yunqi.data.groupids,row.groupids[i].id)){
                                     return false;
@@ -80,6 +102,12 @@
                             return true;
                         },
                         del:function(row){
+                            if(row.id==1){
+                                return false;
+                            }
+                            if(Yunqi.data.isSuperAdmin){
+                                return true;
+                            }
                             for(let i in row.groupids){
                                 if(inArray(Yunqi.data.groupids,row.groupids[i].id)){
                                     return false;

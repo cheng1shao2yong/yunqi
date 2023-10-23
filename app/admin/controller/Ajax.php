@@ -211,11 +211,7 @@ class Ajax extends Backend{
     #[Route('GET','area')]
     public function area()
     {
-        $area=getAddons('area');
-        if(!$area){
-            $this->error('请先安装插件area');
-        }
-        if(!$area->install){
+        if(!addons_installed('area')){
             $this->error('请先安装插件area');
         }
         $pid = $this->request->get("pid");

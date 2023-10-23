@@ -12,13 +12,17 @@ declare (strict_types = 1);
 namespace app\admin\controller;
 
 use app\common\controller\Backend;
+use app\common\model\Admin;
+use app\common\model\Qrcode;
+use app\common\model\QrcodeScan;
+use app\common\model\Third;
 use think\annotation\route\Route;
 use think\captcha\facade\Captcha;
 use think\facade\Session;
 
 class Index extends Backend
 {
-    protected $noNeedLogin = ['login','captcha'];
+    protected $noNeedLogin = ['login','captcha','qrcodeLogin'];
     protected $noNeedRight = ['index', 'logout'];
 
     #[Route('GET','index')]
@@ -38,6 +42,16 @@ class Index extends Backend
         return Captcha::create();
     }
 
+    #[Route('GET','qrcodeLogin')]
+    public function qrcodeLogin()
+    {
+        $token=$this->request->get('token');
+        if($this->auth->loginByThird($token)){
+            $this->success(__('登陆成功'));
+        }
+        $this->error();
+    }
+
     #[Route('POST,GET','login')]
     public function login()
     {
@@ -46,6 +60,22 @@ class Index extends Backend
                 $alis=get_module_alis();
                 return redirect(request()->domain().'/'.$alis.'/index');
             }
+            $thirdLogin=addons_installed('uniapp') && site_config("addons.uniapp_scan_login");
+            if($thirdLogin){
+                $config=[
+                    'appid'=>site_config("addons.uniapp_mpapp_id"),
+                    'appsecret'=>site_config("addons.uniapp_mpapp_secret"),
+                ];
+                $qrcode=new Qrcode();
+                $qrcode->type='backend-login';
+                $qrcode->foreign_key=token();
+                $qrcode->save();
+                $wechat=new \WeChat\Qrcode($config);
+                $ticket = $wechat->create($qrcode->id)['ticket'];
+                $url=$wechat->url($ticket);
+                $this->assign('qrcode',$url);
+            }
+            $this->assign('thirdLogin',$thirdLogin);
             $this->assign('logo',site_config("basic.logo"));
             $this->assign('sitename',site_config("basic.sitename"));
             $this->assign('login_captcha',config('yunqi.login_captcha'));
@@ -55,7 +85,7 @@ class Index extends Backend
         $username = $this->request->post('username');
         $password = $this->request->post('password');
         $captcha = $this->request->post('captcha');
-        if(!captcha_check($captcha)){
+        if(config('yunqi.login_captcha') && !captcha_check($captcha)){
             $this->error(__('验证码错误'),0);
         }
         try{

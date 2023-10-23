@@ -33,7 +33,7 @@ class WriteLog
         ],
         [
             'controller'=>'app\\admin\\controller\\Index',
-            'action'=>['captcha']
+            'action'=>['captcha','checklogin']
         ]
     ];
 
