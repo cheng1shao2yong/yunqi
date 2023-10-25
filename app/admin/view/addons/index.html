@@ -307,7 +307,7 @@
                     this.buyDialog.show=true;
                     this.buyDialog.row=row;
                 }else{
-                    Yunqi.ajax.post('addons/download',row).then(res=>{
+                    Yunqi.ajax.post('addons/download', {key:row.key}).then(res=>{
                         this.$refs.yuntable.reload();
                     });
                 }

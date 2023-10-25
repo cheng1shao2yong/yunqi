@@ -448,7 +448,7 @@ class AddonsService extends BaseService {
             $id=$this->menuid;
             $arr=[];
             $arr['id']=$id;
-            $arr['pid']=$pid;
+            $arr['pid']=isset($item['pid'])?$item['pid']:$pid;
             $arr['addons']=$pack;
             $arr['controller']=$item['controller'];
             $arr['action']=$item['action'];

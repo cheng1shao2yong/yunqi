@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace app\index\controller;
 
 use app\common\controller\BaseController;
+use app\common\library\Http;
 use think\annotation\route\Get;
 use think\facade\View;
 
@@ -19,11 +20,5 @@ class Index extends BaseController
     {
         $this->assign('version',site_config('basic.version'));
         return $this->fetch();
-    }
-
-    #[Get('/test')]
-    public function test()
-    {
-        $this->success('dddd');
     }
 }

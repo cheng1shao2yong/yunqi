@@ -73,8 +73,10 @@ window.Yunqi=(function(){
                         }
                         resolve(res.data);
                     }else if (res.code === 0) {
-                        let msg=res.msg || 'error';
-                        Yunqi.message.error(msg);
+                        let msg=res.msg || '';
+                        if (msg) {
+                            Yunqi.message.error(msg);
+                        }
                         reject(res);
                     }else if(all){
                         resolve(res);

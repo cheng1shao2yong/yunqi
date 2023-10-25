@@ -128,7 +128,8 @@ EOF;
                 'runtime/cache'
             ];
             foreach ($dirs as $dir){
-                mkdir(dirname(dirname(__DIR__)).DS.$dir,0777,true);
+                $dir=dirname(dirname(__DIR__)).DS.$dir;
+                mkdir($dir,0777,true);
             }
             file_put_contents(__DIR__.DS.'install.lock','install');
             echo json_encode(['code'=>1,'msg'=>'安装成功'],JSON_UNESCAPED_UNICODE);

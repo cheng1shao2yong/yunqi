@@ -228,7 +228,7 @@ INSERT INTO `__PREFIX__config` VALUES ('3', 'filegroup', 'dictionary', null, '�
 INSERT INTO `__PREFIX__config` VALUES ('4', 'sitename', 'basic', null, '站点名称', '', 'text', '云油道', 'required', '0', '');
 INSERT INTO `__PREFIX__config` VALUES ('5', 'logo', 'basic', null, '站点Logo', '', 'image', '/assets/img/logo.png', 'required', '0', '');
 INSERT INTO `__PREFIX__config` VALUES ('6', 'forbiddenip', 'basic', null, 'IP黑名单', '', 'textarea', '', '', '0', '');
-INSERT INTO `__PREFIX__config` VALUES ('7', 'version', 'basic', null, '版本号', '', 'text', '1.1.001', 'required', '0', '');
+INSERT INTO `__PREFIX__config` VALUES ('7', 'version', 'basic', null, '版本号', '', 'text', '1.0.001', 'required', '0', '');
 INSERT INTO `__PREFIX__config` VALUES ('8', 'copyright', 'basic', null, '版权标识', '', 'text', '贵阳云起信息科技有限公司', 'required', '0', '');
 
 -- ----------------------------
