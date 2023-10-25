@@ -296,7 +296,7 @@
                 this.$refs.yuntable.submit();
             },
             packAddon:function(row) {
-                Yunqi.ajax.post('addons/pack',{key:row.key}).then(res=>{
+                Yunqi.ajax.post('addons/pack',row).then(res=>{
                     this.$refs.yuntable.reload();
                 });
             },
@@ -307,7 +307,7 @@
                     this.buyDialog.show=true;
                     this.buyDialog.row=row;
                 }else{
-                    Yunqi.ajax.post('addons/download', {key:row.key}).then(res=>{
+                    Yunqi.ajax.post('addons/download',row).then(res=>{
                         this.$refs.yuntable.reload();
                     });
                 }
