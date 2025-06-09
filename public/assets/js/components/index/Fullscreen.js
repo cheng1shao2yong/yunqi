@@ -19,7 +19,7 @@ export default {
     template:template,
     methods:{
         changeFullScreen:function (){
-            var doc = document.documentElement;
+            let doc = document.documentElement;
             if (this.isFull) {
                 this.isFull=false;
                 document.exitFullscreen ? document.exitFullscreen() : document.mozCancelFullScreen ? document.mozCancelFullScreen() : document.webkitExitFullscreen && document.webkitExitFullscreen();

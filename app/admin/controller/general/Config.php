@@ -55,6 +55,11 @@ class Config extends Backend
                         ];
                     }
                     $result[$pack]['list'][]=$item;
+                    //替换value中的{$host}为本地域名
+                    if($item['value']){
+                        $value=str_replace('{$host}',$this->request->host(),$item['value']);
+                        $item['value']=$value;
+                    }
                 }
                 $this->success('',array_values($result));
             }
@@ -71,6 +76,10 @@ class Config extends Backend
     #[Route("POST","del")]
     public function del()
     {
+        $app_debug=\think\facade\Config::get('app.app_debug');
+        if(!$app_debug){
+            $this->error(__('非调试模式下不能删除配置'));
+        }
         $group=$this->request->post('group');
         $name=$this->request->post('name');
         $config=ConfigModel::where(['name'=>$name,'group'=>$group])->find();
@@ -85,6 +94,10 @@ class Config extends Backend
     #[Route("POST","add")]
     public function add()
     {
+        $app_debug=\think\facade\Config::get('app.app_debug');
+        if(!$app_debug){
+            $this->error(__('非调试模式下不能增加配置'));
+        }
         $data=$this->request->post('row/a');
         $name=($data['group']=='addons')?$data['addons_pack'].'_'.$data['name']:$data['name'];
         ConfigModel::where(['name'=>$name,'group'=>$data['group']])->find() && $this->error(__('配置已存在'));
@@ -129,13 +142,20 @@ class Config extends Backend
                     'keyField'=>$data['keyField'],
                     'labelField'=>$data['labelField'],
                 ],JSON_UNESCAPED_UNICODE);
-            break;
-            case 'array':
-                if($data['label']===''){
-                    $this->error(__('数组标题不能为空'));
+                break;
+            case 'json':
+                if(!$data['label']){
+                    $data['label']=['键名','键值'];
+                }else{
+                    $data['label']=explode(',',$data['label']);
                 }
-                $extend=json_encode(explode(',',$data['label']),JSON_UNESCAPED_UNICODE);
-            break;
+                if(!$data['keys']){
+                    $data['keys']=['0','1'];
+                }else{
+                    $data['keys']=explode(',',$data['keys']);
+                }
+                $extend=json_encode([$data['label'],$data['keys']],JSON_UNESCAPED_UNICODE);
+                break;
         }
         (new ConfigModel())->save([
             'name'=>$name,
@@ -156,6 +176,10 @@ class Config extends Backend
     #[Route("POST","edit")]
     public function edit()
     {
+        $app_debug=\think\facade\Config::get('app.app_debug');
+        if(!$app_debug){
+            $this->error(__('非调试模式下不能修改配置'));
+        }
         $data=$this->request->post('row/a');
         $group=$data['group'];
         if($group=='addons'){
@@ -168,9 +192,6 @@ class Config extends Backend
                 $arr=array_keys($editvalue);
                 if(!in_array('basic',$arr)){
                     $this->error(__('基础配置项必须存在'));
-                }
-                if(!in_array('app',$arr)){
-                    $this->error(__('应用配置项必须存在'));
                 }
                 if(!in_array('addons',$arr)){
                     $this->error(__('插件配置项必须存在'));

@@ -38,7 +38,12 @@ class AuthGroup extends Model{
             $rootid=$ruleList[0]['pid'];
         }
         Tree::instance()->init($ruleList);
-        $list = Tree::instance()->getTreeList(Tree::instance()->getTreeArray($rootid));
+        $list = Tree::instance()->getTreeArray($rootid);
         return $list;
+    }
+
+    public static function getGroupListArray(mixed $groupids=''):array
+    {
+        return Tree::instance()->getTreeList(self::getGroupListTree($groupids));
     }
 }

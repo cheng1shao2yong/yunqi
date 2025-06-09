@@ -22,7 +22,9 @@ abstract class UploadService extends BaseService
     ];
     //存储方式
     protected $disks;
-    //上传的文件
+
+
+    /* @var \think\File $file */
     protected $file;
 
     protected $category;
@@ -37,8 +39,7 @@ abstract class UploadService extends BaseService
     abstract protected function compress(string $url,string $fullurl);
     //图片加水印
     abstract protected function watermark(string $url,string $fullurl);
-    //获取处理后的图片信息
-    abstract protected function imageFileinfo(string $url,string $fullurl):array;
+    abstract protected function imageFileinfo(string $url,string $fullurl);
     //删除文件
     abstract public static function deleteFile(Attachment $attachment);
 
@@ -59,7 +60,7 @@ abstract class UploadService extends BaseService
             ];
         }
         [$url,$fullurl] = $this->putFile();
-        $thumburl=$this->getThumbUrl();
+        $thumburl=$this->getThumbUrl($fullurl);
         $imagetype=null;
         $imagewidth=null;
         $imageheight=null;
@@ -134,12 +135,12 @@ abstract class UploadService extends BaseService
         return false;
     }
 
-    protected function getThumbUrl():string
+    protected function getThumbUrl(string $fullurl):string
     {
         $domain=request()->domain();
         $ext = $this->file->extension();
         if (in_array($ext, ['jpg', 'png', 'bmp', 'jpeg', 'gif'])) {
-            return $domain.'/assets/img/fileicon/image.png';
+            return $fullurl;
         }else if (in_array($ext, ['doc', 'docx'])) {
             return $domain.'/assets/img/fileicon/doc.png';
         }else if (in_array($ext, ['ppt', 'pptx'])) {

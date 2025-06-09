@@ -29,7 +29,7 @@
                         :multiple="true"
                         accept="image/*"
                         action="{$config.baseUrl}{$config.upload.uploadurl}"
-                        :data="{category:category,disks:'local_public'}"
+                        :data="{category:category,disks:'{$config.upload.disks}'}"
                         :headers="{'x-requested-with': 'XMLHttpRequest'}"
                         list-type="picture-card"
                         :on-success="beforeUploadSuccess"

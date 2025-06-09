@@ -1,5 +1,5 @@
 const template=`
-   <el-dropdown class="toolBar-dropdown hide-800" trigger="click" placement="bottom">
+   <el-dropdown class="toolBar-dropdown hide-800" placement="bottom">
     <div class="icon-only font-size-icon">
         <i class="fa fa-trash"></i>
     </div> 

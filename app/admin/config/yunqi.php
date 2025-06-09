@@ -29,7 +29,7 @@ return [
         //暗黑模式
         'dark' => false,
         //面包屑
-        'breadcrumb' => false,
+        'breadcrumb' => true,
         //折叠菜单
         'is_menu_collapse' => false,
         //选项卡
@@ -46,7 +46,7 @@ return [
         //最大可上传大小，单位mb
         'maxsize'   => 20,
         //可上传的文件类型
-        'mimetype'  => 'jpg,png,bmp,jpeg,gif,webp,zip,rar,wav,mp4,mp3,webm,doc,docx,xls,xlsx',
+        'mimetype'  => 'jpg,png,bmp,jpeg,gif,webp,zip,rar,wav,mp4,mp3,webm,doc,docx,xls,xlsx,pdf',
         //生成缩略图
         'thumb'=>true,
         //压缩图片

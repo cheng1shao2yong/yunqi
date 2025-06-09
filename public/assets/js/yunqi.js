@@ -88,11 +88,30 @@ window.Yunqi=(function(){
                 if (loading) {
                     elloading.close();
                 }
-                Yunqi.message.error(err);
+                Yunqi.message.error(err.response.data);
                 reject();
             });
         });
         return pro;
+    }
+    //根据url生成一个唯一识别的id,不严谨，但考虑弹出框个数有限，所以基本上够用
+    function constructId(url){
+        let arr=[
+            '0','1','2','3','4','5','6','7','8','9',
+            'a','b','c','d','e','f','g','h','i','j',
+            'k','l','m','n','o','p','q','r','s','t',
+            'u','v','w','x','y','z','/','?',':','-'
+        ];
+        //为了与menuid区分，这里加上一个10000
+        let r=10000;
+        for(let k in url){
+            for(let i=0;i<arr.length;i++){
+                if(url[k]==arr[i]){
+                    r+=i;
+                }
+            }
+        }
+        return r;
     }
     function SupposeClass(){
         //系统配置
@@ -163,7 +182,6 @@ window.Yunqi=(function(){
                     Yunqi.message.error(__('url不能为空'));
                     return;
                 }
-                let id=options.id?options.id:rand(10000,99999);
                 if(!options.url.startsWith('http')){
                     //绝对路径
                     if(options.url.startsWith('/')){
@@ -174,7 +192,7 @@ window.Yunqi=(function(){
                     }
                 }
                 let menu={
-                    id:id,
+                    id:options.id || constructId(options.url),
                     url:options.url,
                     icon:options.icon,
                     title:options.title,
@@ -182,28 +200,9 @@ window.Yunqi=(function(){
                     close:options.close || function (){}
                 };
                 top.Yunqi.app.clickMenu(menu);
-                return id;
+                return menu.id;
             },
             open:function (options) {
-                //根据url生成一个唯一识别的id,不严谨，但考虑弹出框个数有限，所以基本上够用
-                function constructId(url){
-                    let arr=[
-                        '0','1','2','3','4','5','6','7','8','9',
-                        'a','b','c','d','e','f','g','h','i','j',
-                        'k','l','m','n','o','p','q','r','s','t',
-                        'u','v','w','x','y','z','/','?',':','-'
-                    ];
-                    //为了与menuid区分，这里加上一个10000
-                    let r=10000;
-                    for(let k in url){
-                        for(let i=0;i<arr.length;i++){
-                            if(url[k]==arr[i]){
-                                r+=i;
-                            }
-                        }
-                    }
-                    return r;
-                }
                 let config=top.Yunqi.config;
                 if(config.route.join(',')!='admin,index,index'){
                     Yunqi.message.error(__('请在框架内执行该操作'));
@@ -339,17 +338,18 @@ window.Yunqi=(function(){
             let doc=top.document.querySelector('iframe[id="addtabs-'+id+'"]') || top.document.querySelector('iframe[id="layer-'+id+'"]');
             return doc && doc.contentWindow && doc.contentWindow.Yunqi && doc.contentWindow.Yunqi.app;
         },
-        this.getElementUi=function (){
+        this.getElementUi=function (key=''){
             let ui=this.config.elementUi;
-            for(let key in ui){
-                let r=localStorage.getItem('elementUi.'+key) || ui[key];
-                if(r==='true'){
-                    r=true;
+            for(let k in ui){
+                if(ui[k]==='true'){
+                    ui[k]=true;
                 }
-                if(r==='false'){
-                    r=false;
+                if(ui[k]==='false'){
+                    ui[k]=false;
                 }
-                ui[key]=r;
+            }
+            if(key){
+                return ui[key];
             }
             return ui;
         };
@@ -388,26 +388,22 @@ window.Yunqi=(function(){
         this.setThemeColor=function(){
             const hexToRgb=function (str) {
                 let hexs = "";
-                let reg = /^\#?[0-9A-Fa-f]{6}$/;
                 str = str.replace("#", "");
                 hexs = str.match(/../g);
                 for (let i = 0; i < 3; i++) hexs[i] = parseInt(hexs[i], 16);
                 return hexs;
             }
             const rgbToHex=function (r, g, b) {
-                let reg = /^\d{1,3}$/;
                 let hexs = [r.toString(16), g.toString(16), b.toString(16)];
                 for (let i = 0; i < 3; i++) if (hexs[i].length == 1) hexs[i] = `0${hexs[i]}`;
                 return `#${hexs.join("")}`;
             }
             const getDarkColor=function(color, level) {
-                let reg = /^\#?[0-9A-Fa-f]{6}$/;
                 let rgb = hexToRgb(color);
                 for (let i = 0; i < 3; i++) rgb[i] = Math.round(20.5 * level + rgb[i] * (1 - level));
                 return rgbToHex(rgb[0], rgb[1], rgb[2]);
             }
             const getLightColor=function (color, level) {
-                let reg = /^\#?[0-9A-Fa-f]{6}$/;
                 let rgb = hexToRgb(color);
                 for (let i = 0; i < 3; i++) rgb[i] = Math.round(255 * level + rgb[i] * (1 - level));
                 return rgbToHex(rgb[0], rgb[1], rgb[2]);
@@ -501,7 +497,7 @@ window.Yunqi=(function(){
                         return false;
                     }
                     Yunqi.ajax.post(this.extend.recyclebin_url+'?action='+type,{ids:ids}).then(res=>{
-                        this.$refs.YunTable.reset();
+                        this.$refs.yuntable.reset();
                     });
                 }
                 if(type=='restoreall' || type=='clear'){
@@ -511,7 +507,7 @@ window.Yunqi=(function(){
                     };
                     Yunqi.confirm(msg[type],__('温馨提示'),{type: 'warning'}).then(res=>{
                         Yunqi.ajax.post(this.extend.recyclebin_url+'?action='+type).then(res=>{
-                            this.$refs.YunTable.reset();
+                            this.$refs.yuntable.reset();
                         });
                     });
                 }
@@ -530,12 +526,12 @@ window.Yunqi=(function(){
                 //非全屏
                 if(top!=window && !top.Yunqi.app.mainFrameExpand){
                     //弹出窗
-                    let iframe=top.document.querySelector('iframe[src="'+window.location.href+'"][class="layer-iframe"]');
+                    let iframe=top.document.querySelector('iframe[src="'+decodeURI(window.location.href)+'"][class="layer-iframe"]');
                     if(iframe){
                         Vue.nextTick(()=>{
                             el.style.height=iframe.height+'px';
                         });
-                        //正常窗
+                    //正常窗
                     }else{
                         Vue.nextTick(()=>{
                             el.style.height=top.Yunqi.app.contentHeight+'px';
@@ -603,7 +599,7 @@ window.Yunqi=(function(){
                     this.use([
                         jsFile+'axios.min.js',
                         jsFile+'Sortable.min.js',
-                        jsFile+'element-plus.js',
+                        jsFile+'element-plus.js'
                     ]).then(xes=>{
                         let {ElementPlus}=xes;
                         //追加到Yunqi对象

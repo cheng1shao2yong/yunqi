@@ -1,5 +1,5 @@
 const template=`
-<el-dropdown class="toolBar-dropdown" trigger="click" placement="bottom-end">
+<el-dropdown class="toolBar-dropdown" trigger="hover" placement="bottom-end">
     <div class="userinfo">
         <span class="username">{{admin.nickname}}</span>
         <div class="avatar">

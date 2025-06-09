@@ -13,6 +13,11 @@
     border-right: 1px solid var(--el-border-color-light);
 }
 
+.breadcrumb-box .el-breadcrumb .el-breadcrumb__item .el-breadcrumb__inner .breadcrumb-title {
+    margin-top: 3px;
+    color: #606266;
+}
+
 .el-container .el-aside .aside-box {
     display: flex;
     flex-direction: column;

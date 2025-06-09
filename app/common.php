@@ -261,3 +261,13 @@ if (!function_exists('addons_installed')) {
         return false;
     }
 }
+
+if(!function_exists('getDbPrefix')){
+    function getDbPrefix()
+    {
+        $config = \think\facade\Db::getConfig();
+        $default=$config['default'];
+        $prefix=$config['connections'][$default]['prefix'];
+        return $prefix;
+    }
+}

@@ -79,7 +79,6 @@ class AddonsService extends BaseService {
                 unlink($package.'install.sql');
             }
             unlink($package.'Install.php');
-            unlink($savefile);
             (new Addons())->save($addon);
         } else {
             throw new \Exception('解压失败');
@@ -103,6 +102,10 @@ class AddonsService extends BaseService {
         if(!is_file($addonpath.'Install.php')){
             throw new \Exception('安装文件不存在');
         }
+        $pack=$this->getAddonsPack($addon['type'],$addon['pack'],$addon['version']);
+        if(!file_exists($pack)){
+            throw new \Exception('禁止卸载未打包的扩展');
+        }
         $install='\\addons\\'.$addon['type'].'\\'.$addon['pack'].'\\Install';
         try{
             Db::startTrans();
@@ -112,7 +115,11 @@ class AddonsService extends BaseService {
             }
             //删除配置
             if(in_array('config',$actions)){
-                Config::where(['addons'=>$addon['pack']])->delete();
+                if($addon['type']=='app'){
+                    Config::where(['group'=>$addon['pack']])->delete();
+                }else{
+                    Config::where(['addons'=>$addon['pack']])->delete();
+                }
             }
             //删除数据表
             if(in_array('tables',$actions)){
@@ -142,16 +149,23 @@ class AddonsService extends BaseService {
         }
     }
 
-    public function getAddonsInstallInfo(string $key)
+    public function getAddonsInstallInfo(Addons $addons)
     {
-        $addon=Addons::where('key',$key)->find();
-        $this->includeInstall($addon);
-        $addonpath=$this->getAddonsPath($addon['type'],$addon['pack']);
+        $this->includeInstall($addons);
+        $addonpath=$this->getAddonsPath($addons['type'],$addons['pack']);
         if(!is_file($addonpath.'Install.php')){
             throw new \Exception('安装文件不存在');
         }
-        $install='\\addons\\'.$addon['type'].'\\'.$addon['pack'].'\\Install';
-        return [$addon,$install::$menu,$install::$config,array_values($this->parseTable($addonpath))];
+        $install='\\addons\\'.$addons['type'].'\\'.$addons['pack'].'\\Install';
+        return [
+            'files'=>$install::$files,
+            'unpack'=>$install::$unpack,
+            'menu'=>$install::$menu,
+            'require'=>$install::$require,
+            'addons'=>isset($install::$addons)?$install::$addons:[],
+            'config'=>$install::$config,
+            'tables'=>isset($install::$tables)?$install::$tables:[]
+        ];
     }
 
     public function payCode(string $key,string $out_trade_no)
@@ -187,19 +201,33 @@ class AddonsService extends BaseService {
         }
         //检测配置是否冲突
         foreach ($install::$config as &$value){
-            $havaconfig=Config::where(['name'=>$value['name'],'group'=>'addons'])->find();
+            if($addon['type']=='app'){
+                $value['addons']=null;
+                $value['group']=$addon['pack'];
+            }else{
+                $value['addons']=$addon['pack'];
+                $value['group']='addons';
+            }
+            $havaconfig=Config::where(['name'=>$value['name'],'group'=>$value['group']])->find();
             if($havaconfig){
                 throw new \Exception('配置【'.$value['title'].'】已存在');
             }
-            $value['group']='addons';
-            $value['addons']=$addon['pack'];
             $value['can_delete']=1;
-            $value['value']=$value['value']??'';//默认值
+            $value['value']=$value['value']??'';
+            unset($value['id']);
         }
         //检测依赖
         foreach ($install::$require as $require){
             if(!class_exists($require)){
-                throw new \Exception('缺少类：'.$require.'，请先安装依赖包或扩展');
+                throw new \Exception('缺少类：'.$require.'，请先安装依赖包');
+            }
+        }
+        //检测依赖
+        if(isset($install::$addons)){
+            foreach ($install::$addons as $key=>$aons){
+                if(!addons_installed($key)){
+                    throw new \Exception('缺少依赖扩展：'.$aons.'，请先安装依赖扩展');
+                }
             }
         }
         //安装菜单
@@ -210,6 +238,15 @@ class AddonsService extends BaseService {
             Db::name('auth_rule')->insertAll($menus);
             //安装配置
             (new Config())->saveAll($install::$config);
+            if($addon['type']=='app'){
+                $configgroup=Config::where(['name'=>'configgroup','group'=>'dictionary'])->value('value');
+                $configgroup=json_decode($configgroup,true);
+                unset($configgroup['dictionary']);
+                $configgroup[$addon['pack']]='应用配置';
+                $configgroup['dictionary']='配置分组';
+                $configgroup=json_encode($configgroup,JSON_UNESCAPED_UNICODE);
+                Config::where(['name'=>'configgroup','group'=>'dictionary'])->update(['value'=>$configgroup]);
+            }
             //安装sql
             if(is_file($addonpath.'install.sql')){
                 //直接导入数据库文件
@@ -264,6 +301,87 @@ class AddonsService extends BaseService {
         return $response->content;
     }
 
+    public function create(array $param)
+    {
+        include __DIR__.DS.'eof.php';
+        $pack=$param['pack'];
+        $type=$param['type'];
+        $addonspath=$this->getAddonsPath($type,$pack);
+        if(is_dir($addonspath)){
+            rmdirs($addonspath);
+        }
+        $haddon=Addons::where(function ($query) use ($param,$pack){
+            $query->where('pack',$pack);
+            if($param['id']){
+                $query->where('id','<>',$param['id']);
+            }
+        })->find();
+        if($haddon){
+            throw new \Exception('包名已经存在，请更换包名');
+        }
+        if($param['id']){
+            $model=Addons::find($param['id']);
+            if(!Addons::checkKey($model)){
+                throw new \Exception('不是你的扩展，无法操作');
+            }
+        }else{
+            $model=new Addons();
+        }
+        $files=$param['files'];
+        //将换行符转换为数组
+        $files=array_map(function ($file){
+            return trim($file);
+        },explode("\n",$files));
+        if(!$this->checkCreateFiles($files,$error)){
+            throw new \Exception($error);
+        }
+        $unpack=$param['unpack'];
+        $unpack=array_map(function ($file){
+            return trim($file);
+        },explode("\n",$unpack));
+        //设置依赖类
+        $require=$param['require'];
+        $require=array_map(function ($class){
+            return trim($class);
+        },explode("\n",$require));
+        //设置依赖扩展
+        $addons=$param['addons'];
+        $addons=array_map(function ($class){
+            return trim($class);
+        },explode("\n",$addons));
+        $tables=$param['tables'];
+        $config=Config::whereIn('id',$param['config'])->select()->toArray();
+        $menu=AuthRule::getRuleList($param['menu']);
+        //加密密钥
+        $param['secret_key']=md5(str_rand(10).rand(1000,9999));
+        //生成key
+        $param['key']=md5($param['type'].$param['pack'].$param['author'].$param['version'].$param['secret_key']);
+        //创建Install文件
+        $files_txt=rtrim(getFilesTxt($files));
+        $unpack_txt=rtrim(getUnpackTxt($unpack));
+        $require_txt=rtrim(getRequireTxt($require));
+        $addons_txt=rtrim(getAddonsTxt($addons));
+        $config_txt=rtrim(getConfigTxt($config));
+        $menu_txt=rtrim(getMenuTxt($menu));
+        $tables_txt=rtrim(getTableTxt($tables));
+        $install=$this->getContent('install',[
+            'pack'=>$pack,
+            'type'=>$type,
+            'files'=>$files_txt,
+            'unpack'=>$unpack_txt,
+            'require'=>$require_txt,
+            'addons'=>$addons_txt,
+            'config'=>$config_txt,
+            'tables'=>$tables_txt,
+            'menu'=>$menu_txt,
+        ]);
+        mkdir($addonspath,0777,true);
+        file_put_contents($addonspath.'Install.php',$install);
+        //拷贝数据文件
+        $param['install']=1;
+        $model->save($param);
+    }
+
     public function package(string $key)
     {
         $addon=Addons::where('key',$key)->find();
@@ -284,91 +402,12 @@ class AddonsService extends BaseService {
         if(!$this->checkPackFiles($install::$files,$error)){
             throw new \Exception($error);
         }
-        $package=$addonpath.'package'.DS;
-        foreach ($install::$files as $file){
-            $path=root_path().$file;
-            if(is_dir($path)){
-                $this->copy_dir($path,$package.$file,$install::$unpack);
-            }
-            if(is_file($path)){
-                $this->copy_file($path,$package.$file,$install::$unpack);
-            }
-        }
-        $zip=new \ZipArchive();
-        $zip->open($packfile,\ZipArchive::CREATE);
-        self::addFileToZip($package,$package,$zip);
-        //追加安装文件
-        $zip->addFile($addonpath.'Install.php','Install.php');
-        //追加数据库文件
-        if(is_file($addonpath.'install.sql')){
-            $zip->addFile($addonpath.'install.sql','install.sql');
-        }
-        $zip->close();
-        $addon->save();
-    }
-
-    public function create(array $param)
-    {
-        include __DIR__.DS.'eof.php';
-        $pack=$param['pack'];
-        $addons=Addons::where('pack',$pack)->find();
-        if($addons){
-            throw new \Exception('包名已经存在，请更换包名');
-        }
-        $type=$param['type'];
-        $addonspath=$this->getAddonsPath($type,$pack);
-        if(is_dir($addonspath)){
-            throw new \Exception('扩展目录已经存在，请先删除');
-        }
-        $files=$param['files'];
-        //将换行符转换为数组
-        $files=array_map(function ($file){
-            return trim($file);
-        },explode("\n",$files));
-        if(!$this->checkCreateFiles($files,$error)){
-            throw new \Exception($error);
-        }
-        $unpack=$param['unpack'];
-        $unpack=array_map(function ($file){
-            return trim($file);
-        },explode("\n",$unpack));
-        //设置依赖
-        $require=$param['require'];
-        $require=array_map(function ($class){
-            return trim($class);
-        },explode("\n",$require));
-        $config=Config::whereIn('id',$param['config'])->select()->toArray();
-        $menu=AuthRule::getRuleList($param['menu']);
-        //加密密钥
-        $param['secret_key']=md5(str_rand(10).rand(1000,9999));
-        //生成key
-        $param['key']=md5($param['type'].$param['pack'].$param['author'].$param['version'].$param['secret_key']);
-        //创建Install文件
-        $files_txt=rtrim(getFilesTxt($files));
-        $unpack_txt=rtrim(getUnpackTxt($unpack));
-        $require_txt=rtrim(getRequireTxt($require));
-        $config_txt=rtrim(getConfigTxt($config));
-        $menu_txt=rtrim(getMenuTxt($menu));
-        $install=$this->getContent('install',[
-            'pack'=>$pack,
-            'type'=>$type,
-            'files'=>$files_txt,
-            'unpack'=>$unpack_txt,
-            'require'=>$require_txt,
-            'config'=>$config_txt,
-            'menu'=>$menu_txt,
-        ]);
-        //创建打包目录
-        $package=$addonspath.'package'.DS;
-        mkdir($package,0777,true);
-        file_put_contents($addonspath.'Install.php',$install);
-        //拷贝数据文件
-        $tables=$param['tables'];
-        if($tables){
-            $savesql=$addonspath.'install.sql';
+        //打包表格
+        if(!empty($install::$tables)){
+            $savesql=$addonpath.'install.sql';
             $prefix=config('database.connections.mysql.prefix');
             $sqltxt='';
-            foreach ($tables as $table){
+            foreach ($install::$tables as $table){
                 $nopretable=str_replace($prefix,'__PREFIX__',$table);
                 $createComment=PHP_EOL.'-- 创建表结构 `'.$nopretable.'`'.PHP_EOL;
                 $sql="SHOW CREATE TABLE `{$table}`";
@@ -404,18 +443,32 @@ class AddonsService extends BaseService {
             }
             file_put_contents($savesql,$sqltxt);
         }
+        //创建打包目录
+        $package=$addonpath.'package'.DS;
+        if(!is_dir($package)){
+            mkdir($package,0777,true);
+        }
         //拷贝文件
-        foreach ($files as $file){
+        foreach ($install::$files as $file){
             $path=root_path().$file;
             if(is_dir($path)){
-                $this->copy_dir($path,$package.$file,$unpack);
+                $this->copy_dir($path,$package.$file,$install::$unpack);
             }
             if(is_file($path)){
-                $this->copy_file($path,$package.$file,$unpack);
+                $this->copy_file($path,$package.$file,$install::$unpack);
             }
         }
-        $param['install']=1;
-        (new Addons())->save($param);
+        $zip=new \ZipArchive();
+        $zip->open($packfile,\ZipArchive::CREATE);
+        self::addFileToZip($package,$package,$zip);
+        //追加安装文件
+        $zip->addFile($addonpath.'Install.php','Install.php');
+        //追加数据库文件
+        if(is_file($addonpath.'install.sql')){
+            $zip->addFile($addonpath.'install.sql','install.sql');
+        }
+        $zip->close();
+        $addon->save();
     }
 
     public function getAddons(int $page,string $type,string $plain,int $limit,string $keywords='')

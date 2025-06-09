@@ -33,7 +33,10 @@ export default {
         }
         Yunqi.use('/assets/libs/wangeditor/index.js').then(res=>{
             this.editor=window.wangEditor;
-            this.createEditor();
+            let time=rand(100,999);
+            setTimeout(()=>{
+                this.createEditor();
+            },time);
         });
     },
     props:{

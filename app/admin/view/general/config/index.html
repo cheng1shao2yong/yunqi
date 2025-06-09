@@ -15,15 +15,15 @@
         </el-tabs>
         <div class="form-container">
             <yun-form
-                label-position="left"
-                require-asterisk-position="right"
-                :label-width="200"
-                @submit="onSubmit"
-                :append-width="8"
-                :action="extend.edit_url"
-                @success="onSuccess"
-                v-if="columns && tabValue!='addconfig'"
-                :columns="columns">
+                    label-position="left"
+                    require-asterisk-position="right"
+                    :label-width="200"
+                    @submit="onSubmit"
+                    :append-width="8"
+                    :action="extend.edit_url"
+                    @success="onSuccess"
+                    v-if="columns && tabValue!='addconfig'"
+                    :columns="columns">
                 <template #default>
                     <el-form-item>
                         <template #label><span class="bolderText">变量标题</span></template>
@@ -55,11 +55,11 @@
                 {/if}
             </yun-form>
             <yun-form
-                v-if="tabValue=='addconfig'"
-                :action="extend.add_url"
-                @success="onSuccess"
-                ref="yunform"
-                :columns="addconfig">
+                    v-if="tabValue=='addconfig'"
+                    :action="extend.add_url"
+                    @success="onSuccess"
+                    ref="yunform"
+                    :columns="addconfig">
             </yun-form>
         </div>
     </el-card>
@@ -78,16 +78,17 @@
             },
             addconfig:[
                 {field:'group',title:__('分组'),searchList:Yunqi.data.groupList,edit: {form:'select',value:'basic',change:'changeGroup'},rules:'required'},
-                {field:'addons_pack',title:__('扩展包名'),edit:{form:'input',type:'text',visible:false}},
+                {field:'addons_pack',title:__('扩展包名'),edit:{form:'input',type:'text'},visible:false},
                 {field:'type',title:__('类型'),searchList:Yunqi.data.typeList,edit: {form:'select',change:'changeType',value:'text'},rules:'required'},
                 {field:'title',title:__('变量标题'),edit:'text',rules:'required'},
                 {field:'name',title:__('变量名'),edit:'text',rules:'required'},
-                {field:'url',title:__('分页列表Url'),edit: {form:'input',type:'text',visible:false}},
-                {field:'labelField',title:__('显示字段'),edit: {form:'input',type:'text',placeholder:'请输入显示字段labelField',visible:false}},
-                {field:'keyField',title:__('存储字段'),edit: {form:'input',type:'text',placeholder:'请输入显示字段keyField',visible:false}},
-                {field:'options',title:__('选项'),edit: {form:'fieldlist',label:['键名','键值'],visible:false}},
+                {field:'url',title:__('分页列表Url'),edit: {form:'input',type:'text'},visible:false},
+                {field:'labelField',title:__('显示字段'),edit: {form:'input',type:'text',placeholder:'请输入显示字段labelField'},visible:false},
+                {field:'keyField',title:__('存储字段'),edit: {form:'input',type:'text',placeholder:'请输入显示字段keyField'},visible:false},
+                {field:'options',title:__('选项'),edit: {form:'fieldlist',label:['键名','键值']},visible:false},
                 {field:'value',title:__('默认值'),edit:'text'},
-                {field:'label',title:__('数组标题'),edit: {form:'input',type:'text',placeholder:'请输入Fieldlist的标题label，用“,”隔开',visible:false}},
+                {field:'label',title:__('JSON标题'),edit: {form:'input',type:'text',placeholder:'请输入Fieldlist的标题label，用“,”隔开'},visible:false},
+                {field:'keys',title:__('JSON Keys'),edit: {form:'input',type:'text',placeholder:'请输入Fieldlist的标题keys，用“,”隔开'},visible:false},
                 {field:'tips',title:__('提示信息'),edit:'text'},
                 {field:'rules',title:__('验证规则'),edit:{form:'input',type:'text',placeholder:'请输入验证规则，多个规则用“,”隔开'}},
             ],
@@ -136,7 +137,7 @@
                 }
             },
             formatColumns:function (list){
-                let one=[];
+                let one=[{field:'group',edit:'hidden'}];
                 for(let i=0;i<list.length;i++){
                     let obj={
                         id:list[i].id,
@@ -152,11 +153,15 @@
                         obj.edit.form='input';
                         obj.edit.type='text';
                         obj.edit.value=list[i].value;
+                        if(list[i].extend=='readonly'){
+                            obj.edit.readonly=true;
+                        }
                     }
                     if(list[i].type=='textarea'){
                         obj.edit.form='input';
                         obj.edit.type='textarea';
                         obj.edit.value=list[i].value;
+                        obj.edit.rows=4;
                     }
                     if(list[i].type=='password'){
                         obj.edit.form='input';
@@ -263,8 +268,9 @@
                     }
                     if(list[i].type=='json'){
                         obj.edit.form='fieldlist';
-                        obj.edit.value=list[i].value;
-                        obj.edit.label=list[i].extend;
+                        obj.edit.value=list[i].value || null;
+                        obj.edit.label=list[i].extend[0];
+                        obj.edit.keys=list[i].extend[1];
                     }
                     if(list[i].type=='switch'){
                         obj.edit.form='switch';
@@ -283,8 +289,8 @@
                 this.$refs.yunform.hideField(['label','url','labelField','keyField','options']);
                 if(data=='selectpage' || data=='selectpages'){
                     this.$refs.yunform.showField(['url','labelField','keyField']);
-                }else if(data=='array'){
-                    this.$refs.yunform.showField('label');
+                }else if(data=='json'){
+                    this.$refs.yunform.showField(['label','keys']);
                 }else if(inArray(['select','selects','radio','checkbox'],data)){
                     this.$refs.yunform.showField('options');
                 }
@@ -309,13 +315,13 @@
     }
 </script>
 <style>
-.bolderText{
-    font-weight:bolder;
-}
-.form-container{
-    padding: 30px;
-    border:1px solid var(--el-border-color-light);
-    border-top: 0;
-    margin-top: -16px;
-}
+    .bolderText{
+        font-weight:bolder;
+    }
+    .form-container{
+        padding: 30px;
+        border:1px solid var(--el-border-color-light);
+        border-top: 0;
+        margin-top: -16px;
+    }
 </style>

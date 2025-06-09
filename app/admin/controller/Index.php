@@ -14,8 +14,6 @@ namespace app\admin\controller;
 use app\common\controller\Backend;
 use app\common\model\Admin;
 use app\common\model\Qrcode;
-use app\common\model\QrcodeScan;
-use app\common\model\Third;
 use think\annotation\route\Route;
 use think\captcha\facade\Captcha;
 use think\facade\Session;
@@ -23,17 +21,48 @@ use think\facade\Session;
 class Index extends Backend
 {
     protected $noNeedLogin = ['login','captcha','qrcodeLogin'];
-    protected $noNeedRight = ['index', 'logout'];
+    protected $noNeedRight = ['index','logout','platform','changeTheme'];
+
 
     #[Route('GET','index')]
     public function index()
     {
-        $referer = session('referer');
-        list($menulist, $selected, $referer) = $this->auth->getSidebar($referer);
+        $referer=Session::pull('referer');
+        if($referer){
+            Session::save();
+        }
+        list($platform,$menulist, $selected, $referer) = $this->auth->getSidebar($referer);
+        $this->assign('site',site_config('basic'));
+        $this->assign('platform',$platform);
         $this->assign('menulist',$menulist);
         $this->assign('selected',$selected);
         $this->assign('referer',$referer);
         return $this->fetch('',[],false);
+    }
+
+    #[Route('POST','change-theme')]
+    public function changeTheme()
+    {
+        $key=$this->request->post('key');
+        $value=$this->request->post('value');
+        if($value==='true'){
+            $value=true;
+        }
+        if($value==='false'){
+            $value=false;
+        }
+        $element_ui=Admin::where('id',$this->auth->id)->value('element_ui');
+        if($element_ui){
+            $element_ui=json_decode($element_ui,true);
+        }else{
+            $element_ui=[];
+        }
+        $element_ui[$key]=$value;
+        $element_ui=json_encode($element_ui);
+        Admin::update(['element_ui'=>$element_ui],['id'=>$this->auth->id]);
+        Session::set('admin.element_ui',$element_ui);
+        Session::save();
+        $this->success();
     }
 
     #[Route('GET','captcha')]
@@ -42,14 +71,25 @@ class Index extends Backend
         return Captcha::create();
     }
 
+    #[Route('GET','platform')]
+    public function platform()
+    {
+        $id=$this->request->get('id');
+        Session::set('admin.platform_id',$id);
+        Session::save();
+        $this->success();
+    }
+
     #[Route('GET','qrcodeLogin')]
     public function qrcodeLogin()
     {
         $token=$this->request->get('token');
-        if($this->auth->loginByThird($token)){
+        $admin_id=$this->request->get('admin_id');
+        $adminlist=[];
+        if($this->auth->loginByThird($token,$admin_id,$adminlist)){
             $this->success(__('登陆成功'));
         }
-        $this->error();
+        $this->error('',$adminlist);
     }
 
     #[Route('POST,GET','login')]
@@ -60,16 +100,13 @@ class Index extends Backend
                 $alis=get_module_alis();
                 return redirect(request()->domain().'/'.$alis.'/index');
             }
-            $thirdLogin=addons_installed('uniapp') && site_config("addons.uniapp_scan_login");
+            $thirdLogin=addons_installed('uniapp') && site_config("uniapp.scan_login");
             if($thirdLogin){
                 $config=[
-                    'appid'=>site_config("addons.uniapp_mpapp_id"),
-                    'appsecret'=>site_config("addons.uniapp_mpapp_secret"),
+                    'appid'=>site_config("uniapp.mpapp_id"),
+                    'appsecret'=>site_config("uniapp.mpapp_secret"),
                 ];
-                $qrcode=new Qrcode();
-                $qrcode->type='backend-login';
-                $qrcode->foreign_key=token();
-                $qrcode->save();
+                $qrcode=Qrcode::createQrcode(Qrcode::TYPE('管理员扫码登录'),token(),5*60);
                 $wechat=new \WeChat\Qrcode($config);
                 $ticket = $wechat->create($qrcode->id)['ticket'];
                 $url=$wechat->url($ticket);
@@ -79,7 +116,6 @@ class Index extends Backend
             $this->assign('logo',site_config("basic.logo"));
             $this->assign('sitename',site_config("basic.sitename"));
             $this->assign('login_captcha',config('yunqi.login_captcha'));
-            $this->assign('referer',$this->request->get('referer',''));
             return $this->fetch();
         }
         $username = $this->request->post('username');
@@ -89,9 +125,9 @@ class Index extends Backend
             $this->error(__('验证码错误'),0);
         }
         try{
+            $this->auth->login($username,$password);
             Session::delete('captcha');
             Session::save();
-            $this->auth->login($username,$password);
         }catch (\Exception $e){
             $this->error($e->getMessage(),1);
         }
@@ -101,8 +137,9 @@ class Index extends Backend
     #[Route('GET','logout')]
     public function logout()
     {
-        $this->auth->logout();
         $alis=get_module_alis();
-        return redirect(request()->domain().'/'.$alis.'/login');
+        $this->auth->logout();
+        $url=request()->domain().'/'.$alis.'/login';
+        return redirect($url);
     }
 }

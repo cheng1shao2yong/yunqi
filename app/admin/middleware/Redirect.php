@@ -11,6 +11,8 @@ declare(strict_types = 1);
 
 namespace app\admin\middleware;
 
+use think\facade\Session;
+
 class Redirect{
     public function handle($request, \Closure $next)
     {
@@ -20,7 +22,9 @@ class Redirect{
             $url = preg_replace_callback("/([\?|&]+)ref=addtabs(&?)/i", function ($matches) {
                 return $matches[2] == '&' ? $matches[1] : '';
             }, $request->url());
-            redirect('/'.$modulealis.'/index')->with('referer',build_url($url))->send();
+            Session::set('referer',build_url($url));
+            Session::save();
+            redirect('/'.$modulealis.'/index')->send();
         }
         return $next($request);
     }

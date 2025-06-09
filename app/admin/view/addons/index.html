@@ -83,7 +83,7 @@
         let month=date.getMonth()+1;
         let day=date.getDate();
         if(day<10){
-            date='0'+day;
+            day='0'+day;
         }
         let hour=date.getHours();
         if(hour<10){
@@ -136,9 +136,9 @@
             plain:'all',
             columns:[
                 {field:"plain",visible:'none',operate:{form:'hidden',value:function (){return Yunqi.app.plain},filter:false}},
-                {field:"name",title:"扩展名称",width: 180},
-                {field:"type",title:"扩展类型",width: 100,searchList:Yunqi.data.type,operate:false},
-                {field:"author",title:"作者",width: 150},
+                {field:"name",title:"扩展名称"},
+                {field:"type",title:"扩展类型",searchList:Yunqi.data.type,operate:false},
+                {field:"author",title:"作者"},
                 {field:"price",title:"价格",width: 80,formatter:function (data) {
                         let tag=Yunqi.formatter.tag;
                         if (data) {
@@ -160,7 +160,7 @@
                             return '';
                         }
                     }},
-                {field:"description",title:"简介",width:400},
+                {field:"description",title:"简介",width: 300},
                 {
                     field:"local",
                     title:"本地",
@@ -251,6 +251,16 @@
                                 return row.download && row.install && !row.packed;
                             }
                         },
+                        edit:{
+                            text:__('编辑'),
+                            type:'warning',
+                            tooltip:false,
+                            icon:'fa fa-edit',
+                            method:'editAddon',
+                            visible:function (row) {
+                                return row.local && row.is_author && !row.packed;
+                            }
+                        },
                         uninstall:{
                             text:__('卸载'),
                             type:'danger',
@@ -258,7 +268,7 @@
                             icon:'fa fa-remove',
                             method:'uninstallAddon',
                             visible:function (row) {
-                                return row.install;
+                                return row.install && row.packed;
                             }
                         },
                         remove:{
@@ -300,6 +310,19 @@
                     this.$refs.yuntable.reload();
                 });
             },
+            editAddon:function (row){
+                let that=this;
+                Yunqi.api.open({
+                    title: __('修改本地扩展'),
+                    url: 'addons/create?id='+row.id,
+                    icon:'fa fa-edit',
+                    close:function (r) {
+                        if(r){
+                            that.$refs.yuntable.reload();
+                        }
+                    }
+                });
+            },
             downloadAddon:function(row){
                 if(row.price>0){
                     this.buyDialog.out_trade_no=create_out_trade_no();
@@ -307,7 +330,7 @@
                     this.buyDialog.show=true;
                     this.buyDialog.row=row;
                 }else{
-                    Yunqi.ajax.post('addons/download',row).then(res=>{
+                    Yunqi.ajax.post('addons/download', row).then(res=>{
                         this.$refs.yuntable.reload();
                     });
                 }

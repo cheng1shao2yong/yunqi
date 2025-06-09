@@ -1,8 +1,8 @@
 <el-container class="layout" id="container">
     <el-header v-show="!mainFrameExpand">
         <div class="logo flx-center hide-600">
-            <img class="logo-img" src="{:site_config('basic.logo')}" alt="logo" />
-            <span class="logo-text">{:site_config('basic.sitename')}</span>
+            <img class="logo-img" :src="logo_img" alt="logo" />
+            <span class="logo-text">{$site.sitename}</span>
         </div>
         <el-menu
             mode="horizontal"

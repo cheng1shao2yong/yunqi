@@ -1,12 +1,14 @@
 const template=`
    <div class="tabs-box">
     <div class="tabs-menu">
-      <el-tabs v-model="tabsMenuValue" type="card" @tab-change="showMenu">
+      <el-tabs style="border:0;" v-model="tabsMenuValue" type="card" @tab-change="showMenu">
         <el-tab-pane v-for="(item,index) in tabsMenuList" :key="item.id" :label="item.title" :name="item.id">
           <template #label>
-            <i :class="['tabs-icon',item.icon]"></i>
-            {{ item.title }}
-            <i @click.stop="closeMenuByIcon(item)" class="fa fa-remove tabs-icon-remove" v-if="index>0"></i>
+            <div class="menubox">
+                <i :class="['tabs-icon',item.icon]"></i>
+                {{ item.title }}
+                <i @click.stop="closeMenuByIcon(item)" class="fa fa-remove tabs-icon-remove" v-if="index>0"></i>
+            </div>
           </template>
         </el-tab-pane>
       </el-tabs>

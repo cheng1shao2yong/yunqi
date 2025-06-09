@@ -20,6 +20,14 @@ class Install{
 <#require#>
     ];
 
+    public static $tables=[
+<#tables#>
+    ];
+
+    public static $addons=[
+<#addons#>
+    ];
+
     public static $config=[
 <#config#>
     ];

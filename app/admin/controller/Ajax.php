@@ -15,6 +15,9 @@ use app\admin\service\AdminUploadService;
 use app\common\controller\Backend;
 use app\common\library\Tree;
 use app\common\model\Attachment;
+use app\common\model\QrcodeScan;
+use app\common\model\Third;
+use app\common\model\Qrcode;
 use app\common\model\Category;
 use app\common\service\msg\BackendMsg;
 use think\annotation\route\Group;
@@ -34,7 +37,10 @@ class Ajax extends Backend{
     #[Route('POST','upload')]
     public function upload()
     {
-        $disks=$this->request->post('disks',$this->config['upload']['disks']);
+        $disks=$this->request->post('disks');
+        if(!$disks){
+            $disks=$this->config['upload']['disks'];
+        }
         $category=$this->request->post('category');
         $catelist=site_config('dictionary.filegroup');
         if(!key_exists($category,$catelist)){
@@ -42,6 +48,10 @@ class Ajax extends Backend{
         }
         $file = $this->request->file('file');
         $classname=config('filesystem.disks')[$disks]['class'];
+        $name=config('filesystem.disks')[$disks]['name'];
+        if(!class_exists($classname)){
+            $this->error($name.'扩展未安装，请先下载');
+        }
         try{
             $savename=$classname::newInstance([
                 'config'=>config('yunqi.upload'),
@@ -101,7 +111,7 @@ class Ajax extends Backend{
     #[Route('GET,POST','message')]
     public function message()
     {
-        $msgService=BackendMsg::newInstance();
+        $msgService=BackendMsg::newInstance(['msg_type'=>'backend']);
         //阅读消息
         if($this->request->isPost()){
             $ids=$this->request->post('ids/a');
@@ -241,5 +251,48 @@ class Ajax extends Backend{
         $response = Response::create(trim($content))->header($header);
         $response->send();
         exit;
+    }
+
+    //绑定第三方账号
+    #[Route('GET,JSON','third/:action')]
+    public function third($action)
+    {
+        if($action=='qrcode'){
+            $platform=$this->request->get('platform');
+            $foreign_key=$this->request->get('foreign_key');
+            if($platform=='mpapp'){
+                $config=[
+                    'appid'=>site_config("uniapp.mpapp_id"),
+                    'appsecret'=>site_config("uniapp.mpapp_secret"),
+                ];
+                $qrcode=Qrcode::createQrcode(Qrcode::TYPE('绑定第三方账号'),$foreign_key,5*60);
+                $wechat=new \WeChat\Qrcode($config);
+                $ticket = $wechat->create($qrcode->id)['ticket'];
+                $url=$wechat->url($ticket);
+                $content=file_get_contents($url);
+                header('Content-Type: image/png');
+                echo $content;
+                exit;
+            }
+        }
+        if($action=='check'){
+            $platform=$this->request->get('platform');
+            $foreign_key=$this->request->get('foreign_key');
+            $scan=QrcodeScan::where('foreign_key',$foreign_key)->find();
+            if($scan){
+                $third=Third::where(['openid'=>$scan->openid,'platform'=>$platform])->find();
+                if($third){
+                    $this->success('',$third);
+                }
+            }
+            $this->error();
+        }
+        if($action=='selectpage'){
+            $platform=$this->request->get('platform');
+            $this->model=new Third();
+            $where=[];
+            $where[]=['platform','=',$platform];
+            return $this->selectpage($where);
+        }
     }
 }

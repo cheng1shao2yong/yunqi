@@ -55,7 +55,8 @@ export default{
         columns:[
             {field: 'id',title: __('ID'),edit:'hidden'},
             {field: 'pid', title: __('父级'),edit:'slot',rules:'required'},
-            {field: 'rules',title: __('权限'),edit:'slot',visible:'none'},
+            {field: 'rules',title: __('权限'),edit:'slot'},
+            {field: 'auth_rules',edit:'hidden'},
             {field: 'name', title: __('名称'),edit:'text',rules:'required'},
             {field: 'status', title: __('状态'), edit:{form:'radio',value:'normal'},searchList: {'normal': __('正常'),'hidden': __('隐藏')}}
         ],

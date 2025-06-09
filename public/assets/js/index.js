@@ -5,6 +5,7 @@ import themesetting from "./components/index/ThemeSetting.js";
 import message from "./components/index/Message.js";
 import fullscreen from "./components/index/Fullscreen.js";
 import trash from "./components/index/Trash.js";
+import platform from "./components/index/Platform.js";
 import userinfo from "./components/index/Userinfo.js";
 const findBreadcrumbById=function(tree, targetId, result = []) {
     for (let i = 0; i < tree.length; i++) {
@@ -80,6 +81,7 @@ export default{
         'Message':message,
         'Fullscreen':fullscreen,
         'Trash':trash,
+        'Platform':platform,
         'Userinfo':userinfo
     },
     data(){
@@ -97,11 +99,13 @@ export default{
             layerList:[],
             tabList:[],
             imageList:[],
-            mainFrameExpand:false
+            mainFrameExpand:false,
+            logo_img:''
         }
     },
     onLoad:function (){
         this.elementUi=Yunqi.getElementUi();
+        this.changeLogo();
         this.menuList=Yunqi.data.menulist;
         this.initMainContentFrame();
     },
@@ -112,6 +116,17 @@ export default{
         }
     },
     methods:{
+        changeLogo:function (){
+            if(this.elementUi.dark){
+                this.logo_img=Yunqi.data.site.logo_white;
+                return;
+            }
+            if(this.elementUi.layout=='vertical'){
+                this.logo_img=Yunqi.data.site.logo;
+                return;
+            }
+            this.logo_img=Yunqi.data.site.logo_white;
+        },
         initMainContentFrame:function (){
             this.setMainContentFrame();
             //监听屏幕宽度变化

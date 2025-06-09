@@ -1,7 +1,7 @@
 <el-container class="layout" id="container">
     <div class="aside-split" v-show="documentWidth>600 || !elementUi.is_menu_collapse">
         <div class="logo flx-center">
-            <img class="logo-img" src="{:site_config('basic.logo')}" alt="logo" />
+            <img class="logo-img" :src="logo_img" alt="logo" />
         </div>
         <el-scrollbar :height="menuHeight+'px'">
             <div class="split-list">
@@ -19,10 +19,10 @@
     <el-aside v-show="documentWidth>600 || !elementUi.is_menu_collapse" :class="{ 'not-aside': !childMenuList.length }" :style="{ width: elementUi.is_menu_collapse ? '65px' : documentWidth>600 ? '210px':(documentWidth-2)+'px'}">
         <div class="logo flx-center">
             <template v-if="elementUi.is_menu_collapse">
-                <span class="logo-text">{:mb_substr(site_config('basic.sitename'),0,1)}</span>
+                <span class="logo-text">{:mb_substr($site.sitename,0,1)}</span>
             </template>
             <template v-else>
-                <span class="logo-text">{:site_config('basic.sitename')}</span>
+                <span class="logo-text">{$site.sitename}</span>
             </template>
         </div>
         <el-scrollbar :height="menuHeight+'px'">
@@ -46,7 +46,7 @@
                 {include file="layout/index/rightbar" /}
             </div>
         </el-header>
-        <el-container class="classic-main">
+        <el-container class="classic-main is-vertical">
             <Tabs v-show="!mainFrameExpand && elementUi.tabs" ref="tabs"></Tabs>
             <el-main :class="mainFrameExpand?'expand':''">
                 <div id="main-content" :style="mainFrameExpand?'width:100%;height:100%;':`width:${contentWidth}px;height:${contentHeight}px;`"></div>

@@ -68,6 +68,31 @@ export function formatTime(date){
     return hour+':'+minis+':'+seconds;
 }
 
+export function formatDuration(seconds,showSeconds=true) {
+    const days = Math.floor(seconds / (24 * 60 * 60));
+    const hours = Math.floor((seconds % (24 * 60 * 60)) / (60 * 60));
+    const minutes = Math.floor((seconds % (60 * 60)) / 60);
+    const remainingSeconds = seconds % 60;
+
+    let formattedDuration = "";
+    if (days > 0) {
+        formattedDuration += `${days}天 `;
+    }
+    if (hours > 0) {
+        formattedDuration += `${hours}小时 `;
+    }
+    if (minutes > 0) {
+        formattedDuration += `${minutes}分 `;
+    }
+    if (remainingSeconds > 0 && showSeconds) {
+        formattedDuration += `${remainingSeconds}秒`;
+    }
+    if(!formattedDuration){
+        return remainingSeconds+'秒';
+    }
+    return formattedDuration.trim();
+}
+
 export function rand(n,m){
 	return Math.floor(Math.random() * (m - n + 1)) + n;
 }
@@ -91,4 +116,36 @@ export function copyObj(obj){
         }
     }
     return r;
+}
+
+export function getUniqid() {
+    var currentDate = new Date();
+    var timestamp = currentDate.getTime().toString(36); // 使用36进制
+    var unique = (currentDate.getUTCMilliseconds() + Math.random()).toString(36).slice(2, 7); // 随机数
+    return (timestamp + unique).replace('.','');
+}
+
+export function getfileImage(filename){
+    let $domain=location.origin;
+    let start = filename.lastIndexOf('.');
+    let $ext= start>-1?filename.slice(start + 1):'';
+    if (inArray(['jpg', 'png', 'bmp', 'jpeg', 'gif'],$ext)) {
+        return $domain+'/assets/img/fileicon/image.png';
+    }else if(inArray(['doc', 'docx'],$ext)) {
+        return $domain+'/assets/img/fileicon/doc.png';
+    }else if(inArray(['ppt', 'pptx'],$ext)) {
+        return $domain+'/assets/img/fileicon/ppt.png';
+    }else if(inArray(['xls', 'xlsx'],$ext)) {
+        return $domain+'/assets/img/fileicon/xls.png';
+    }else if(inArray(['mp3','wav','wma','ogg'],$ext)) {
+        return $domain+'/assets/img/fileicon/audio.png';
+    }else if(inArray(['mp4', 'avi', 'rmvb','swf', 'flv','rm', 'ram', 'mpeg', 'mpg', 'wmv', 'mov'],$ext)) {
+        return $domain+'/assets/img/fileicon/video.png';
+    }else if(inArray(['zip', 'rar', '7z', 'gz', 'tar'],$ext)) {
+        return $domain+'/assets/img/fileicon/zip.png';
+    }else if(inArray(['apk','tiff','exe','html','pdf','psd','visio','svg','txt','xml'],$ext)){
+        return $domain+'/assets/img/fileicon/'+$ext+'.png';
+    }else{
+        return $domain+'/assets/img/fileicon/wz.png';
+    }
 }

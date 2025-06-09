@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace app\admin\traits;
 
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
 use think\annotation\route\Route;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
@@ -26,6 +28,12 @@ trait Actions
      * 请勿在回调函数内使用$this->error()方法，使用ThrowException抛出异常
      */
     protected $callback;
+
+    /**
+     * 自定义导出数据的控制器及方法
+     */
+    protected $downloadController;
+    protected $downloadAction;
     /**
      * 添加插入时额外增加的字段
      * 支持add,edit
@@ -52,6 +60,13 @@ trait Actions
      * @var array
      */
     protected $relationField=[];
+
+
+    /**
+     * 修改、删除、更新时验证属性权限
+     * @var array
+     */
+    protected $volidateFields=[];
 
     /**
      * 查看
@@ -131,6 +146,13 @@ trait Actions
         if (!$row) {
             $this->error(__('没有找到记录'));
         }
+        if(count($this->volidateFields)>0){
+            foreach ($this->volidateFields as $field=>$value){
+                if($row[$field]!=$value){
+                    $this->error(__('没有操作权限'));
+                }
+            }
+        }
         if (false === $this->request->isPost()) {
             $this->assign('row', $row);
             return $this->fetch();
@@ -184,6 +206,13 @@ trait Actions
         Db::startTrans();
         try {
             foreach ($list as $item) {
+                if(count($this->volidateFields)>0){
+                    foreach ($this->volidateFields as $field=>$value){
+                        if($item[$field]!=$value){
+                            $this->error(__('没有操作权限'));
+                        }
+                    }
+                }
                 $count += $item->delete();
             }
             if($this->callback){
@@ -222,7 +251,15 @@ trait Actions
         try {
             foreach ($ids as $id) {
                 $id=intval($id);
-                $r = $this->model->where($pk,$id)->update([$field=>$value]);
+                $where=[
+                    $pk=>$id
+                ];
+                if(count($this->volidateFields)>0){
+                    foreach ($this->volidateFields as $sk=>$sv){
+                        $where[$sk]=$sv;
+                    }
+                }
+                $r = $this->model->where($where)->update([$field=>$value]);
                 if($r){
                     $count++;
                 }
@@ -302,14 +339,21 @@ trait Actions
             $fields = [];
             for ($currentRow = 1; $currentRow <= 1; $currentRow++) {
                 for ($currentColumn = 1; $currentColumn <= $maxColumnNumber; $currentColumn++) {
-                    $val = $currentSheet->getCellByColumnAndRow($currentColumn, $currentRow)->getValue();
-                    $fields[] = $val;
+                    $columnName = Coordinate::stringFromColumnIndex($currentColumn);
+                    $val = $currentSheet->getCell($columnName.$currentRow)->getCalculatedValue();
+                    $fields[] = is_null($val) ? '' : $val;
                 }
             }
             for ($currentRow = 2; $currentRow <= $allRow; $currentRow++) {
                 $values = [];
                 for ($currentColumn = 1; $currentColumn <= $maxColumnNumber; $currentColumn++) {
-                    $val = $currentSheet->getCellByColumnAndRow($currentColumn, $currentRow)->getValue();
+                    $columnName = Coordinate::stringFromColumnIndex($currentColumn);
+                    $cell = $currentSheet->getCell($columnName.$currentRow);
+                    $dataType=$cell->getDataType();
+                    $val = $cell->getCalculatedValue();
+                    if($dataType==DataType::TYPE_ISO_DATE){
+
+                    }
                     $values[] = is_null($val) ? '' : $val;
                 }
                 $row = [];
@@ -327,23 +371,35 @@ trait Actions
             $this->error($exception->getMessage());
         }
         if (!$insert) {
-            $this->error(__('No rows were updated'));
+            $this->error(__('一行都未导入'));
         }
+        $success=0;
+        $fail=[];
         try {
             if($this->callback){
+                $rinsert=[];
                 $callback = $this->callback;
-                $insert=$callback($insert);
+                foreach ($insert as $vf){
+                    $ss=$callback($vf,$success,$fail);
+                    if($ss){
+                        $rinsert[]=$ss;
+                        $success++;
+                    }
+                }
+                if(!empty($rinsert)){
+                    $this->model->saveAll($rinsert);
+                }
+            }else{
+                $this->model->saveAll($insert);
             }
-            $this->model->saveAll($insert);
         } catch (PDOException $exception) {
             $msg = $exception->getMessage();
             $this->error($msg);
         } catch (Exception $e) {
             $this->error($e->getMessage());
         }
-        $this->success();
+        $this->success('',compact('success','fail'));
     }
-
     /**
      * 回收站
      */
@@ -402,19 +458,46 @@ trait Actions
     {
         if($this->request->isAjax()){
             $postdata=$this->request->post();
-            //获取table的列
-            $listAction=explode('/',str_replace('.','/',$postdata['listAction']));
-            $controller='\\app\\admin\\controller';
-            for($i=0;$i<count($listAction)-1;$i++){
-                if($i==count($listAction)-2){
-                    $listAction[$i]=ucfirst($listAction[$i]);
+            if (!$this->downloadController){
+                //获取table的列
+                $listAction=explode('/',str_replace('.','/',$postdata['listAction']));
+                $controller='\\app\\admin\\controller';
+                for($i=0;$i<count($listAction)-1;$i++){
+                    if($i==count($listAction)-2){
+                        $listAction[$i]=ucfirst($listAction[$i]);
+                    }
+                    $controller.='\\'.$listAction[$i];
                 }
-                $controller.='\\'.$listAction[$i];
+                $this->downloadController=$controller;
             }
-            $action=$listAction[count($listAction)-1];
-            $obj=new $controller($this->request);
-            $result=call_user_func_array([$obj,$action],[]);
+            if (!$this->downloadAction){
+                $listAction=explode('/',str_replace('.','/',$postdata['listAction']));
+                $action=$listAction[count($listAction)-1];
+                if(strpos($action,'?')){
+                    $action=substr($action,0,strpos($action,'?'));
+                }
+                if(strpos($action,'-')!==false){
+                    $arrs=explode('-',$action);
+                    $action='';
+                    foreach ($arrs as $k=>$v){
+                        if($k>0){
+                            $action.=ucfirst($v);
+                        }else{
+                            $action.=$v;
+                        }
+                    }
+                }
+                $this->downloadAction=$action;
+            }
+            $obj=new ($this->downloadController)($this->request);
+            $result=call_user_func_array([$obj,$this->downloadAction],[]);
             $list=$result->getData()['rows'];
+            if($this->callback){
+                $callback=$this->callback;
+                foreach ($list as $k=>$v){
+                    $list[$k]=$callback($v);
+                }
+            }
             //格式化
             $fields=[];
             foreach ($postdata['field'] as $v){

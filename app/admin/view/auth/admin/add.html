@@ -26,13 +26,19 @@
                     </el-select>
                 </el-form-item>
             </template>
+            <template v-slot:third_id="{rows}">
+                <el-form-item label="绑定微信:">
+                    <third :value="rows.third_id" :selectable="true" @change="changValue"></third>
+                </el-form-item>
+            </template>
         </yun-form>
     </el-card>
 </template>
 <script>
     import form from "@components/Form.js";
+    import third from "@components/Third.js";
     export default{
-        components:{'YunForm':form},
+        components:{'YunForm':form,'Third':third},
         data:{
             data:Yunqi.data.row || {},
             disabled:false,
@@ -43,6 +49,7 @@
             this.columns=[
                 {field: 'id',title: __('ID'),edit:'hidden'},
                 {field: 'username', title: __('用户名'),edit:(ids==1)?'readonly':'text',rules:'required'},
+                {field: 'password', title: __('密码'),edit:'password',rules:(Yunqi.config.route[2]=='add')?'required':''},
                 {field: 'nickname', title: __('昵称'),edit:'text',rules:'required'},
                 {field: 'mobile', title: __('手机号'),edit:'text',rules:'required;mobile'},
                 {
@@ -51,16 +58,20 @@
                     edit:{form:'slot',value:[]},
                     rules:'required'
                 },
-                {field: 'third_id', title: __('绑定微信'),edit:Yunqi.data.thirdLogin?{form:'selectpage',url:'auth/admin/third',keyField:'id',labelField:'openname'}:false},
-                {field: 'password', title: __('密码'),edit:'password'},
+                {field: 'third_id', title: __('绑定微信'),edit:Yunqi.data.thirdLogin?'slot':false},
                 {field: 'status', title: __('状态'),searchList: {'normal': __('正常'),'hidden': __('隐藏')},edit:{form:'radio',value:'normal'}}
             ];
             if(ids==1){
                 this.disabled=true;
             }
         },
-        methods: {
+        onShow:function (){
 
+        },
+        methods: {
+            changValue:function (e){
+                this.$refs.yunform.setValue('third_id',e);
+            }
         }
     }
 </script>

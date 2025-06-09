@@ -66,6 +66,7 @@ const template=`
         <el-divider class="divider" content-position="center" style="margin-top: 40px">
           界面设置
         </el-divider>
+        <template v-if="elementUi.layout!='transverse'">
         <div class="theme-item">
           <span>折叠菜单</span>
           <el-switch v-model="elementUi.is_menu_collapse" @change="changeElementUi('is_menu_collapse')"></el-switch>
@@ -74,6 +75,7 @@ const template=`
           <span>面包屑</span>
           <el-switch v-model="elementUi.breadcrumb" @change="changeElementUi('breadcrumb')"></el-switch>
         </div>
+        </template>
         <div class="theme-item">
           <span>标签栏</span>
           <el-switch v-model="elementUi.tabs" @change="changeElementUi('tabs')"></el-switch>
@@ -111,28 +113,80 @@ export default {
     },
     template:template,
     methods:{
-        changeLayout:function (key){
-            let layout=Yunqi.getElementUi()[key];
-            if(layout==key){
-                return;
-            }
-            localStorage['elementUi.layout']=key;
-            document.cookie='layout='+key;
-            location.reload();
+        changeLayout:function (value){
+            this.postData('layout',value,function(){
+                location.reload();
+            });
         },
         changeElementUi:function (key){
-            localStorage['elementUi.'+key]=this.elementUi[key];
-            if(key=='footer' || key=='tabs' || key=='dark'){
-                location.reload();
-            }
+            let value=this.elementUi[key];
+            let callback=false;
             if(key=='language'){
-                document.cookie='think_var='+this.elementUi.language;
-                location.reload();
+                callback=function (){
+                    location.reload();
+                };
             }
+            if(key=='dark'){
+                let win=this.getAppsWindow();
+                callback=function (){
+                    Yunqi.app.changeLogo();
+                    if(value){
+                        document.documentElement.classList.add('dark');
+                        for(let i=0;i<win.length;i++){
+                            win[i].document.documentElement.classList.add('dark');
+                        }
+                    }else{
+                        document.documentElement.classList.remove('dark');
+                        for(let i=0;i<win.length;i++){
+                            win[i].document.documentElement.classList.remove('dark');
+                        }
+                    }
+                };
+            }
+            if(key=='footer' || key=='tabs'){
+                callback=function (){
+                    Yunqi.app.setMainContentFrame();
+                };
+            }
+            this.postData(key,value,callback);
         },
-        changeThemeColor:function (val){
-            localStorage['elementUi.theme_color']=val;
-            Yunqi.setThemeColor();
+        changeThemeColor:function (value){
+            let win=this.getAppsWindow();
+            this.postData('theme_color',value,function(){
+                Yunqi.setThemeColor();
+                for(let i=0;i<win.length;i++){
+                    win[i].Yunqi.config.elementUi.theme_color=value;
+                    win[i].Yunqi.setThemeColor();
+                }
+            });
+        },
+        getAppsWindow:function (){
+            let tab=Yunqi.app.tabList;
+            let layer=Yunqi.app.layerList;
+            let doc=[];
+            for (let i=0;i<tab.length;i++){
+                let id=tab[i].id;
+                let _doc=document.querySelector('iframe[id="addtabs-'+id+'"]');
+                if(_doc){
+                    doc.push(_doc.contentWindow);
+                }
+            }
+            for (let i=0;i<layer.length;i++){
+                let id=layer[i].id;
+                let _doc=document.querySelector('iframe[id="layer-'+id+'"]');
+                if(_doc){
+                    doc.push(_doc.contentWindow);
+                }
+            }
+            return doc;
+        },
+        postData:function (key,value,callback){
+            this.elementUi[key]=value;
+            Yunqi.ajax.post(Yunqi.config.baseUrl+'change-theme', {key:key,value:value},false,false).then(res=>{
+                if(callback){
+                    callback();
+                }
+            });
         }
     }
 };

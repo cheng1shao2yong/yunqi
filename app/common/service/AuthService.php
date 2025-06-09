@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace app\common\service;
 
+use app\common\model\Third;
+
 /**
  * 权限服务
  */
@@ -34,7 +36,7 @@ abstract class AuthService extends BaseService
      * @param string $openid
      * @return mixed
      */
-    abstract public function loginByThirdPlatform(string $platform, string $openid);
+    abstract public function loginByThirdPlatform(string $platform,Third $third);
     /**
      * 获取用户信息
      * @return array

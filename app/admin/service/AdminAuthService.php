@@ -25,10 +25,12 @@ class AdminAuthService extends AuthService{
     protected $allowFields = ['id', 'username', 'nickname', 'mobile', 'avatar', 'user_id', 'group_id', 'status'];
     protected $userRuleList = [];
     protected $userMenuList = [];
+    private $platformList=[];
     private $modulealis;
     private $modulename;
     private $controllername;
     private $actionname;
+
 
     protected function init()
     {
@@ -79,6 +81,17 @@ class AdminAuthService extends AuthService{
         return in_array(1,$this->groupids);
     }
 
+    public function getElementUi($elementUi)
+    {
+        if($this->element_ui){
+            $data=json_decode($this->element_ui,true);
+            foreach ($data as $k=>$v){
+                $elementUi[$k]=$v;
+            }
+        }
+        return $elementUi;
+    }
+
     public function getChildrenGroupIds(array $groupids=[]):array
     {
         if(count($groupids)==0){
@@ -125,8 +138,8 @@ class AdminAuthService extends AuthService{
                     return implode('/',array_reverse($actiontitle));
                 }
                 return '未定义';
-                default:
-                    return '';
+            default:
+                return '';
         }
     }
 
@@ -141,14 +154,24 @@ class AdminAuthService extends AuthService{
         return true;
     }
 
-    public function loginByThird(string $__token__):bool
+    public function loginByThird(string $__token__,$admin_id,array &$adminlist):bool
     {
         $scan=QrcodeScan::where(['type'=>'backend-login','foreign_key'=>$__token__])->order('id desc')->find();
         if($scan){
             $third=Third::where(['platform'=>Third::PLATFORM('微信公众号'),'openid'=>$scan->openid])->find();
             if($third){
-                $admin=Admin::where(['third_id'=>$third->id])->find();
-                if($admin && $admin['status'] == 'normal'){
+                $list=Admin::where(['third_id'=>$third->id])->select();
+                $adminlist=[];
+                foreach ($list as $item){
+                    unset($item['password']);
+                    unset($item['salt']);
+                    if($item['status']!='normal'){
+                        continue;
+                    }
+                    $adminlist[]=$item;
+                }
+                if(count($adminlist)==1){
+                    $admin=$adminlist[0];
                     $admin->loginfailure = 0;
                     $admin->logintime = time();
                     $admin->loginip = request()->ip();
@@ -157,6 +180,21 @@ class AdminAuthService extends AuthService{
                     Session::set('admin',$admin->toArray());
                     Session::save();
                     return true;
+                }
+                if(count($adminlist)>1 && $admin_id){
+                    foreach ($adminlist as $xitem){
+                        if($xitem['id']==$admin_id){
+                            $admin=$xitem;
+                            $admin->loginfailure = 0;
+                            $admin->logintime = time();
+                            $admin->loginip = request()->ip();
+                            $admin->token = uuid();
+                            $admin->save();
+                            Session::set('admin',$admin->toArray());
+                            Session::save();
+                            return true;
+                        }
+                    }
                 }
             }
         }
@@ -187,11 +225,12 @@ class AdminAuthService extends AuthService{
         $admin->save();
         Session::set('admin',$admin->toArray());
         Session::save();
+        return $admin;
     }
 
     public function getRuleList()
     {
-        $rule = AuthRule::field('id,pid,status,controller,action,title,icon,menutype,ismenu,extend')
+        $rule = AuthRule::field('id,pid,status,controller,action,title,icon,menutype,ismenu,isplatform,extend')
             ->order('weigh', 'desc')
             ->cache('admin_rule_list')
             ->select()
@@ -265,58 +304,84 @@ class AdminAuthService extends AuthService{
     private function setUserRuleAndMenu()
     {
         if($this->id){
-           $adminRuleList= Cache::get('admin_rule_list_'.$this->id);
-           $adminMenuList= Cache::get('admin_menu_list_'.$this->id);
-           if(!$adminRuleList || !$adminMenuList || Config::get('app.app_debug')){
-               $rules=array_column($this->getRuleList(),null,'id');
-               $groups=AuthGroup::column('auth_rules','id');
-               foreach ($groups as $key=>$value){
-                   $value=explode(',',$value);
-                   $groups[$key]=array_filter(array_map(function($v) use ($rules){
-                       if($v=='*'){
-                           return '*';
-                       }
-                       return isset($rules[$v])?$rules[$v]:'';
-                   },$value),function ($f){
-                       return $f!='';
-                   });
-               }
-               $rulesids=[];
-               $menuids=[];
-               if($this->isSuperAdmin()){
-                   $adminRuleList='*';
-                   $adminMenuList='*';
-               }else{
-                   $adminRuleList=[];
-                   $adminMenuList=[];
-                   foreach ($this->groupids as $groupid){
-                       foreach ($groups[$groupid] as $value){
-                           if($value['ismenu']==1){
-                               continue;
-                           }
-                           if(in_array($value['id'],$rulesids)){
-                               continue;
-                           }
-                           $adminRuleList[]=$value;
-                           $rulesids[]=$value['id'];
-                       }
-                       foreach ($groups[$groupid] as $value){
-                           if($value['ismenu']==0){
-                               continue;
-                           }
-                           if(in_array($value['id'],$menuids)){
-                               continue;
-                           }
-                           $adminMenuList[]=$value;
-                           $menuids[]=$value['id'];
-                       }
-                   }
-               }
-               Cache::set('admin_rule_list_'.$this->id,$adminRuleList);
-               Cache::set('admin_menu_list_'.$this->id,$adminMenuList);
-           }
-           $this->userRuleList=$adminRuleList;
-           $this->userMenuList=$adminMenuList;
+            $adminRuleList= Cache::get('admin_rule_list_'.$this->id);
+            $adminMenuList= Cache::get('admin_menu_list_'.$this->id);
+            $platformList=Cache::get('admin_platform_list_'.$this->id);
+            $rulelist=$this->getRuleList();
+            if(!$adminRuleList || !$adminMenuList || $platformList || Config::get('app.app_debug')){
+                $rules=array_column($rulelist,null,'id');
+                $groups=AuthGroup::column('auth_rules','id');;
+                foreach ($groups as $key=>$value){
+                    $value=explode(',',$value);
+                    $groups[$key]=array_filter(array_map(function($v) use ($rules){
+                        if($v=='*'){
+                            return '*';
+                        }
+                        return isset($rules[$v])?$rules[$v]:'';
+                    },$value),function ($f){
+                        return $f!='';
+                    });
+                }
+                $rulesids=[];
+                $menuids=[];
+                $platformids=[];
+                if($this->isSuperAdmin()){
+                    $adminRuleList='*';
+                    $adminMenuList='*';
+                    $platformList=array(['id'=>0,'title'=>'管理平台']);
+                    foreach ($rulelist as $value){
+                        if($value['isplatform']){
+                            array_push($platformList,['id'=>$value['id'],'title'=>$value['title']]);
+                        }
+                    }
+                }else{
+                    $adminRuleList=[];
+                    $adminMenuList=[];
+                    $platformList=[];
+                    foreach ($this->groupids as $groupid){
+                        foreach ($groups[$groupid] as $value){
+                            if($value['ismenu']===1){
+                                continue;
+                            }
+                            if(in_array($value['id'],$rulesids)){
+                                continue;
+                            }
+                            $adminRuleList[]=$value;
+                            $rulesids[]=$value['id'];
+                        }
+                        foreach ($groups[$groupid] as $value){
+                            if($value['ismenu']===0){
+                                continue;
+                            }
+                            if(in_array($value['id'],$menuids)){
+                                continue;
+                            }
+                            $adminMenuList[]=$value;
+                            $menuids[]=$value['id'];
+                        }
+                        foreach ($groups[$groupid] as $value){
+                            if($value['pid']===0 && $value['isplatform']===0 && !in_array(0,$platformids)){
+                                $platformList[]=['id'=>0,'title'=>'管理平台'];
+                                $platformids[]=0;
+                            }
+                            if($value['isplatform']===0){
+                                continue;
+                            }
+                            if(in_array($value['id'],$platformids)){
+                                continue;
+                            }
+                            $platformList[]=['id'=>$value['id'],'title'=>$value['title']];
+                            $platformids[]=$value['id'];
+                        }
+                    }
+                }
+                Cache::set('admin_rule_list_'.$this->id,$adminRuleList);
+                Cache::set('admin_menu_list_'.$this->id,$adminMenuList);
+                Cache::set('admin_platform_list_'.$this->id,$platformList);
+            }
+            $this->userRuleList=$adminRuleList;
+            $this->userMenuList=$adminMenuList;
+            $this->platformList=$platformList;
         }
     }
 
@@ -350,7 +415,6 @@ class AdminAuthService extends AuthService{
      */
     public function getSidebar(mixed $refererUrl=''):array
     {
-        $referer = [];
         $ruleList=$this->getRuleList();
         foreach ($ruleList as $k => &$v) {
             unset($v['controller']);
@@ -363,25 +427,45 @@ class AdminAuthService extends AuthService{
                 unset($ruleList[$k]);
                 continue;
             }
+            if ($v['isplatform']) {
+                unset($ruleList[$k]);
+                continue;
+            }
             $v['title'] = __($v['title']);
             if($v['extend']){
                 $v['extend']=json_decode($v['extend'],true);
             }
         }
         $ruleList=array_values($ruleList);
-        $selected=$ruleList[0];
-        $treeRuleList=Tree::instance()->init($ruleList)->getTreeArray(0);
+        $platform_id=$this->getPlatformId();
+        $treeRuleList=Tree::instance()->init($ruleList)->getTreeArray($platform_id);
+        $selected=[];
+        $referer=[];
         $this->getSelectAndReferer($treeRuleList,$refererUrl,$selected,$referer);
         if($selected==$referer){
             $referer=[];
         }
-        return [$treeRuleList,$selected,$referer];
+        return [$this->platformList,$treeRuleList,$selected,$referer];
+    }
+
+    private function getPlatformId()
+    {
+        if($this->platform_id){
+            foreach ($this->platformList as &$value){
+                if($value['id']==$this->platform_id){
+                    $value['active']=1;
+                    return $this->platform_id;
+                }
+            }
+        }
+        $this->platformList[0]['active']=1;
+        return $this->platformList[0]['id'];
     }
 
     private function getSelectAndReferer($treeRuleList,$refererUrl,&$selected,&$referer)
     {
         foreach ($treeRuleList as $value){
-            if(count($value['childlist'])===0 && !$selected['url']){
+            if(count($value['childlist'])===0 && !isset($selected['url'])){
                 $selected=$value;
             }
             if($refererUrl){
@@ -396,12 +480,25 @@ class AdminAuthService extends AuthService{
         }
     }
 
+    public function getRuleId()
+    {
+        foreach ($this->getUserRuleList() as $rule){
+            if($rule['controller']==$this->controllername){
+                $action=json_decode($rule['action'],true);
+                if(in_array($this->actionname,$action)){
+                    return $rule['id'];
+                }
+            }
+        }
+        return null;
+    }
+
     public function loginByMobile(string $mobile, string $code)
     {
 
     }
 
-    public function loginByThirdPlatform(string $platform, string $openid)
+    public function loginByThirdPlatform(string $platform, Third $third)
     {
 
     }

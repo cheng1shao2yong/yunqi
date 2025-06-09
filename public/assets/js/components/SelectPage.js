@@ -59,7 +59,11 @@ export default {
                 });
             }
         }else{
-            this.data=this.value?this.value.toString():'';
+            if(this.value===0 || this.value==='0'){
+                this.data='';
+            }else{
+                this.data=this.value?this.value.toString():'';
+            }
         }
         this.initList();
     },
@@ -154,6 +158,61 @@ export default {
         changePage:function (e){
             this.pageNumber=e;
             this.getList();
+        },
+        getSelectedData:function (){
+            let r=[];
+            for(let i=0;i<this.list.length;i++){
+                if(this.multiple){
+                    if(this.data.indexOf(this.list[i][this.keyField])>-1){
+                        r.push(this.list[i]);
+                    }
+                }else{
+                    if(this.data==this.list[i][this.keyField]){
+                        r.push(this.list[i]);
+                    }
+                }
+            }
+            return r;
+        },
+        select:function (key){
+            if(this.multiple){
+                if(this.data.indexOf(key)>-1){
+                    return;
+                }
+                this.data.push(key);
+            }else{
+                this.data=key;
+            }
+            this.pageNumber=1;
+            let postdata={
+                'page':1,
+                'limit':this.pageSize,
+                'keyField':this.keyField,
+                'labelField':this.labelField,
+                'keyValue':this.data,
+                'labelValue':'',
+                'selectpage':true
+            };
+            Yunqi.ajax.json(this.url,postdata,false).then(res=>{
+                this.list=res.rows;
+                this.total=res.total;
+                this.changeSelect();
+            });
+        },
+        remove:function (key){
+            if(this.multiple){
+                let i=this.data.indexOf(key);
+                if(i>-1){
+                    this.data.splice(i,1);
+                }
+            }else{
+                this.data='';
+            }
+            let r=this.data;
+            if(this.multiple){
+                r=this.data.join(',');
+            }
+            this.changeSelect();
         }
     }
 };

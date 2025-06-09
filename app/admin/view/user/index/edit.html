@@ -1,6 +1,8 @@
 <template>
     <el-card shadow="never" style="border: 0;">
-        <yun-form :data="row" :columns="columns"></yun-form>
+        <yun-form :data="row" :columns="columns">
+            {:token_field()}
+        </yun-form>
     </el-card>
 </template>
 <script>

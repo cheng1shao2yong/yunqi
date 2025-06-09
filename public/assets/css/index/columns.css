@@ -17,10 +17,19 @@
     border-right: 1px solid var(--el-border-color-light);
 }
 
+.dark .el-container .aside-split {
+    background-color: #141414;
+    color: #bdbdc0;
+}
+
 .el-container .aside-split .logo {
     box-sizing: border-box;
     height: 55px;
     border-bottom: 1px solid var(--el-color-primary-light-3);
+}
+
+.dark .el-container .aside-split .logo {
+    border-bottom: 1px solid #141414;
 }
 
 .el-container .aside-split .logo .logo-img {
@@ -50,6 +59,10 @@
     background-color: var(--el-color-primary-dark-2);
 }
 
+.dark .el-container .aside-split .el-scrollbar .split-list .split-item:hover {
+    background-color: #2a2a2a;
+}
+
 .el-container .aside-split .el-scrollbar .split-list .split-item .el-icon {
     font-size: 21px;
 }
@@ -64,8 +77,17 @@
     color: #ffffff;
 }
 
+.dark .el-container .aside-split .el-scrollbar .split-list .split-item .fa,
+.dark .el-container .aside-split .el-scrollbar .split-list .split-item .title {
+    color: #bdbdc0;
+}
+
 .el-container .aside-split .el-scrollbar .split-list .split-active {
     background-color: var(--el-color-primary-dark-2) !important;
+}
+
+.dark .el-container .aside-split .el-scrollbar .split-list .split-active {
+    background-color: #2a2a2a !important;
 }
 
 .el-container .aside-split .el-scrollbar .split-list .split-active .el-icon,
@@ -120,6 +142,11 @@
     padding: 0 0 0 15px;
     background-color: #ffffff;
     border-bottom: 1px solid var(--el-border-color-light);
+}
+
+.dark .el-container .el-header {
+    background-color: #141414;
+    color: #bdbdc0;
 }
 
 .el-container .el-header .tool-bar-ri .toolBar-icon,

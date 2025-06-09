@@ -38,7 +38,7 @@ abstract class MsgService extends BaseService{
         }
     }
     //生成消息
-    public function create(string $content='',mixed $send_to=''):Msg
+    public function create(string $content='',mixed $send_to='')
     {
         if($content){
             $this->content=$content;
@@ -53,14 +53,21 @@ abstract class MsgService extends BaseService{
             throw new \Exception(__('消息接收者不能为空'));
         }
         $classname=get_called_class();
-        $msg=new Msg();
-        $msg->msg_type=$this->msg_type;
-        $msg->handle=$classname;
-        $msg->send_to=$this->send_to;
-        $msg->content=$this->content;
-        $msg->status=0;
-        $msg->save();
-        return $msg;
+        $send_to=$this->send_to;
+        if(!is_array($this->send_to)){
+            $send_to=[$send_to];
+        }
+        $insert=[];
+        foreach ($send_to as $v){
+            $insert[]=[
+                'msg_type'=>$this->msg_type,
+                'handle'=>$classname,
+                'send_to'=>$v,
+                'content'=>$this->content,
+                'status'=>0
+            ];
+        }
+        (new Msg())->saveAll($insert);
     }
     //发送消息
     public function send(Msg $msg)

@@ -8,7 +8,6 @@
                 toolbar="refresh,add,edit,del,more"
                 @render="onRender"
                 ref="yuntable"
-                :tree-expand-all="true"
                 :is-tree="true"
                 :common-search="false"
                 :pagination="false"
@@ -47,20 +46,45 @@
                     return true;
                 }},
                 {field: 'id',title: __('ID'),width:80},
-                {field: 'title', title: __('标题'),width:400,formatter:function(data){
-                        let html=Yunqi.formatter.html;
-                        html.value=data.replace(/&nbsp;/g,'&nbsp;&nbsp;');
-                        return html;
-                    }},
-                {field: 'controller', title: __('控制器'),width:350,align:'left'},
-                {field: 'action', title: __('方法')},
+                {field: 'title',expand:true,title: __('标题'),align:'left',formatter:function (data,row){
+                    if(row.ismenu){
+                        return data;
+                    }else{
+                        data=JSON.parse(data);
+                        return data.join(',');
+                    }
+                }},
+                {field: 'controller', title: __('控制器'),align:'left',formatter:function (data,row){
+                    if(!data){
+                        return '';
+                    }
+                    return data;
+                }},
+                {field: 'action', title: __('方法'),align:'left',formatter:function (data,row){
+                    if(!data){
+                        return '';
+                    }
+                    if(row.ismenu){
+                        return data;
+                    }else{
+                        data=JSON.parse(data);
+                        return data.join(',');
+                    }
+                }},
                 {field: 'icon',width:80, title: __('图标'),formatter:Yunqi.formatter.slot},
                 {field: 'ismenu',width:80, title: __('菜单'),formatter:function(data){
-                        if(data==1){
-                            return __('是');
-                        }
-                        return __('否');
-                    }},
+                    if(data==1){
+                        return __('是');
+                    }
+                    return __('否');
+                }},
+                {field: 'isplatform', title: __('平台'),width:80,formatter: function(data,row){
+                    if(row.pid===0 && row.ismenu){
+                        let t=Yunqi.formatter.switch;
+                        t.value=data;
+                        return t;
+                    }
+                }},
                 {field: 'weigh', title: __('权重'),width:80},
                 {field: 'status', title: __('状态'),width:80,searchList: {'normal': __('正常'),'hidden': __('隐藏')},formatter: Yunqi.formatter.switch},
                 {treeExpand: true},
@@ -70,19 +94,11 @@
                     width:150,
                     action:{sort:true,edit:true, del:true}
                 }
-            ],
-            pageinit:false
+            ]
         },
         methods: {
             onRender:function (data){
                 let action=Yunqi.config.route[2];
-                if(action=='index'){
-                    if(this.pageinit){
-                        return;
-                    }
-                    this.treeinit(data);
-                    this.pageinit=true;
-                }
                 if(action=='edit'){
                     if(parseInt(data.ismenu)===0){
                         let title=JSON.parse(data.title);
@@ -93,18 +109,6 @@
                         }
                         data.actions=actions;
                         this.changeMenu(0);
-                    }
-                }
-            },
-            treeinit:function (list){
-                for(let i=0;i<list.length;i++){
-                    let controller=list[i].controller;
-                    let action=list[i].action;
-                    let ismenu=list[i].ismenu;
-                    if(ismenu && controller && action){
-                        Vue.nextTick(()=>{
-                            this.$refs.yuntable.expandTree(list[i].id);
-                        });
                     }
                 }
             }

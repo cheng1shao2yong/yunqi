@@ -20,6 +20,18 @@ use app\common\model\Addons as AddonsModel;
 use think\facade\Db;
 use think\facade\Cache;
 
+function parseMenu(array $menu)
+{
+    $ids=[];
+    foreach ($menu as $value){
+        $ids[]=$value['id'];
+        if(isset($value['childlist'])){
+            $ids=array_merge($ids,parseMenu($value['childlist']));
+        }
+    }
+    return $ids;
+}
+
 #[Group("addons")]
 class Addons extends Backend
 {
@@ -61,7 +73,7 @@ class Addons extends Backend
                     if($keywords){
                         $where[]=['name|key','like','%'.$keywords.'%'];
                     }
-                    $fields='id,key,pack,type,name,description,author,document,price,version,open,install';
+                    $fields='id,key,secret_key,pack,type,name,description,author,document,price,version,open,install';
                     $result=AddonsModel::list($page,$limit,$fields,$where);
                     foreach ($result['rows'] as $key=>$value){
                         $result['rows'][$key]['download']=0;
@@ -74,6 +86,11 @@ class Addons extends Backend
                         if(file_exists($this->service->getAddonsPack($value['type'],$value['pack'],$value['version']))){
                             $result['rows'][$key]['packed']=1;
                         }
+                        //判断是否是作者
+                        if(AddonsModel::checkKey($value)){
+                            $result['rows'][$key]['is_author']=1;
+                        }
+                        unset($result['rows'][$key]['secret_key']);
                     }
                 }else{
                     //远程获取的扩展
@@ -82,7 +99,7 @@ class Addons extends Backend
                     if($type){
                         $where[]=['type','=',$type];
                     }
-                    $local=AddonsModel::list(1,1000,'id,pack,key,open,install',$where);
+                    $local=AddonsModel::list(1,1000,'id,type,pack,author,version,key,secret_key,open,install',$where);
                     //对比远程扩展和本地扩展
                     foreach ($result['rows'] as $key=>$value){
                         $result['rows'][$key]['open']=0;
@@ -102,6 +119,10 @@ class Addons extends Backend
                                 }
                                 if(file_exists($this->service->getAddonsPack($value['type'],$v['pack'],$value['version']))){
                                     $result['rows'][$key]['packed']=1;
+                                }
+                                //判断是否是作者
+                                if(AddonsModel::checkKey($v)){
+                                    $result['rows'][$key]['is_author']=1;
                                 }
                             }
                         }
@@ -158,13 +179,32 @@ class Addons extends Backend
             }
             $this->success('创建成功');
         }
-        $this->assign('type',AddonsModel::TYPE);
+        $id=$this->request->get('id');
+        if($id){
+            $rows=AddonsModel::find($id);
+            if(!AddonsModel::checkKey($rows)){
+                $this->error('不是你的扩展，无法操作');
+            }
+            $rows->version=intval(str_replace('.','',$rows['version']));
+            $info=$this->service->getAddonsInstallInfo($rows);
+            //将数组转换成换行隔开的字符串
+            $rows->files=implode("\n",$info['files']);
+            $rows->unpack=implode("\n",$info['unpack']);
+            $rows->require=implode("\n",array_map(function($item){return "\\".$item;},$info['require']));
+            $rows->addons=implode("\n",array_keys($info['addons']));
+            $rows->tables=$info['tables'];
+            $rows->config=array_map(function($item){return $item['id'];},$info['config']);
+            $rows->menu=parseMenu($info['menu']);
+            $this->assign('rows',$rows);
+        }else{
+            $this->assign('rows',['menu'=>[]]);
+        }
+        $config=Config::where('can_delete',1)->column('id,name,title','id');
         $dbname=config('database.connections.mysql.database');
         $tableList =Db::query("SELECT `TABLE_NAME` AS `name` FROM `information_schema`.`TABLES` where `TABLE_SCHEMA` = '{$dbname}';");
-        $this->assign('table',array_map(function ($item){
-            return $item['name'];
-        },$tableList));
-        $config=Config::where('can_delete',1)->column('id,name,title','id');
+        $table=array_map(function ($item){return $item['name'];},$tableList);
+        $this->assign('type',AddonsModel::TYPE);
+        $this->assign('table',$table);
         $this->assign('sonfig',$config);
         return $this->fetch();
     }
@@ -230,11 +270,12 @@ class Addons extends Backend
     {
         if($this->request->isGet()){
             $key=$this->request->get('key');
-            [$addon,$menu,$config,$tables]=$this->service->getAddonsInstallInfo($key);
+            $addon=AddonsModel::where('key',$key)->find();
+            $result=$this->service->getAddonsInstallInfo($addon);
             $this->assign('addon',$addon);
-            $this->assign('menu',$menu);
-            $this->assign('conf',$config);
-            $this->assign('tables',$tables);
+            $this->assign('menu',$result['menu']);
+            $this->assign('conf',$result['config']);
+            $this->assign('tables',$result['tables']);
             return $this->fetch();
         }
         if($this->request->isPost()){

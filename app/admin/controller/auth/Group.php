@@ -42,13 +42,17 @@ class Group extends Backend
         $this->model=new AuthGroup();
     }
 
-    private function getGroupData()
+    private function getGroupData(bool $astree=false)
     {
         $groupids='*';
         if(!$this->auth->isSuperAdmin()){
             $groupids=$this->auth->getChildrenGroupIds();
         }
-        $groupdata=AuthGroup::getGroupListTree($groupids);
+        if($astree){
+            $groupdata=AuthGroup::getGroupListTree($groupids);
+        }else{
+            $groupdata=AuthGroup::getGroupListArray($groupids);
+        }
         return $groupdata;
     }
 
@@ -59,7 +63,7 @@ class Group extends Backend
             $this->assign('groupids',$this->auth->groupids);
             return $this->fetch();
         }
-        $result = ['total' => 1000, 'rows' =>$this->getGroupData()];
+        $result = ['total' => 1000, 'rows' =>$this->getGroupData(true)];
         return json($result);
     }
 

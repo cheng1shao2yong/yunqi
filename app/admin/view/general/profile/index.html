@@ -7,19 +7,24 @@
                         @submit="onSubmit"
                         :columns="columns"
                         :action="extend.edit_url"
-                        :data='{:json_encode($auth->userinfo())}'
+                        :data='admininfo'
                         label-position="top">
-                    <template #default>
-                        {:token_field()}
-                        <div style="display: flex;justify-content: center;padding: 15px 0;">
-                            <upload-img :image-url="avatar" :is-circle="true" @change="changeImg">
-                                <template #title>
-                                    <i class="fa fa-user-circle"></i>
-                                    <span>请上传头像</span>
-                                </template>
-                            </upload-img>
-                        </div>
-                    </template>
+                        <template #default>
+                            {:token_field()}
+                            <div style="display: flex;justify-content: center;padding: 15px 0;">
+                                <upload-img :image-url="avatar" :is-circle="true" @change="changeImg">
+                                    <template #title>
+                                        <i class="fa fa-user-circle"></i>
+                                        <span>请上传头像</span>
+                                    </template>
+                                </upload-img>
+                            </div>
+                        </template>
+                        <template #third_id="{rows}">
+                            <el-form-item label="绑定微信:">
+                                <third :value="rows.third_id" :selectable="true" @change="changValue"></third>
+                            </el-form-item>
+                        </template>
                 </yun-form>
             </el-card>
         </el-col>
@@ -39,17 +44,21 @@
     import table from "@components/Table.js";
     import form from "@components/Form.js";
     import uploadimg from "@components/UploadImg.js";
+    import third from "@components/Third.js";
     export default{
-        components:{'YunTable':table,'YunForm':form,'UploadImg':uploadimg},
+        components:{'YunTable':table,'YunForm':form,'UploadImg':uploadimg,'Third':third},
         data:{
+            admininfo:Yunqi.data.admininfo,
             extend:{
                 index_url: 'general/profile/index',
                 edit_url: 'general/profile/update'
             },
             columns:[
+                {field: 'avatar',edit:'hidden'},
                 {field: 'username', title: __('用户名'),edit:'readonly'},
                 {field: 'mobile', title: __('手机号'),edit:'text',rules:'required;mobile'},
                 {field: 'nickname', title: __('昵称'),edit:'text',rules:'required'},
+                {field: 'third_id', title: __('微信'),edit:Yunqi.data.thirdLogin?'slot':false,rules:'required'},
                 {field: 'password', title: __('密码'),edit: {form:'input',type:'password',placeholder:'不修改密码请留空'}},
             ],
             log:[
@@ -71,6 +80,9 @@
             onSubmit:function (data){
                 data.avatar=this.avatar;
                 return true;
+            },
+            changValue:function (e){
+                this.$refs.yunform.setValue('third_id',e);
             }
         }
     }

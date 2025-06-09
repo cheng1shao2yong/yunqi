@@ -28,16 +28,16 @@ function getFields($rows,$table,$form,$isTree,$treeTitle)
     foreach ($rows as &$value){
         $value=is_string($value)?trim($value):$value;
     }
-    if($rows['visible']=='none' && !$rows['edit']){
-        return '';
-    }
     $arr=[
         'field'=>$rows['field'],
         'title'=>$rows['title']
     ];
     if($table){
-        if($rows['visible']===false && $rows['visible']==='none'){
-            $arr['visible']=$rows['visible'];
+        if($rows['visible']==='none'){
+            return '';
+        }
+        if($rows['visible']===false){
+            $arr['visible']=false;
         }
         if(!empty($rows['sortable'])){
             $arr['sortable']=true;
@@ -61,6 +61,9 @@ function getFields($rows,$table,$form,$isTree,$treeTitle)
         }
     }
     if($form){
+        if($rows['visible']==='none'){
+            return '';
+        }
         if($rows['edit']){
             $arr['edit']=parseJson($rows['edit']);
             if(is_array($arr['edit']) && isset($arr['edit']['value'])){
@@ -83,6 +86,9 @@ function getFields($rows,$table,$form,$isTree,$treeTitle)
     $json=json_encode($arr,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
     if($table){
         $json=substr($json,0,-1).getFormatter($rows,$isTree,$treeTitle).'},';
+    }
+    if($form){
+        $json.=',';
     }
     $str=<<<EOF
             {$json}
@@ -176,19 +182,20 @@ function parseJson($str)
     return $str;
 }
 
-function getRelation($field,$relation)
+function getRelationMethods($field,$relation)
 {
     $table=$relation['table'];
     $config = Db::getConfig();
     $default=$config['default'];
     $prefix=$config['connections'][$default]['prefix'];
     $table=str_replace($prefix,'',$table);
+    $funcname=parse_name($table,1);
     $tableModelName=str_replace(' ','',ucwords(str_replace('_',' ',$table)));
     $selectfields=implode(',',array_unique([$relation['relationField'],$relation['showField'],$relation['filterField']]));
     if($relation['ralationType']=='one'){
         $action=<<<EOF
 
-    public function {$table}()
+    public function {$funcname}()
     {
         return \$this->hasOne({$tableModelName}::class,'{$relation['relationField']}','{$field}')->field('{$selectfields}');
     }

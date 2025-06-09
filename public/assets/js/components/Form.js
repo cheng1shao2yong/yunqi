@@ -1,4 +1,4 @@
-import {formatDate,formatDateTime,formatTime,copyObj,inArray} from '../util.js';
+import {formatDate,formatDateTime,formatTime,copyObj,inArray,getfileImage} from '../util.js';
 import fieldlist from '../components/Fieldlist.js';
 import selectpage from '../components/SelectPage.js';
 import attachment from "../components/Attachment.js";
@@ -19,6 +19,27 @@ const getParams=function(obj,str) {
     });
     return str;
 }
+const getValue=function(row,field,defaultValue){
+    let fieldarr=field.split('.');
+    for(let i=0;i<fieldarr.length;i++){
+        row=row[fieldarr[i]];
+        if(row==undefined){
+            return defaultValue;
+        }
+    }
+    return row;
+}
+const changeCheckboxValue=function (searchlist,value){
+    let r=[];
+    for(let i=0;i<value.length;i++){
+        for(let key in searchlist){
+            if(value[i]==key){
+                r.push(key);
+            }
+        }
+    }
+    return r;
+}
 export default {
     name: "YunForm",
     components:{'Fieldlist':fieldlist,'SelectPage':selectpage,'Attachment':attachment,'Wangeditor':wangeditor},
@@ -27,6 +48,7 @@ export default {
             isLayer:false,
             documentWidth:'',
             activeStep:0,
+            activeTab:0,
             form_:{
                 columns:[],
                 data:{},
@@ -53,6 +75,9 @@ export default {
             type:String
         },
         steps:{
+            type:Array
+        },
+        tabs:{
             type:Array
         },
         columns:{
@@ -92,6 +117,10 @@ export default {
             default:function(res){}
         },
         onStep:{
+            type:Function,
+            default:function(res){}
+        },
+        onTabChange:{
             type:Function,
             default:function(res){}
         }
@@ -251,8 +280,7 @@ export default {
                 }
                 if(columns[i].edit=='fieldlist' || columns[i].edit=='FIELDLIST'){
                     edit.form='fieldlist';
-                    edit.label=['键名','键值'];
-                    edit.value= [{"0":"", "1":""},{"0":"", "1":""}];
+                    edit.value=null;
                     columns[i].edit=edit;
                 }
                 if(columns[i].edit=='slot' || columns[i].edit=='SLOT'){
@@ -268,10 +296,6 @@ export default {
                         if(typeof columns[i].edit[k]=='string' && k!='value' && k!='url'){
                             columns[i].edit[k]=columns[i].edit[k].toLowerCase();
                         }
-                    }
-                    if(columns[i].edit.form=='fieldlist'){
-                        edit.label=['键名','键值'];
-                        edit.value= [{"0":"", "1":""},{"0":"", "1":""}];
                     }
                     if(columns[i].edit.form=='cascader'){
                         columns[i].edit.props=Object.assign({expandTrigger:'hover',multiple:false,children:'childlist',value:'id',label:'name',lazy:false},columns[i].edit.props);
@@ -399,6 +423,17 @@ export default {
                                 };
                             }
                         }
+                        if(columns[i].edit.button && columns[i].edit.button.method){
+                            let fun=columns[i].edit.button.method;
+                            if(typeof fun=='string'){
+                                columns[i].edit.button.method=function(data,row){
+                                    if(Yunqi.app[fun]==undefined){
+                                        throw new Error('找不到方法：'+fun);
+                                    }
+                                    Yunqi.app[fun](data,row);
+                                };
+                            }
+                        }
                     }
                 }
                 if(typeof columns[i].searchList=='function'){
@@ -456,7 +491,7 @@ export default {
                         value=columns[i].edit.value;
                     }
                     //替换默认值
-                    value=data[columns[i].field]!==undefined?data[columns[i].field]:value;
+                    value=getValue(data,columns[i].field,value);
                     //根据表单类型修改表单项目的值
                     if(columns[i].edit.form=='files'){
                         if(value && typeof value=='string'){
@@ -485,19 +520,34 @@ export default {
                     }
                     if(columns[i].edit.form=='select' && columns[i].edit.multiple && typeof value=='string'){
                         value=value.split(',');
+                        if(columns[i].searchList){
+                            value=changeCheckboxValue(columns[i].searchList,value);
+                        }
                     }
                     if(columns[i].edit.form=='select' && columns[i].edit.multiple && value instanceof Array){
                         value=value.map(res=>{
                             return res+'';
                         });
+                        if(columns[i].searchList){
+                            value=changeCheckboxValue(columns[i].searchList,value);
+                        }
+                    }
+                    if(columns[i].edit.form=='select' && columns[i].edit.multiple && columns[i].edit.checkAll){
+                        value=Object.keys(columns[i].searchList);
                     }
                     if(columns[i].edit.form=='checkbox' && typeof value=='string'){
                         value=value.split(',');
+                        if(columns[i].searchList){
+                            value=changeCheckboxValue(columns[i].searchList,value);
+                        }
                     }
                     if(columns[i].edit.form=='checkbox' && value instanceof Array){
                         value=value.map(res=>{
                             return res+'';
                         });
+                        if(columns[i].searchList){
+                            value=changeCheckboxValue(columns[i].searchList,value);
+                        }
                     }
                     if(columns[i].edit.form=='input' && columns[i].edit.type=='password'){
                         value='';
@@ -630,7 +680,7 @@ export default {
                                     callback(new Error('请输入整数'));
                                 } else if (rule=='integer(+)' && !(/^[1-9]\d*$/.test(value))) {
                                     callback(new Error('请输入正整数'));
-                                } else if (rule=='integer(+0)' && !(/^0$/.test(value))) {
+                                } else if (rule=='integer(+0)' && !(/^(0|[1-9]\d*)$/.test(value))) {
                                     callback(new Error('请输入大于或等于0的整数'));
                                 } else if (rule=='integer(-)' && !(/^(-\d+)$/.test(value))) {
                                     callback(new Error('请输入负整数'));
@@ -663,11 +713,23 @@ export default {
                             let drr=d.slice(0,d.length-1).split('~');
                             validator = (rule, value, callback) => {
                                 if(drr[0] && f && value.length!=parseInt(drr[0])){
-                                    callback(new Error(`请输入${drr[0]}个字符`));
+                                    if(value instanceof Array){
+                                        callback(new Error(`请选择${drr[0]}个值`));
+                                    }else{
+                                        callback(new Error(`请输入${drr[0]}个字符`));
+                                    }
                                 }else if(drr[0] && value.length<parseInt(drr[0])){
-                                    callback(new Error(`至少输入${drr[0]}个字符`));
+                                    if(value instanceof Array){
+                                        callback(new Error(`至少选择${drr[0]}个值`));
+                                    }else{
+                                        callback(new Error(`至少输入${drr[0]}个字符`));
+                                    }
                                 }else if(drr[1] && value.length>parseInt(drr[1])){
-                                    callback(new Error(`至多输入${drr[1]}个字符`));
+                                    if(value instanceof Array){
+                                        callback(new Error(`至多选择${drr[1]}个值`));
+                                    }else{
+                                        callback(new Error(`至多输入${drr[1]}个字符`));
+                                    }
                                 }else {
                                     callback();
                                 }
@@ -756,6 +818,15 @@ export default {
             }
             this.form_.rules=rules;
         },
+        handleSelectCheckAll:function (column){
+            let field=column.field;
+            let keys=Object.keys(column.searchList);
+            if(column.edit.checkAll){
+                this.setValue(field,keys);
+            }else{
+                this.setValue(field,[]);
+            }
+        },
         handlePictureCardPreview:function (uploadfile){
             let img=uploadfile.url;
             Yunqi.api.previewImg(img);
@@ -766,7 +837,7 @@ export default {
             }
             for(let i=0;i<this.form_.columns.length;i++){
                 if(inArray(fields,this.form_.columns[i].field)){
-                    delete this.form_.columns[i].edit.visible;
+                    delete this.form_.columns[i].visible;
                 }
             }
         },
@@ -776,7 +847,7 @@ export default {
             }
             for(let i=0;i<this.form_.columns.length;i++){
                 if(inArray(fields,this.form_.columns[i].field)){
-                    this.form_.columns[i].edit.visible=false;
+                    this.form_.columns[i].visible=false;
                 }
             }
         },
@@ -810,17 +881,32 @@ export default {
                 }
             }
         },
+        getFormColumn:function (field){
+            for(let i=0;i<this.form_.columns.length;i++){
+                if(this.form_.columns[i].field==field){
+                    return this.form_.columns[i];
+                }
+            }
+        },
         changeFieldlist:function (r){
             this.form_.data[r.field]=r.value;
+            let column=this.getFormColumn(r.field);
+            column.edit.change(this.form_.data[r.field],this.form_.data);
         },
         changeSelectpage:function (r){
             this.form_.data[r.field]=r.value;
+            let column=this.getFormColumn(r.field);
+            column.edit.change(this.form_.data[r.field],this.form_.data);
         },
         changeAttachment:function (r){
             this.form_.data[r.field]=r.value;
+            let column=this.getFormColumn(r.field);
+            column.edit.change(this.form_.data[r.field],this.form_.data);
         },
         changeEditor:function (r){
             this.form_.data[r.field]=r.value;
+            let column=this.getFormColumn(r.field);
+            column.edit.change(this.form_.data[r.field],this.form_.data);
         },
         isYesOrNo:function (searchList){
             let r=true;
@@ -868,6 +954,9 @@ export default {
                 postdata['row['+key+']']=value;
             }
         },
+        tabChange:function (){
+            this.onTabChange(this.activeTab,this.form_.data);
+        },
         nextStep:function(){
             let columns=this.form_.columns;
             let promiseAll=[];
@@ -906,49 +995,50 @@ export default {
                             action=Yunqi.config.url;
                         }
                         let postdata={};
-                        for(let k in this.form_.data){
+                        for(let i=0;i<this.columns.length;i++){
                             let havaname=false;
                             let isFile=false;
                             let isFieldList=false;
                             let dateType=false;
                             let isTime=false;
-                            for(let i=0;i<this.columns.length;i++){
-                                if(this.columns[i].edit==undefined){
-                                    continue;
-                                }
-                                if(this.columns[i].field==k && this.columns[i].edit.name!=undefined){
-                                    havaname=this.columns[i].edit.name;
-                                }
-                                if(this.columns[i].field==k && this.columns[i].edit.form=='files'){
-                                    isFile=true;
-                                }
-                                if(this.columns[i].field==k && this.columns[i].edit.form=='fieldlist'){
-                                    isFieldList=true;
-                                }
-                                if(this.columns[i].field==k && this.columns[i].edit.form=='date-picker'){
-                                    dateType=this.columns[i].edit.type;
-                                }
-                                if(this.columns[i].field==k && this.columns[i].edit.form=='time-picker'){
-                                    isTime=true;
-                                }
+                            if(this.columns[i].edit==undefined){
+                                continue;
+                            }
+                            if(this.columns[i].edit.name===false){
+                                continue
+                            }
+                            if(this.columns[i].edit.name!=undefined){
+                                havaname=this.columns[i].edit.name;
+                            }
+                            if(this.columns[i].edit.form=='files'){
+                                isFile=true;
+                            }
+                            if(this.columns[i].edit.form=='fieldlist'){
+                                isFieldList=true;
+                            }
+                            if(this.columns[i].edit.form=='date-picker'){
+                                dateType=this.columns[i].edit.type;
+                            }
+                            if(this.columns[i].edit.form=='time-picker'){
+                                isTime=true;
                             }
                             let issetpost=false;
                             if(isFile){
                                 issetpost=true;
-                                let data=this.form_.data[k];
                                 let r=[];
-                                if(data){
-                                    for(let i in data){
-                                        r.push(data[i].postUrl);
+                                let fileValue=this.form_.data[this.columns[i].field];
+                                if(fileValue){
+                                    for(let i in fileValue){
+                                        r.push(fileValue[i].postUrl);
                                     }
                                 }
                                 if(r.length>0){
-                                    this.parsePostValue(postdata,k,r.join(','),havaname);
+                                    this.parsePostValue(postdata,this.columns[i].field,r.join(','),havaname);
                                 }
                             }
                             if(dateType){
                                 issetpost=true;
-                                let dateValue=this.form_.data[k];
+                                let dateValue=this.form_.data[this.columns[i].field];
                                 if(dateValue){
                                     switch (dateType){
                                         case 'date':
@@ -985,30 +1075,31 @@ export default {
                                         default:
                                             break;
                                     }
-                                    this.parsePostValue(postdata,k,dateValue,havaname);
+                                    this.parsePostValue(postdata,this.columns[i].field,dateValue,havaname);
                                 }
                             }
                             if(isTime){
                                 issetpost=true;
-                                let timeValue=this.form_.data[k];
+                                let timeValue=this.form_.data[this.columns[i].field];
                                 if(timeValue){
                                     if(timeValue instanceof Array){
                                         timeValue=[formatTime(timeValue[0]),formatTime(timeValue[1])];
                                     }else{
                                         timeValue=formatTime(timeValue);
                                     }
-                                    this.parsePostValue(postdata,k,timeValue,havaname);
+                                    this.parsePostValue(postdata,this.columns[i].field,timeValue,havaname);
                                 }
                             }
                             if(isFieldList){
                                 issetpost=true;
-                                let strlist=JSON.stringify(this.form_.data[k]);
+                                let strlist=JSON.stringify(this.form_.data[this.columns[i].field]);
                                 if(strlist!='{}' && strlist!='[]'){
-                                    this.parsePostValue(postdata,k,JSON.stringify(this.form_.data[k]),havaname);
+                                    this.parsePostValue(postdata,this.columns[i].field,strlist,havaname);
                                 }
                             }
                             if(!issetpost){
-                                this.parsePostValue(postdata,k,this.form_.data[k],havaname);
+                                let value=this.form_.data[this.columns[i].field]
+                                this.parsePostValue(postdata,this.columns[i].field,value,havaname);
                             }
                         }
                         if(token){
@@ -1020,6 +1111,15 @@ export default {
                         }).catch(err=>{
                             this.onFail(err);
                         });
+                    }
+                }else{
+                    let keys=Object.keys(fields);
+                    for(let i=0;i<this.columns.length;i++){
+                        let field=this.columns[i].field;
+                        let tab=this.columns[i].tab;
+                        if(tab && inArray(keys,field)){
+                            this.activeTab=tab;
+                        }
                     }
                 }
            });

@@ -43,8 +43,17 @@ a{
 }
 .operate-box-row{
     display: flex;
+    flex-wrap: nowrap;
+}
+.operate-align-center{
     justify-content: center;
-    flex-wrap: wrap;
+    width: 100%;
+}
+.operate-align-left{
+    justify-content: flex-start;
+}
+.operate-align-right{
+    justify-content: flex-end;
 }
 .el-button-icon.default{
     padding-left:8px;
@@ -149,26 +158,57 @@ td .el-image:last-child{
 .toolbar .right>.el-select .el-input__prefix-inner>:last-child{
     margin-right: 0;
 }
-.filter{
+.toolbar .right>.el-select{
+    --el-select-width:auto;
+}
+.toolbar .right>.el-select .el-select__wrapper{
+    padding: 0;
+    box-shadow: none;
+    min-height:auto;
+}
+.toolbar .right>.el-select .el-select__selection{
+    display: none;
+}
+.toolbar .right>.el-select .el-select__suffix{
+    display: none;
+}
+.toolbar .right>.el-select .el-button--small{
+    height: 28px;
+}
+.toolbar .left>.el-button-group>.el-button--small{
+    height: 28px;
+}
+.yunqi-filter{
     margin-bottom: 20px;
 }
-.filter .el-date-editor--daterange{
+.yunqi-filter .el-date-editor--daterange{
     padding: 0;
 }
-.filter .el-date-editor--daterange .el-range__icon{
+.yunqi-filter .el-date-editor--daterange .el-range__icon{
     margin-left: 10px;
 }
-.filter .el-date-editor--daterange .el-range__close-icon{
+.yunqi-filter .el-date-editor--daterange .el-range__close-icon{
     position: relative;
     right: 5px;
 }
-.filter .filter-between{
+.yunqi-filter .filter-between{
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
+.yunqi-filter .el-input--small{
+    height: 28px;
+}
+.yunqi-filter .el-select--small>.el-select__wrapper{
+    min-height: 28px;
+}
 .el-table .cell{
     overflow: visible;
+    display: flex;
+    align-items: center;
+}
+.dark .el-table th .cell{
+    color: #e5e5e5 !important;
 }
 .table-footer{
     border-top: none;
@@ -190,6 +230,22 @@ td .el-image:last-child{
 .form-body .el-date-editor--daterange .el-range__close-icon,.form-body .el-date-editor--timerange .el-range__close-icon{
     position: relative;
     right: 5px;
+}
+.form-body .input-btn{
+    cursor: pointer;
+    position: relative;
+    z-index: 9999;
+    margin: 0 -10px;
+    padding: 0 10px;
+    border-radius: 4px;
+}
+.form-body .input-btn.primary{
+    background:var(--el-color-primary);
+    color: #fff;
+}
+.form-body .input-btn.primary:active{
+    background:var(--el-color-primary-light-5);
+    color: #fff;
 }
 .form-footer-layer{
     position: fixed;
@@ -232,7 +288,6 @@ td .el-image:last-child{
     flex-wrap: wrap;
 }
 .fieldlist .row .field{
-    width: 19%;
     padding-right: 1%;
 }
 .fieldlist .act{
@@ -246,7 +301,15 @@ td .el-image:last-child{
 .tag-box{
     display: flex;
     flex-wrap: wrap;
+}
+.tag-box-center{
     justify-content: center;
+}
+.tag-box-right{
+    justify-content: flex-end;
+}
+.tag-box-left{
+    justify-content: flex-start;
 }
 .tag-box>.el-tag{
     margin-left: 8px;
@@ -271,7 +334,6 @@ td .el-image:last-child{
     color: var(--el-color-info);
     background: #ffffff;
 }
-
 
 .fast-upload-box .preview-img img{
     width: 96%;

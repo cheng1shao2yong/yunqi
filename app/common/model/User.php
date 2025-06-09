@@ -31,7 +31,7 @@ class User extends BaseModel
             $nickname='n-'.str_rand(6);
         }
         if(!$avatar){
-            $avatar=request()->domain().'/assets/img/avatar.png';
+            $avatar=request()->domain().'/assets/img/avatar.jpg';
         }
         if(!$email){
             $email=$username.'@'.request()->host();
@@ -55,5 +55,10 @@ class User extends BaseModel
             'status'=>'normal',
         ]);
         return $user;
+    }
+
+    public function log()
+    {
+        return $this->hasMany(UserLog::class,'user_id','id');
     }
 }

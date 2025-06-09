@@ -13,13 +13,9 @@ namespace app\common\controller;
 
 use app\admin\service\AdminAuthService;
 use app\common\listener\WriteLog;
-use app\common\model\Addons;
 use app\common\service\LangService;
 use think\exception\HttpResponseException;
-use think\facade\Cache;
 use think\facade\Config;
-use think\facade\Db;
-use think\facade\Lang;
 use think\facade\View;
 use think\facade\Cookie;
 use think\Response;
@@ -70,8 +66,12 @@ class Backend extends BaseController
         $this->auth = AdminAuthService::newInstance(compact('modulealis','modulename','controllername','actionname'));
         $noNeed=$this->getNoNeedLoginOrRight();
         $noNeedLogin = in_array('*',$noNeed['login']) || in_array($actionname,$noNeed['login']);
+        $elementUi=Config::get('yunqi.elementUi');
+        $elementUi['language_list']=Config::get('yunqi.language_list');
+        $elementUi['language']=Config::get('yunqi.language');
         if(!$noNeedLogin){
             if ($this->auth->isLogin()) {
+                $elementUi=$this->auth->getElementUi($elementUi);
                 event('write_log','管理员访问-ID:'.$this->auth->id.',昵称:'.$this->auth->nickname);
                 $noNeedRight=in_array('*',$noNeed['right']) || in_array($actionname,$noNeed['right']);
                 if(!$noNeedRight && !$this->auth->check($controllername,$actionname)){
@@ -83,7 +83,7 @@ class Backend extends BaseController
             }else{
                 event('write_log','未登陆跳转');
                 event('write_log',WriteLog::END);
-                $url=url('/'.$modulealis.'/login',['referer'=>$this->request->url(true)])->build();
+                $url=url('/'.$modulealis.'/login')->build();
                 redirect($url)->send();
                 exit;
             }
@@ -91,15 +91,6 @@ class Backend extends BaseController
             event('write_log','游客访问');
         }
         event('write_log',WriteLog::ADMIN);
-        $elementUi=Config::get('yunqi.elementUi');
-        if(Cookie::get('layout')){
-            $elementUi['layout']=Cookie::get('layout');
-        }
-        $elementUi['language_list']=Config::get('yunqi.language_list');
-        $elementUi['language']=Config::get('yunqi.language');
-        if(Cookie::get('think_var')){
-            $elementUi['language']=Cookie::get('think_var');
-        }
         //加载当前控制器语言包
         LangService::newInstance()->load($elementUi['language']);
         // 配置信息
@@ -221,7 +212,11 @@ class Backend extends BaseController
             'list_rows' => $this->request->post('limit/d',10)
         ];
         $filter = $this->request->post("filter/a", []);
-        $with=is_null($this->relationField)?[]:(is_array($this->relationField)?$this->relationField:explode(',',$this->relationField));
+        if(isset($this->relationField)){
+            $with=is_null($this->relationField)?[]:(is_array($this->relationField)?$this->relationField:explode(',',$this->relationField));
+        }else{
+            $with=[];
+        }
         $search=$this->getBuildSearch();
         if($search){
             $where[]=$search;
@@ -337,7 +332,15 @@ class Backend extends BaseController
                 break;
             case 'FIND_IN_SET':
             case 'NOT FIND_IN_SET':
-                $where = [$sym."({$value},{$field})"];
+                if(is_array($value)){
+                   $inset=[];
+                   foreach ($value as $v){
+                       $inset[]=$sym."('{$v}',{$field})";
+                   }
+                   $where = [implode(' and ',$inset)];
+                }else{
+                    $where = [$sym."('{$value}',{$field})"];
+                }
                 break;
             case 'IN':
             case 'NOT IN':

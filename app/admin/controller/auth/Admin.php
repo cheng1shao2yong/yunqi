@@ -42,7 +42,7 @@ class Admin extends Backend
         parent::_initialize();
         $this->model=new AdminModel();
         $this->groups=AuthGroup::select();
-        $this->thirdLogin=addons_installed('uniapp') && site_config("addons.uniapp_scan_login");
+        $this->thirdLogin=addons_installed('uniapp') && site_config("uniapp.scan_login");
         $this->assign('thirdLogin',$this->thirdLogin);
     }
 
@@ -122,6 +122,9 @@ class Admin extends Backend
                 unset($params['password'], $params['salt']);
             }
             $params['groupids']=implode(',',$postgroups);
+            if(isset($params['third_id']) && !$params['third_id']){
+                $params['third_id']=null;
+            }
             $row->save($params);
             $this->success();
         }else{
@@ -154,6 +157,9 @@ class Admin extends Backend
             $params['salt'] = str_rand(4);
             $params['password'] = md5(md5($params['password']) . $params['salt']);
             $params['groupids']=implode(',',$postgroups);
+            if(isset($params['third_id']) && !$params['third_id']){
+                $params['third_id']=null;
+            }
             $this->model->save($params);
             $this->success();
         }else{
@@ -181,15 +187,6 @@ class Admin extends Backend
         return $this->_del();
     }
 
-    #[Route('JSON','third')]
-    public function third()
-    {
-         $this->model=new \app\common\model\Third();
-         $where=[];
-         $where[]=['platform','=','mpapp'];
-         return $this->selectpage($where);
-    }
-
     private function getGroupData()
     {
         $groupids='*';
@@ -202,7 +199,7 @@ class Admin extends Backend
                 }
             }
         }
-        $groupdata=AuthGroup::getGroupListTree($groupids);
+        $groupdata=AuthGroup::getGroupListArray($groupids);
         return $groupdata;
     }
 

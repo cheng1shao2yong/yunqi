@@ -6,32 +6,46 @@ namespace app\common\service;
 
 abstract class BaseService{
 
-    private static $service=[];
+    protected static $service=[];
 
-    private static $obj=[];
+    protected static $obj=[];
 
-    public static function newInstance(array $arr=[])
+    protected $safekey;
+
+    /**
+     * @param array $arr 参数
+     * @param string $key 为创建线程安全对象的唯一识别key
+     * @return mixed|static
+     */
+    public static function newInstance(array $arr=[],mixed $safekey=null)
     {
-        $classname=get_called_class();
+        $classname=$safekey??get_called_class();
         if(!isset(self::$service[$classname])){
             $service = new static();
+            $service->safekey=$safekey;
             if(count($arr)>0){
                 $service->setParam($arr);
             }
             self::$service[$classname]=$service;
             self::$obj[$classname]=[];
-            $service->init();
+            try{
+                $service->init();
+            }catch (\Exception $e){
+                $service->destroy();
+                throw $e;
+            }
         }
         return self::$service[$classname];
     }
 
     public function destroy()
     {
-        $classname=get_called_class();
+        $classname=$this->safekey??get_called_class();
         unset(self::$service[$classname]);
+        unset(self::$obj[$classname]);
     }
 
-    private function setParam(array $arr)
+    public function setParam(array $arr)
     {
         $class = new \ReflectionClass($this);
         $property=$class->getProperties();
@@ -50,14 +64,17 @@ abstract class BaseService{
 
     protected function setObj(string $classname,object $objval)
     {
-        $class=get_called_class();
+        $class=$this->safekey??get_called_class();
         self::$obj[$class][$classname]=$objval;
     }
 
-    protected function getObj(string $classname,string $message='')
+    protected function getObj(string $classname,bool $allowNull=false,string $message='')
     {
-        $class=get_called_class();
+        $class=$this->safekey??get_called_class();
         if(!isset(self::$obj[$class][$classname])){
+            if($allowNull){
+                return null;
+            }
             if($message){
                 throw new \Exception($message);
             }else{

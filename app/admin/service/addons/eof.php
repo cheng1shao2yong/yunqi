@@ -36,10 +36,31 @@ function getRequireTxt($require)
         if(!$re){
             continue;
         }
-        $re=str_replace('\\\\','\\',$re);
-        $re=str_replace('\\','\\\\',$re);
+        if(!class_exists($re)){
+            throw new \Exception("{$re}类不存在");
+        }
         $str.=<<<EOF
-        "{$re}",
+        {$re}::class,
+
+EOF;
+    }
+    return $str;
+}
+
+function getAddonsTxt($addons)
+{
+    $str = '';
+    foreach($addons as $re){
+        if(!$re){
+            continue;
+        }
+        if(!addons_installed($re)){
+            $ad=get_addons($re);
+            throw new \Exception("扩展{$ad->name}不存在");
+        }
+        $ad=get_addons($re);
+        $str.=<<<EOF
+        "{$re}"=>"{$ad->name}",
 
 EOF;
     }
@@ -63,8 +84,24 @@ EOF;
     return $str;
 }
 
+function getTableTxt($table)
+{
+    if(empty($table)){
+        return '';
+    }
+    $str='';
+    foreach ($table as $te){
+        $str.=<<<EOF
+        "{$te}",
+
+EOF;
+    }
+    return $str;
+}
+
 function parseMenu($menu){
     $arr=[
+        'id'=>$menu['id'],
         'controller'=>$menu['controller'],
         'action'=>$menu['action'],
         'title'=>$menu['title'],
@@ -88,6 +125,7 @@ function getConfigTxt($config)
     $str = '';
     foreach($config as $fig){
         $arr=[
+            'id'=>$fig['id'],
             'name'=>$fig['name'],
             'title'=>$fig['title'],
             'type'=>$fig['type'],

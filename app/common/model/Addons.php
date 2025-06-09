@@ -46,7 +46,7 @@ class Addons extends Model
         return $result;
     }
 
-    public static function checkKey(Addons $addon){
+    public static function checkKey($addon){
         $key=md5($addon['type'].$addon['pack'].$addon['author'].$addon['version'].$addon['secret_key']);
         if($key!=$addon['key']){
             return false;

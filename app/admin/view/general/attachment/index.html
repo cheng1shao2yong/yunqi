@@ -50,21 +50,21 @@
             },
             columns:[
                 {checkbox: true},
-                {field: 'id',title:'ID',width:80,operate:false,edit:'hidden'},
-                {field: 'category', title: __('类别'),visible:false,width:100, operate: false, formatter: Yunqi.formatter.tag, searchList:Yunqi.data.categoryList},
-                {field: 'admin_id', title: __('管理员ID'), width:120, visible: false,operate:false},
+                {field: 'id',title:'ID',operate:false,edit:'hidden'},
+                {field: 'category', title: __('类别'),visible:false,operate: false, formatter: Yunqi.formatter.tag, searchList:Yunqi.data.categoryList},
+                {field: 'admin_id', title: __('管理员ID'), visible: false,operate:false},
                 {field: 'user_id', title: __('会员ID'), visible: false,operate:false},
-                {field: 'thumburl', title: __('缩略图'), width:120,operate: false,formatter: Yunqi.formatter.image},
-                {field: 'filename', title: __('文件名'),align:'left',operate: 'like',width:200,formatter: Yunqi.formatter.slot},
-                {field: 'fullurl', title: __('源文件'),align:'left',operate: false,width:300,formatter: Yunqi.formatter.link},
+                {field: 'thumburl', title: __('缩略图'), operate: false,formatter: Yunqi.formatter.image},
+                {field: 'filename', title: __('文件名'),align:'left',operate: 'like',formatter: Yunqi.formatter.slot},
+                {field: 'fullurl', title: __('源文件'),align:'left',operate: false,formatter: Yunqi.formatter.link},
                 {
-                    field: 'filesize', title: __('文件大小'), width: 120,operate: false, sortable: true, formatter: function (value, row) {
+                    field: 'filesize', title: __('文件大小'),operate: false, sortable: true, formatter: function (value, row) {
                         var size = parseFloat(value);
                         var i = Math.floor(Math.log(size) / Math.log(1024));
                         return (size / Math.pow(1024, i)).toFixed(i < 2 ? 0 : 2) * 1 + ' ' + ['B', 'KB', 'MB', 'GB', 'TB'][i];
                     }
                 },
-                {field: 'is_image', title: __('图片'), width: 80,operate: false,searchList: {1: __('是'), 0: __('否')},formatter: function(data,row){
+                {field: 'is_image', title: __('图片'), operate: false,searchList: {1: __('是'), 0: __('否')},formatter: function(data,row){
                         let tag=Yunqi.formatter.tag;
                         if(row.is_image){
                             tag.value='是';
@@ -75,23 +75,22 @@
                         }
                         return tag;
                     }},
-                {field: 'imagetype', title: __('图片类型'), width: 120,operate: false},
-                {field: 'imagewidth', title: __('宽度'), width: 100,operate: false},
-                {field: 'imageheight', title: __('高度'), width: 100,operate: false},
-                {field: 'storage', title: __('存储方式'), width: 150,operate: false,searchList: Yunqi.data.disksList,formatter: Yunqi.formatter.tag},
+                {field: 'imagetype', title: __('图片类型'), operate: false},
+                {field: 'imagewidth', title: __('宽度'), operate: false},
+                {field: 'imageheight', title: __('高度'), operate: false},
+                {field: 'storage', title: __('存储方式'), operate: false,searchList: Yunqi.data.disksList,formatter: Yunqi.formatter.tag},
                 {
                     field: 'createtime',
                     title: __('创建时间'),
                     formatter: Yunqi.formatter.datetime,
                     operate: {form:'date-picker',type:'daterange'},
-                    sortable: true,
-                    width: 150
+                    sortable: true
                 },
                 {
                     field: 'operate',
                     fixed: 'right',
                     title: __('操作'),
-                    width:60,
+                    width:50,
                     action:{
                         del:true
                     }

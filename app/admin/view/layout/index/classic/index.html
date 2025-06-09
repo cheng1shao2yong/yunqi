@@ -2,8 +2,8 @@
     <el-header v-show="!mainFrameExpand">
         <div class="header-lf">
             <div class="logo flx-center hide-600">
-                <img class="logo-img" src="{:site_config('basic.logo')}" alt="logo" />
-                <span class="logo-text">{:site_config('basic.sitename')}</span>
+                <img class="logo-img" :src="logo_img" alt="logo" />
+                <span class="logo-text">{$site.sitename}</span>
             </div>
             <div class="tool-bar-lf">
                 <i @click="elementUi.is_menu_collapse=!elementUi.is_menu_collapse;setMainContentFrame();" :class="['collapse-icon',elementUi.is_menu_collapse?'fa fa-indent':'fa fa-outdent']"></i>

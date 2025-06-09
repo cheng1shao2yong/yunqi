@@ -1,6 +1,9 @@
 <?php
+declare(strict_types=1);
+
 namespace app\common\library;
 
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Csv;
@@ -34,7 +37,8 @@ class Export
         $i=0;
         foreach ($this->column as $column){
             $i++;
-            $worksheet->setCellValueByColumnAndRow($i, 1, $column);
+            $columnName = Coordinate::stringFromColumnIndex($i);
+            $worksheet->setCellValue($columnName.'1', $column);
         }
         foreach ($this->data as $row=>$data){
             $lie=1;
@@ -43,7 +47,8 @@ class Export
                 if(key_exists($key,$this->searchList)){
                     $value=key_exists($value,$this->searchList[$key])?$this->searchList[$key][$value]:$value;
                 }
-                $worksheet->setCellValueByColumnAndRow($lie, $row+2, $value);
+                $columnName = Coordinate::stringFromColumnIndex($lie);
+                $worksheet->setCellValue($columnName.($row+2), $value);
                 $lie++;
             }
         }

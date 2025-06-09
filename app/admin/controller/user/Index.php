@@ -57,6 +57,12 @@ class Index extends Backend
         }
     }
 
+    #[Route('GET','test')]
+    public function test()
+    {
+        return $this->fetch();
+    }
+
     #[Route('GET,JSON','detail')]
     public function detail($ids)
     {

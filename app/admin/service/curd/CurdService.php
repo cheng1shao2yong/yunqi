@@ -374,6 +374,7 @@ class CurdService extends BaseService
     {
         //用户自定义模型名
         $modelName=substr($this->model,strrpos($this->model,'\\')+1);
+        $namespace=substr($this->model,0,strrpos($this->model,'\\'));
         //根据表名生成模型名
         $table=str_replace(self::$prefix,'',$this->table);
         $tableModelName=str_replace(' ','',ucwords(str_replace('_',' ',$table)));
@@ -401,13 +402,13 @@ class CurdService extends BaseService
         }
         $methods='';
         foreach($this->relations as $field=>$value){
-            $methods.=getRelation($field,$value);
+            $methods.=getRelationMethods($field,$value);
         }
         $methods=rtrim($methods);
         if($createtime && $updatetime && $deletetime) {
-            $content=$this->getContent('model-extend-base',compact('modelName','name','weigh','methods'));
+            $content=$this->getContent('model-extend-base',compact('namespace','modelName','name','weigh','methods'));
         }else{
-            $content=$this->getContent('model-normal',compact('modelName','name','createtime','updatetime','deletetime','weigh','methods'));
+            $content=$this->getContent('model-normal',compact('namespace','modelName','name','createtime','updatetime','deletetime','weigh','methods'));
         }
         if($this->type=='file'){
             $file=$this->buildFile('model');

@@ -3,8 +3,7 @@ const template=`
         <el-breadcrumb separator="&#155">
             <transition-group name="breadcrumb">
                 <el-breadcrumb-item v-for="(item, index) in list" :key="item.id">
-                    <div class="el-breadcrumb__inner is-link">
-                        <i :class="['breadcrumb-icon',item.icon]"></i>
+                    <div class="el-breadcrumb__inner">
                         <span class="breadcrumb-title">{{ item.title }}</span>
                     </div>
                 </el-breadcrumb-item>

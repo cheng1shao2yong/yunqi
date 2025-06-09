@@ -87,6 +87,7 @@ class Http
         $method = strtoupper($method);
         $protocol = substr($url, 0, 5);
         $query_string = is_array($params) ? http_build_query($params) : $params;
+        //echo $query_string;
         $ch = curl_init();
         $defaults = [];
         if ('GET' == $method) {
@@ -94,12 +95,8 @@ class Http
             $defaults[CURLOPT_URL] = $geturl;
         } else {
             $defaults[CURLOPT_URL] = $url;
-            if ($method == 'POST') {
-                $defaults[CURLOPT_POST] = 1;
-            } else {
-                $defaults[CURLOPT_CUSTOMREQUEST] = $method;
-            }
-            $defaults[CURLOPT_POSTFIELDS] = $params;
+            $defaults[CURLOPT_CUSTOMREQUEST] = $method;
+            $defaults[CURLOPT_POSTFIELDS] = $query_string;
         }
         $defaults[CURLOPT_HEADER] = false;
         $defaults[CURLOPT_USERAGENT] = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.98 Safari/537.36";
@@ -107,7 +104,7 @@ class Http
         $defaults[CURLOPT_RETURNTRANSFER] = true;
         $defaults[CURLOPT_CONNECTTIMEOUT] = 3;
         $defaults[CURLOPT_TIMEOUT] = 3;
-        $defaults[CURLOPT_ENCODING] = 'gzip,deflate,br';
+        //$defaults[CURLOPT_ENCODING] = 'gzip,deflate,br';
         if ($cookie){
             $defaults[CURLOPT_COOKIE] = $cookie;
         }

@@ -46,7 +46,7 @@
                             {{parseTime(row.delay) || '立即执行'}}
                         </template>
                     </el-table-column>
-                    <el-table-column label="{:__('规则限制')}">
+                    <el-table-column label="{:__('规则限制')}" width="200">
                         <template #default="{row}">
                             {{parseFilter(row.filter)}}
                         </template>
@@ -56,7 +56,7 @@
                             {{parseLasttime(row.lasttime)}}
                         </template>
                     </el-table-column>
-                    <el-table-column label="{:__('错误')}" width="300">
+                    <el-table-column label="{:__('错误')}" width="200">
                         <template #default="{row}">
                             <el-tag type="danger" v-if="row.error">{{row.error}}</el-tag>
                         </template>

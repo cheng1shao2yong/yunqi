@@ -42,12 +42,12 @@ class AuthRule extends Model{
     public static function getRuleListTree(mixed $ruleids):array
     {
         if($ruleids=='*'){
-            $ruleList = self::field('id,pid,title,icon,controller,action,ismenu,weigh,status')->order('weigh DESC,id ASC')->select()->toArray();
+            $ruleList = self::field('id,pid,title,icon,controller,action,ismenu,isplatform,weigh,status')->order('weigh DESC,id ASC')->select()->toArray();
         }else{
-            $ruleList = self::whereIn('id',$ruleids)->field('id,pid,title,icon,controller,action,ismenu,weigh,status')->order('weigh DESC,id ASC')->select()->toArray();
+            $ruleList = self::whereIn('id',$ruleids)->field('id,pid,title,icon,controller,action,ismenu,isplatform,weigh,status')->order('weigh DESC,id ASC')->select()->toArray();
         }
         Tree::instance()->init($ruleList);
-        $list = Tree::instance()->getTreeList(Tree::instance()->getTreeArray(0), 'title');
+        $list = Tree::instance()->getTreeArray(0);
         return $list;
     }
 
@@ -63,7 +63,7 @@ class AuthRule extends Model{
         return $list;
     }
 
-    public static function getRuleList(mixed $ruleids):array
+    public static function getRuleList(mixed $ruleids,$pid=0):array
     {
         if($ruleids=='*'){
             $ruleList = self::field('id,pid,title,icon,ismenu,menutype,extend,controller,action,ismenu,weigh,status')->order('weigh DESC,id ASC')->select()->toArray();
@@ -72,7 +72,7 @@ class AuthRule extends Model{
         }
         $tree=new Tree();
         $tree->init($ruleList);
-        $list = $tree->getTreeArray(0);
+        $list = $tree->getTreeArray($pid);
         return $list;
     }
 }

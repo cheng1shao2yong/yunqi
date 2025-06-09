@@ -51,11 +51,7 @@ export default{
                 return true;
             }},
             {field: 'id',title: __('ID'),width:80},
-            {field: 'name', title: __('名称'),formatter:function (data){
-                let html=Yunqi.formatter.html;
-                html.value=data.replace(/&nbsp;/g,'&nbsp;&nbsp;');
-                return html;
-            }},
+            {field: 'name', title: __('名称'),align:'left'},
             {field: 'status', title: __('状态'),searchList: {'normal': __('正常'),'hidden': __('隐藏')},formatter:function(data,row){
                 let sw=Yunqi.formatter.switch;
                 sw.activeValue='normal';

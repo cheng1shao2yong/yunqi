@@ -13,38 +13,38 @@
                     {:token_field()}
                     <el-row>
                         <el-col :span="thirdLogin?15:24">
-                        <el-form-item label="" prop="username">
-                            <el-input size="large" v-model="loginForm.username" placeholder="用户名">
-                                <template #prepend>
-                                    <i class="fa fa-user"></i>
-                                </template>
-                            </el-input>
-                        </el-form-item>
-                        <el-form-item label="" prop="password">
-                            <el-input size="large" type="password" v-model="loginForm.password" placeholder="密码">
-                                <template #prepend>
-                                    <i class="fa fa-lock"></i>
-                                </template>
-                            </el-input>
-                        </el-form-item>
-                        {if $login_captcha}
-                        <el-form-item label="" prop="captcha" style="margin-bottom:10px;">
-                            <el-row>
-                                <el-col :span="12" :xs="14">
-                                    <el-input size="large" v-model="loginForm.captcha" placeholder="验证码">
-                                        <template #prepend>
-                                            <i class="fa fa-ellipsis-h"></i>
-                                        </template>
-                                    </el-input>
-                                </el-col>
-                                <el-col :span="12" :xs="10">
-                                    <div class="captcha-img">
-                                        <img :src="captchaUrl" @click="refreshCaptcha"/>
-                                    </div>
-                                </el-col>
-                            </el-row>
-                        </el-form-item>
-                        {/if}
+                            <el-form-item label="" prop="username">
+                                <el-input size="large" v-model="loginForm.username" placeholder="用户名">
+                                    <template #prepend>
+                                        <i class="fa fa-user"></i>
+                                    </template>
+                                </el-input>
+                            </el-form-item>
+                            <el-form-item label="" prop="password">
+                                <el-input size="large" type="password" v-model="loginForm.password" placeholder="密码">
+                                    <template #prepend>
+                                        <i class="fa fa-lock"></i>
+                                    </template>
+                                </el-input>
+                            </el-form-item>
+                            {if $login_captcha}
+                            <el-form-item label="" prop="captcha" style="margin-bottom:10px;">
+                                <el-row>
+                                    <el-col :span="12" :xs="14">
+                                        <el-input size="large" v-model="loginForm.captcha" placeholder="验证码">
+                                            <template #prepend>
+                                                <i class="fa fa-ellipsis-h"></i>
+                                            </template>
+                                        </el-input>
+                                    </el-col>
+                                    <el-col :span="12" :xs="10">
+                                        <div class="captcha-img">
+                                            <img :src="captchaUrl" @click="refreshCaptcha"/>
+                                        </div>
+                                    </el-col>
+                                </el-row>
+                            </el-form-item>
+                            {/if}
                         </el-col>
                         <el-col :span="9" v-if="thirdLogin && qrcode" class="hide-800">
                             <div class="login-right">
@@ -65,239 +65,282 @@
             </div>
         </div>
     </div>
+    <el-dialog
+        v-model="dialogVisible"
+        title="选择登录账号"
+        width="600"
+    >
+        <div class="login-admin">
+            <el-radio-group v-model="checked">
+                <el-radio v-for="item in adminlist" :label="item.id" size="large" border>{{item.nickname}}</el-radio>
+            </el-radio-group>
+            <span style="margin-top: 20px">您当前微信绑定了多个账户，请任选择一个登录</span>
+        </div>
+        <template #footer>
+            <div class="dialog-footer">
+                <el-button @click="cancelDialog">取消</el-button>
+                <el-button type="primary" @click="confirmDialog">
+                    确认
+                </el-button>
+            </div>
+        </template>
+    </el-dialog>
 </template>
 <script>
-export default{
-    data(){
-        return {
-            thirdLogin:false,
-            qrcode:'',
-            captchaUrl:'',
-            loginForm:{
-                __token__:'',
-                username: '',
-                password: '',
-                captcha: '',
-                savepassword:[1],
-            },
-            rules:{
-                username:[{required:true,message:'用户名不能为空！',}],
-                password:[{required:true,message:'密码不能为空！',}],
+    export default{
+        data(){
+            return {
+                thirdLogin:false,
+                qrcode:'',
+                captchaUrl:'',
+                loginForm:{
+                    __token__:'',
+                    username: '',
+                    password: '',
+                    captcha: '',
+                    savepassword:[1],
+                },
+                rules:{
+                    username:[{required:true,message:'用户名不能为空！',}],
+                    password:[{required:true,message:'密码不能为空！',}],
+                },
+                dialogVisible:false,
+                adminlist:[],
+                checked:''
             }
-        }
-    },
-    onLoad:function (){
-        this.refreshCaptcha();
-        let width=document.body.clientWidth;
-        this.thirdLogin=Yunqi.data.thirdLogin && width>800;
-        window.addEventListener('resize',()=>{
+        },
+        onLoad:function (){
+            this.refreshCaptcha();
             let width=document.body.clientWidth;
             this.thirdLogin=Yunqi.data.thirdLogin && width>800;
-        });
-        this.qrcode=Yunqi.data.qrcode;
-    },
-    onShow:function (){
-        this.loginForm.__token__=document.getElementsByTagName('input')[0].value;
-        this.loginForm.username= localStorage.getItem('username') || '';
-        this.loginForm.password= localStorage.getItem('password') || '';
-        this.loginForm.savepassword= localStorage.getItem('savepassword')? [1] : [];
-        this.checklogin();
-    },
-    methods:{
-        refreshCaptcha:function (){
-            this.captchaUrl=Yunqi.config.baseUrl+"captcha?"+Math.random();
+            window.addEventListener('resize',()=>{
+                let width=document.body.clientWidth;
+                this.thirdLogin=Yunqi.data.thirdLogin && width>800;
+            });
+            this.qrcode=Yunqi.data.qrcode;
         },
-        checklogin:function (){
-            if(!this.thirdLogin){
-                return;
+        onShow:function (){
+            this.loginForm.__token__=document.getElementsByTagName('input')[0].value;
+            this.loginForm.username= localStorage.getItem('username') || '';
+            this.loginForm.password= localStorage.getItem('password') || '';
+            this.loginForm.savepassword= localStorage.getItem('savepassword')? [1] : [];
+            this.checklogin();
+        },
+        methods:{
+            refreshCaptcha:function (){
+                this.captchaUrl=Yunqi.config.baseUrl+"captcha?"+Math.random();
+            },
+            checklogin:function (){
+                if(!this.thirdLogin){
+                    return;
+                }
+                let token=document.querySelector('input[name="__token__"]').value;
+                Yunqi.ajax.get('qrcodeLogin', {token:token},false,false).then(res=>{
+                    Yunqi.message.success('登录成功');
+                    setTimeout(()=>{
+                        this.redirect();
+                    },1000);
+                }).catch(err=>{
+                    if(err.data.length>0){
+                        this.adminlist=err.data;
+                        this.dialogVisible=true;
+                        return;
+                    }
+                    setTimeout(()=>{
+                        this.checklogin();
+                    },2000);
+                });
+            },
+            cancelDialog:function (){
+                location.reload();
+            },
+            confirmDialog:function (){
+                let token=document.querySelector('input[name="__token__"]').value;
+                Yunqi.ajax.get('qrcodeLogin',{token:token,admin_id:this.checked},true,false).then(res=>{
+                    this.dialogVisible=false;
+                    Yunqi.message.success('登录成功');
+                    setTimeout(()=>{
+                        this.redirect();
+                    },1000);
+                });
+            },
+            redirect:function (){
+                location.href=Yunqi.config.baseUrl+'index';
+            },
+            login:function (){
+                this.$refs.loginForm.validate((valid)=>{
+                    if(valid){
+                        Yunqi.ajax.post('login',this.loginForm,true).then(res=>{
+                            let savepassword=this.loginForm.savepassword.length>0?1:0;
+                            if(savepassword){
+                                localStorage.setItem('username',this.loginForm.username);
+                                localStorage.setItem('password',this.loginForm.password);
+                                localStorage.setItem('savepassword',savepassword);
+                            }else{
+                                localStorage.removeItem('username');
+                                localStorage.removeItem('password');
+                                localStorage.removeItem('savepassword');
+                            }
+                            this.redirect();
+                        }).catch(err=>{
+                            if(err.data){
+                                this.refreshCaptcha();
+                            }
+                        });
+                    }
+                });
             }
-            let token=document.querySelector('input[name="__token__"]').value;
-            Yunqi.ajax.get('qrcodeLogin', {token:token},false,false).then(res=>{
-                if(Yunqi.data.referer){
-                    location.href=Yunqi.data.referer;
-                }else{
-                    location.href=Yunqi.config.baseUrl+'index';
-                }
-            }).catch(err=>{
-                setTimeout(()=>{
-                    this.checklogin();
-                },2000);
-            });
-        },
-        login:function (){
-            this.$refs.loginForm.validate((valid)=>{
-                if(valid){
-                    Yunqi.ajax.post('login',this.loginForm,true).then(res=>{
-                        let savepassword=this.loginForm.savepassword.length>0?1:0;
-                        if(savepassword){
-                            localStorage.setItem('username',this.loginForm.username);
-                            localStorage.setItem('password',this.loginForm.password);
-                            localStorage.setItem('savepassword',savepassword);
-                        }else{
-                            localStorage.removeItem('username');
-                            localStorage.removeItem('password');
-                            localStorage.removeItem('savepassword');
-                        }
-                        if(Yunqi.data.referer){
-                            location.href=Yunqi.data.referer;
-                        }else{
-                            location.href=Yunqi.config.baseUrl+'index';
-                        }
-                    }).catch(err=>{
-                        if(err.data){
-                            this.refreshCaptcha();
-                        }
-                    });
-                }
-            });
         }
     }
-}
 </script>
 <style>
-body {
-    color: #999;
-}
-.login-container {
-    height: 100%;
-    min-height: 550px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    top: 0;
-    background-color: #eeeeee;
-    background-image: url("/assets/img/bg.svg");
-    background-size: 100% 100%;
-    background-size: cover;
-}
-
-.login-container .login-box {
-    position: relative;
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
-    width: 96.5%;
-    height: 94%;
-    padding: 0 50px;
-    background-color: rgba(255, 255, 255, 0.8);
-    border-radius: 10px;
-}
-
-.login-container .login-box .under {
-    position: absolute;
-    top: 13px;
-    left: 18px;
-}
-
-.login-container .login-box .under a{
-    text-decoration:none;
-    font-size: 16px;
-    color: #4c4c4c;
-}
-
-.login-container .login-box .under span{
-    font-size: 16px;
-    color: #4c4c4c;
-    margin-left: 20px;
-    cursor: pointer;
-}
-
-.login-container .login-box .login-left {
-    width: 800px;
-    margin-right: 10px;
-    text-align: center;
-}
-
-.login-container .login-box .login-left .login-left-img {
-    width: 80%;
-}
-
-.login-container .login-box .login-form {
-    width: 420px;
-    padding: 50px 40px 0px;
-    background-color: var(--el-bg-color);
-    border-radius: 10px;
-    box-shadow: rgba(0, 0, 0, 0.1) 0 2px 10px 2px;
-}
-
-.login-container .login-box .login-form .login-logo {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 45px;
-}
-
-.login-container .login-box .login-form .login-logo .login-icon {
-    width: 80px;
-}
-
-.login-container .login-box .login-form .login-logo .logo-text {
-    padding: 0 0 0 25px;
-    margin: 0;
-    font-size: 42px;
-    font-weight: bold;
-    color: #34495e;
-    white-space: nowrap;
-}
-.login-container .login-box .login-form .el-form-item {
-    margin-bottom: 10px;
-}
-
-.login-container .login-box .login-form .login-btn {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    margin-top: 40px;
-    white-space: nowrap;
-}
-
-.login-container .login-box .login-form .login-btn .el-button {
-    width: 185px;
-}
-.captcha-img img{
-    width: 125px;
-}
-.login-right{
-    display: flex;
-    flex-direction: column;
-    margin-left: 10px;
-    align-items: center;
-    justify-content: center;
-}
-.login-right-img{
-    width: 125px;
-}
-
-@media screen and (max-width: 1250px) {
-    .login-left {
-        display: none;
+    body {
+        color: #999;
     }
-}
-
-@media screen and (max-width: 600px) {
-    .login-box{
-        padding: 0 20px!important;
+    .login-container {
+        height: 100%;
+        min-height: 550px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        top: 0;
+        background-color: #eeeeee;
+        background-image: url("/assets/img/bg.svg");
+        background-size: 100% 100%;
+        background-size: cover;
     }
-    .login-form {
-        width: 100% !important;
-        padding: 10px !important;
+
+    .login-container .login-box {
+        position: relative;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        width: 96.5%;
+        height: 94%;
+        padding: 0 50px;
+        background-color: rgba(255, 255, 255, 0.8);
+        border-radius: 10px;
+    }
+
+    .login-container .login-box .under {
+        position: absolute;
+        top: 13px;
+        left: 18px;
+    }
+
+    .login-container .login-box .under a{
+        text-decoration:none;
+        font-size: 16px;
+        color: #4c4c4c;
+    }
+
+    .login-container .login-box .under span{
+        font-size: 16px;
+        color: #4c4c4c;
+        margin-left: 20px;
+        cursor: pointer;
+    }
+
+    .login-container .login-box .login-left {
+        width: 800px;
+        margin-right: 10px;
+        text-align: center;
+    }
+
+    .login-container .login-box .login-left .login-left-img {
+        width: 80%;
+    }
+
+    .login-container .login-box .login-form {
+        width: 420px;
+        padding: 50px 40px 0px;
+        background-color: var(--el-bg-color);
+        border-radius: 10px;
+        box-shadow: rgba(0, 0, 0, 0.1) 0 2px 10px 2px;
+    }
+
+    .login-container .login-box .login-form .login-logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 45px;
+    }
+
+    .login-container .login-box .login-form .login-logo .login-icon {
+        width: 80px;
+    }
+
+    .login-container .login-box .login-form .login-logo .logo-text {
+        padding: 0 0 0 25px;
+        margin: 0;
+        font-size: 42px;
+        font-weight: bold;
+        color: #34495e;
+        white-space: nowrap;
+    }
+    .login-container .login-box .login-form .el-form-item {
+        margin-bottom: 10px;
+    }
+
+    .login-container .login-box .login-form .login-btn {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        margin-top: 40px;
+        white-space: nowrap;
+    }
+
+    .login-container .login-box .login-form .login-btn .el-button {
+        width: 185px;
     }
     .captcha-img img{
-        width: 120px;
+        width: 125px;
     }
-    .login-icon {
-        width: 20%!important;
+    .login-right{
+        display: flex;
+        flex-direction: column;
+        margin-left: 10px;
+        align-items: center;
+        justify-content: center;
     }
-    .login-logo{
-        margin: 20px 0!important;
+    .login-right-img{
+        width: 125px;
     }
-    .logo-text {
-        font-size: 32px!important;
+
+    @media screen and (max-width: 1250px) {
+        .login-left {
+            display: none;
+        }
     }
-}
+
+    @media screen and (max-width: 600px) {
+        .login-box{
+            padding: 0 20px!important;
+        }
+        .login-form {
+            width: 100% !important;
+            padding: 10px !important;
+        }
+        .captcha-img img{
+            width: 120px;
+        }
+        .login-icon {
+            width: 20%!important;
+        }
+        .login-logo{
+            margin: 20px 0!important;
+        }
+        .logo-text {
+            font-size: 32px!important;
+        }
+    }
+    .login-admin{
+        display: flex;
+        flex-direction: column;
+    }
 </style>

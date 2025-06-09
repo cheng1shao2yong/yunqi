@@ -3,6 +3,7 @@
         <yun-form
                 :steps="['设置基础资料','设置扩展文件','添加菜单与数据']"
                 @submit="onSubmit"
+                :data="rows"
                 :columns="columns">
             <template #default>
                 {:token_field()}
@@ -23,10 +24,9 @@
                         <el-option :value="{$key}" label="{$value.name}-{$value.title}"></el-option>
                         {/foreach}
                     </el-select>
-                    <el-alert style="margin-top:5px;" type="warning">最好选择【扩展配置】分组中的属性，否则安装的时候容易造成配置冲突</el-alert>
                 </el-form-item>
             </template>
-            <template #menu="{step}">
+            <template #menu="{step,rows}">
                 <el-form-item label="{:__('选择菜单')}:" v-if="step==2">
                     <el-tree ref="tree" :props="{children:'childlist',label:'title'}" node-key="id" show-checkbox :default-checked-keys="checkedKey" :data="treedata" style="width: 100%;"></el-tree>
                 </el-form-item>
@@ -36,10 +36,13 @@
 </template>
 <script>
     import form from "@components/Form.js";
+    import {copyObj} from "@util.js";
     export default {
         components:{'YunForm':form},
         data:{
+            checkedKey:[],
             columns:[
+                {"field":"id","title":"ID",width:80,"edit":"hidden"},
                 {
                     field:"pack",
                     title:"包名",
@@ -63,18 +66,20 @@
                 {field:"version",title:"版本号",edit:{form:'input',type:'number',placeholder: '请输入100到1999之间的数字，对应版本号为1.0.0或19.9.9'},rules:'required;range(100~1999)',step:0},
                 {field:"document",title:"说明文档",edit:{form:'input',type:'text',placeholder:'请输入文档链接'},step:0},
                 {field:"description",title:"简介",edit:'textarea',step:0},
-                {field: "files",title:'扩展文件',edit:{form:'input',type:'textarea',rows:6,placeholder:'请输入扩展文件目录或扩展文件，相对系统根目录路径，每一行一个目录或文件'},step:1,rules:'required'},
+                {field: "files",title:'扩展文件',edit:{form:'input',type:'textarea',rows:3,placeholder:'请输入扩展文件目录或扩展文件，相对系统根目录路径，每一行一个目录或文件'},step:1,rules:'required'},
                 {field: "unpack",title:'过滤文件',edit:{form:'input',type:'textarea',rows:3,placeholder:'请输入打包时需要过滤掉的目录或文件，每一行一个目录或文件'},step:1},
-                {field: "require",title:'依赖文件',edit:{form:'input',type:'textarea',rows:3,placeholder:'请输入依赖的类，每一行一个完整类名，如\\Yansongda\\Pay\\Pay'},step:1},
-                {field: "tables",title:'选择表',edit:'slot'},
-                {field: "config",title:'选择配置',edit:'slot'},
-                {field: "menu",title:'选择菜单',edit:'slot'},
+                {field: "require",title:'依赖文件',edit:{form:'input',type:'textarea',rows:3,placeholder:'请输入依赖的composer类，每一行一个完整类名，如\\Yansongda\\Pay\\Pay'},step:1},
+                {field: "addons",title:'依赖扩展',edit:{form:'input',type:'textarea',rows:3,placeholder:'请输入依赖的扩展，每一行一个扩展的包名，如qqmap'},step:1},
+                {field: "tables",title:'选择表',edit:'slot',step:2},
+                {field: "config",title:'选择配置',edit:'slot',step:2},
+                {field: "menu",title:'选择菜单',edit:'slot',step:2},
             ],
-            checkedKey:[],
+            rows:Yunqi.data.rows,
             treedata:[],
         },
         onShow:function (){
-            Yunqi.ajax.get('auth/group/roletree',{groupid:1},true,false,true).then(res=>{
+            this.checkedKey = copyObj(Yunqi.data.rows.menu);
+            Yunqi.ajax.get('auth/group/roletree',{groupid:1},false,false,true).then(res=>{
                 this.treedata=res;
             });
         },

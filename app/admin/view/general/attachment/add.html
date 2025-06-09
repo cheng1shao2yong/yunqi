@@ -24,6 +24,7 @@
                             :limit="10"
                             :on-change="fileUploadChange"
                             action="{$config.baseUrl}{$config.upload.uploadurl}"
+                            :headers="{'x-requested-with': 'XMLHttpRequest'}"
                             :data="{disks:addform.disks,category:addform.category}"
                             :auto-upload="false"
                             list-type="picture-card">

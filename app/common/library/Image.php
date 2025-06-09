@@ -369,15 +369,19 @@ class Image
      * @param  string $source 水印图片路径
      * @param int     $locate 水印位置
      * @param int     $alpha  透明度
+     * @param int     $scale  水印缩放比例
      * @return $this
      */
-    public function water($source, $locate = self::WATER_SOUTHEAST, $alpha = 100)
+    public function water($source, $locate = self::WATER_SOUTHEAST, $alpha = 100,$scale=1)
     {
         if (!is_file($source)) {
             throw new \RuntimeException('水印图像不存在');
         }
         //获取水印图像信息
         $info = getimagesize($source);
+        $water_width=intval($info[0]*$scale);
+        $water_height=intval($info[1]*$scale);
+        //设置水印宽高
         if (false === $info || (IMAGETYPE_GIF === $info[2] && empty($info['bits']))) {
             throw new \RuntimeException('非法水印文件');
         }
@@ -390,13 +394,13 @@ class Image
         switch ($locate) {
             /* 右下角水印 */
             case self::WATER_SOUTHEAST:
-                $x = $this->info['width'] - $info[0];
-                $y = $this->info['height'] - $info[1];
+                $x = $this->info['width'] - $water_width;
+                $y = $this->info['height'] - $water_height;
                 break;
             /* 左下角水印 */
             case self::WATER_SOUTHWEST:
                 $x = 0;
-                $y = $this->info['height'] - $info[1];
+                $y = $this->info['height'] - $water_height;
                 break;
             /* 左上角水印 */
             case self::WATER_NORTHWEST:
@@ -404,33 +408,33 @@ class Image
                 break;
             /* 右上角水印 */
             case self::WATER_NORTHEAST:
-                $x = $this->info['width'] - $info[0];
+                $x = $this->info['width'] - $water_width;
                 $y = 0;
                 break;
             /* 居中水印 */
             case self::WATER_CENTER:
-                $x = ($this->info['width'] - $info[0]) / 2;
-                $y = ($this->info['height'] - $info[1]) / 2;
+                $x = ($this->info['width'] - $water_width) / 2;
+                $y = ($this->info['height'] - $water_height) / 2;
                 break;
             /* 下居中水印 */
             case self::WATER_SOUTH:
-                $x = ($this->info['width'] - $info[0]) / 2;
-                $y = $this->info['height'] - $info[1];
+                $x = ($this->info['width'] - $water_width) / 2;
+                $y = $this->info['height'] - $water_height;
                 break;
             /* 右居中水印 */
             case self::WATER_EAST:
-                $x = $this->info['width'] - $info[0];
-                $y = ($this->info['height'] - $info[1]) / 2;
+                $x = $this->info['width'] - $water_width;
+                $y = ($this->info['height'] - $water_height) / 2;
                 break;
             /* 上居中水印 */
             case self::WATER_NORTH:
-                $x = ($this->info['width'] - $info[0]) / 2;
+                $x = ($this->info['width'] - $water_width) / 2;
                 $y = 0;
                 break;
             /* 左居中水印 */
             case self::WATER_WEST:
                 $x = 0;
-                $y = ($this->info['height'] - $info[1]) / 2;
+                $y = ($this->info['height'] - $water_height) / 2;
                 break;
             default:
                 /* 自定义水印坐标 */
@@ -441,14 +445,18 @@ class Image
                 }
         }
         do {
-            //添加水印
-            $src = imagecreatetruecolor($info[0], $info[1]);
+            $src = imagecreatetruecolor($water_width, $water_height);
             // 调整默认颜色
             $color = imagecolorallocate($src, 255, 255, 255);
             imagefill($src, 0, 0, $color);
-            imagecopy($src, $this->im, 0, 0, $x, $y, $info[0], $info[1]);
-            imagecopy($src, $water, 0, 0, 0, 0, $info[0], $info[1]);
-            imagecopymerge($this->im, $src, $x, $y, 0, 0, $info[0], $info[1], $alpha);
+            imagecopyresampled(
+                $src,
+                $water,
+                0, 0, 0, 0,
+                $water_width, $water_height,
+                $info[0], $info[1]
+            );
+            imagecopymerge($this->im, $src, intval($x), intval($y), 0, 0, $water_width, $water_height, $alpha);
             //销毁零时图片资源
             imagedestroy($src);
         } while (!empty($this->gif) && $this->gifNext());

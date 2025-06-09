@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace app\admin\command;
 
-use app\common\model\Msg;
 use app\common\model\Queue as QueueModel;
 use think\console\Command;
 use think\console\Input;
@@ -55,7 +54,6 @@ class Queue extends Command
                 unlink(self::$locktxt);
             }
             foreach (self::$EventTime as &$value){
-                $title=$value['title'];
                 $function=$value['function'];
                 $delay=$value['delay'];
                 $filter=$value['filter'];
@@ -74,7 +72,6 @@ class Queue extends Command
                         $value['times']++;
                         $value['error']='';
                         $value['lasttime']=date('Y-m-d H:i:s');
-                        $this->output('执行任务:'.$title);
                     }
                 }catch (\Exception $e) {
                     $this->output('执行出错:'.$e->getMessage());
@@ -82,6 +79,9 @@ class Queue extends Command
                     $value['lasttime']=date('Y-m-d H:i:s');
                     $value['error']=$e->getMessage();
                     $value['status']='hidden';
+                }
+                if($value['filter']){
+                    $value['filter']=json_encode($value['filter']);
                 }
             }
             //每5分钟更新一次数据库

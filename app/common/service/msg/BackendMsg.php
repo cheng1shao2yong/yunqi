@@ -85,7 +85,7 @@ class BackendMsg extends MsgService{
      *
      * @return void
      */
-    public function sendAddTabsMessage(int $send_to,string $content,array|string $options=[],)
+    public function sendAddTabsMessage(int|array $send_to,string $content,array|string $options=[],)
     {
         if(is_string($options)){
             $options=['url'=>$options];

@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace app\common\model;
 
+use think\facade\Config;
 use think\Model;
 
 class Admin extends Model{

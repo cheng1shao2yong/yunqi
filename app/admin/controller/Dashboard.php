@@ -12,6 +12,7 @@ declare (strict_types = 1);
 namespace app\admin\controller;
 
 use app\common\model\Admin;
+use app\common\model\delivery\Text;
 use app\common\model\User;
 use app\common\model\Category;
 use app\common\model\Attachment;
@@ -101,6 +102,18 @@ class Dashboard extends Backend
             ];
             $this->success('',compact('panel','line','table','bar','pie','order'));
         }
+        return $this->fetch();
+    }
+
+    #[Route('GET','dashboard/platform1')]
+    public function platform1()
+    {
+        return $this->fetch();
+    }
+
+    #[Route('GET','dashboard/platform2')]
+    public function platform2()
+    {
         return $this->fetch();
     }
 }

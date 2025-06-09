@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace app\admin\controller\general;
 
-use app\admin\traits\Actions;
 use app\common\model\Admin;
 use app\common\controller\Backend;
 use app\common\model\AdminLog;
@@ -43,6 +42,13 @@ class Profile extends Backend
     public function index()
     {
         if (false === $this->request->isAjax()) {
+            $thirdLogin=addons_installed('uniapp') && site_config("uniapp.scan_login");
+            $field='id,username,nickname,mobile,avatar';
+            if($thirdLogin){
+                $field.=',third_id';
+            }
+            $this->assign('thirdLogin',$thirdLogin);
+            $this->assign('admininfo',Admin::field($field)->find($this->auth->id));
             return $this->fetch();
         }
         $where=[];
@@ -79,6 +85,7 @@ class Profile extends Backend
         Session::set('admin.mobile',$params['mobile']);
         Session::set('admin.nickname',$params['nickname']);
         Session::set('admin.avatar',$params['avatar']);
+        Session::save();
         $this->success();
     }
 }

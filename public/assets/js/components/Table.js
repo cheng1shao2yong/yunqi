@@ -1,6 +1,6 @@
 import {formatDate, formatDateTime, copyObj, inArray, formatTime} from '../util.js';
 import selectpage from '../components/SelectPage.js';
-import template from './template/TableTemp.js';
+import tableTemp from './template/TableTemp.js';
 const setValue=function(obj, path, value){
     const keys = path.split('.');
     if (keys.length === 1) {
@@ -24,28 +24,6 @@ const getValue=function(row,field){
         }
     }
     return row;
-}
-const countChild=function (arr){
-    let i=arr.length;
-    for(let k in arr){
-        if(arr[k].children){
-            if(arr[k]._expand){
-                arr[k]._expand=false;
-                i+=countChild(arr[k].children);
-            }
-        }
-    }
-    return i;
-}
-const getTreeChildren=function(arr,id){
-    let childIds = [];
-    for (let i = 0; i < arr.length; i++) {
-        if (arr[i].pid === id) {
-            childIds.push(arr[i].id);
-            childIds = childIds.concat(getTreeChildren(arr, arr[i].id));
-        }
-    }
-    return childIds;
 }
 
 export default {
@@ -72,7 +50,7 @@ export default {
             },
             treeExpandAll_:false,
             mainFrameExpand:false,
-            tabList:[],
+            tabList:{},
             tabsValue:'',
             rightToolOption:{type:'font',list:{large:'大',default:'中',small:'小'}},
             pageFont:'default',
@@ -81,10 +59,15 @@ export default {
                 field:[],
                 filter:1,
                 page:0,
+            },
+            importResult:{
+                show:false,
+                success:0,
+                fail:[]
             }
         }
     },
-    template:template,
+    template:tableTemp,
     props:{
         columns:{
             type: Array,
@@ -155,6 +138,10 @@ export default {
             type:Boolean,
             default:false
         },
+        multiHeader:{
+            type:Boolean,
+            default:false
+        },
         auth:{
             type:Object,
             default:{
@@ -174,7 +161,7 @@ export default {
                 title:__('添加'),
                 expand:false,
                 width:800,
-                height:500
+                height:550
             }
         },
         editForm:{
@@ -184,7 +171,7 @@ export default {
                 title:__('编辑'),
                 expand:false,
                 width:800,
-                height:500
+                height:550
             }
         },
         onRender:{
@@ -201,231 +188,255 @@ export default {
         this.reset();
         this.rowDrop();
     },
-    watch:{
-        loading:function (data) {
-            if(!data){
-                let colgroup=document.getElementsByTagName('colgroup');
-                for(let i=0;i<colgroup.length;i++){
-                    let col=colgroup[i].childNodes;
-                    if(col.length>0){
-                        col[col.length-1].style.display='none';
-                    }
-                }
-            }
-        }
-    },
     methods:{
         reset:function(){
-            let promise=[];
             let columns=copyObj(this.columns);
             for(let i=0;i<columns.length;i++){
-                //格式化operate
-                let operate={form:'input',value:'',size:'default',placeholder:columns[i].title};
-                /**简写begin**/
-                if((columns[i].field && columns[i].operate==undefined) || columns[i].operate=='='){
-                    operate.filter='=';
-                    operate.type='text';
-                    columns[i].operate=operate;
+                if(this.isTree && i===1){
+                    columns[i].type='';
                 }
-                if(columns[i].operate=='!=' || columns[i].operate=='<>'){
-                    operate.filter='<>';
-                    operate.type='text';
-                    columns[i].operate=operate;
-                }
-                if(columns[i].operate=='null' || columns[i].operate=='NULL'){
-                    operate.filter='IS NULL';
-                    operate.form='hidden';
-                    columns[i].operate=operate;
-                }
-                if(columns[i].operate=='not null' || columns[i].operate=='NOT NULL'){
-                    operate.filter='IS NOT NULL';
-                    operate.form='hidden';
-                    columns[i].operate=operate;
-                }
-                if(columns[i].operate=='like' || columns[i].operate=='LIKE'){
-                    operate.filter='LIKE';
-                    operate.type='text';
-                    columns[i].operate=operate;
-                }
-                if(columns[i].operate=='not like' || columns[i].operate=='NOT LIKE'){
-                    operate.filter='NOT LIKE';
-                    operate.type='text';
-                    columns[i].operate=operate;
-                }
-                if(columns[i].operate=='select' || columns[i].operate=='SELECT'){
-                    operate.filter='=';
-                    operate.form='select';
-                    columns[i].operate=operate;
-                }
-                if(columns[i].operate=='selects' || columns[i].operate=='SELECTS'){
-                    operate.filter='in';
-                    operate.form='select';
-                    operate.multiple=true;
-                    operate.value=[];
-                    columns[i].operate=operate;
-                }
-                if(columns[i].operate=='checkbox' || columns[i].operate=='CHECKBOX'){
-                    operate.filter='in';
-                    operate.form='checkbox';
-                    operate.value=[];
-                    columns[i].operate=operate;
-                }
-                if(columns[i].operate=='radio' || columns[i].operate=='RADIO'){
-                    operate.filter='=';
-                    operate.form='radio';
-                    columns[i].operate=operate;
-                }
-                if(columns[i].operate=='find_in_set' || columns[i].operate=='FIND_IN_SET'){
-                    operate.filter='FIND_IN_SET';
-                    operate.form='select';
-                    columns[i].operate=operate;
-                }
-                if(columns[i].operate=='between' || columns[i].operate=='BETWEEN'){
-                    operate.filter='between';
-                    operate.form='between';
-                    operate.value=[];
-                    columns[i].operate=operate;
-                }
-                if(columns[i].operate=='not between' || columns[i].operate=='NOT BETWEEN'){
-                    operate.filter='not between';
-                    operate.form='between';
-                    operate.value=[];
-                    columns[i].operate=operate;
-                }
-                if(columns[i].operate=='date' || columns[i].operate=='DATE'){
-                    operate.filter='=';
-                    operate.form='date-picker';
-                    operate.type='date';
-                    columns[i].operate=operate;
-                }
-                if(columns[i].operate=='datetime' || columns[i].operate=='DATETIME'){
-                    operate.filter='=';
-                    operate.form='date-picker';
-                    operate.type='datetime';
-                    columns[i].operate=operate;
-                }
-                if(columns[i].operate=='daterange' || columns[i].operate=='DATERANGE'){
-                    operate.filter='between time';
-                    operate.form='date-picker';
-                    operate.type='daterange';
-                    columns[i].operate=operate;
-                }
-                if(columns[i].operate=='time' || columns[i].operate=='TIME'){
-                    operate.form='time-picker';
-                    operate.filter='=';
-                    operate.type='time';
-                    columns[i].operate=operate;
-                }
-                if(columns[i].operate=='timerange' || columns[i].operate=='TIMERANGE'){
-                    operate.form='time-picker';
-                    operate.type='timerange';
-                    operate.filter='between';
-                    columns[i].operate=operate;
-                }
-                if(columns[i].operate=='area' || columns[i].operate=='AREA'){
-                    operate.form='cascader';
-                    operate.url='ajax/area';
-                    operate.level=3;
-                    columns[i].operate=operate;
-                }
-                if(columns[i].operate=='category' || columns[i].operate=='CATEGORY'){
-                    operate.form='cascader';
-                    operate.url='ajax/category';
-                    operate.level=2;
-                    columns[i].operate=operate;
-                }
-                /**简写end**/
-                if(typeof columns[i].operate=='object'){
-                    for(let k in columns[i].operate){
-                        if(typeof columns[i].operate[k]=='string'){
-                            columns[i].operate[k]=columns[i].operate[k].toLowerCase();
+                if(columns[i].children){
+                    columns[i].visible=true;
+                    for(let j=0;j<columns[i].children.length;j++){
+                        if(columns[i].children[j].children){
+                            columns[i].children[j].visible=true;
+                            for (let k=0;k<columns[i].children[j].children.length;k++){
+                                columns[i].children[j].children[k]=this.formatColumn(columns[i].children[j].children[k]);
+                            }
+                        }else{
+                            columns[i].children[j]=this.formatColumn(columns[i].children[j]);
                         }
                     }
-                    if(columns[i].operate.form=='selectpage'){
-                        operate.filter='=';
+                }else{
+                    columns[i]=this.formatColumn(columns[i]);
+                }
+            }
+            this.table_.columns=columns;
+            this.searchValue='';
+            this.currentPage=1;
+            this.list=[];
+            this.total=0;
+            this.selections=[];
+            this.dataList();
+        },
+        formatColumn:function (column){
+            let operate={form:'input',value:'',size:'default',placeholder:column.title};
+            /**简写begin**/
+            if((column.field && column.operate==undefined) || column.operate=='='){
+                operate.filter='=';
+                operate.type='text';
+                column.operate=operate;
+            }
+            if(column.operate=='!=' || column.operate=='<>'){
+                operate.filter='<>';
+                operate.type='text';
+                column.operate=operate;
+            }
+            if(column.operate=='null' || column.operate=='NULL'){
+                operate.filter='IS NULL';
+                operate.form='hidden';
+                column.operate=operate;
+            }
+            if(column.operate=='not null' || column.operate=='NOT NULL'){
+                operate.filter='IS NOT NULL';
+                operate.form='hidden';
+                column.operate=operate;
+            }
+            if(column.operate=='like' || column.operate=='LIKE'){
+                operate.filter='LIKE';
+                operate.type='text';
+                column.operate=operate;
+            }
+            if(column.operate=='not like' || column.operate=='NOT LIKE'){
+                operate.filter='NOT LIKE';
+                operate.type='text';
+                column.operate=operate;
+            }
+            if(column.operate=='select' || column.operate=='SELECT'){
+                operate.filter='=';
+                operate.form='select';
+                column.operate=operate;
+            }
+            if(column.operate=='selects' || column.operate=='SELECTS'){
+                operate.filter='in';
+                operate.form='select';
+                operate.multiple=true;
+                operate.value=[];
+                column.operate=operate;
+            }
+            if(column.operate=='checkbox' || column.operate=='CHECKBOX'){
+                operate.filter='in';
+                operate.form='checkbox';
+                operate.value=[];
+                column.operate=operate;
+            }
+            if(column.operate=='radio' || column.operate=='RADIO'){
+                operate.filter='=';
+                operate.form='radio';
+                column.operate=operate;
+            }
+            if(column.operate=='find_in_set' || column.operate=='FIND_IN_SET'){
+                operate.filter='FIND_IN_SET';
+                operate.form='select';
+                column.operate=operate;
+            }
+            if(column.operate=='between' || column.operate=='BETWEEN'){
+                operate.filter='between';
+                operate.form='between';
+                operate.value=[];
+                column.operate=operate;
+            }
+            if(column.operate=='not between' || column.operate=='NOT BETWEEN'){
+                operate.filter='not between';
+                operate.form='between';
+                operate.value=[];
+                column.operate=operate;
+            }
+            if(column.operate=='date' || column.operate=='DATE'){
+                operate.filter='=';
+                operate.form='date-picker';
+                operate.type='date';
+                column.operate=operate;
+            }
+            if(column.operate=='datetime' || column.operate=='DATETIME'){
+                operate.filter='=';
+                operate.form='date-picker';
+                operate.type='datetime';
+                column.operate=operate;
+            }
+            if(column.operate=='daterange' || column.operate=='DATERANGE'){
+                operate.filter='between time';
+                operate.form='date-picker';
+                operate.type='daterange';
+                column.operate=operate;
+            }
+            if(column.operate=='time' || column.operate=='TIME'){
+                operate.form='time-picker';
+                operate.filter='=';
+                operate.type='time';
+                column.operate=operate;
+            }
+            if(column.operate=='timerange' || column.operate=='TIMERANGE'){
+                operate.form='time-picker';
+                operate.type='timerange';
+                operate.filter='between';
+                column.operate=operate;
+            }
+            if(column.operate=='area' || column.operate=='AREA'){
+                operate.form='cascader';
+                operate.url='ajax/area';
+                operate.level=3;
+                column.operate=operate;
+            }
+            if(column.operate=='category' || column.operate=='CATEGORY'){
+                operate.form='cascader';
+                operate.url='ajax/category';
+                operate.level=2;
+                column.operate=operate;
+            }
+            /**简写end**/
+            if(typeof column.operate=='object'){
+                for(let k in column.operate){
+                    if(typeof column.operate[k]=='string'){
+                        column.operate[k]=column.operate[k].toLowerCase();
                     }
-                    if(columns[i].operate.form=='cascader'){
-                        columns[i].operate.props=Object.assign({expandTrigger:'hover',multiple:false,children:'childlist',value:'id',label:'name',lazy:false},columns[i].operate.props);
-                        if(columns[i].operate.url && columns[i].operate.level){
-                            columns[i].operate.props.lazy=true;
-                            columns[i].operate.props.expandTrigger='click';
-                            let url=columns[i].operate.url;
-                            columns[i].operate.props.lazyLoad=function(node,resolve){
-                                let pid=0;
-                                let level=columns[i].operate.level;
-                                if(node.level){
-                                    pid=node.value;
+                }
+                if(column.operate.form=='selectpage'){
+                    operate.filter='=';
+                }
+                if(column.operate.form=='cascader'){
+                    column.operate.props=Object.assign({expandTrigger:'hover',multiple:false,children:'childlist',value:'id',label:'name',lazy:false},column.operate.props);
+                    if(column.operate.url && column.operate.level){
+                        column.operate.props.lazy=true;
+                        column.operate.props.expandTrigger='click';
+                        let url=column.operate.url;
+                        column.operate.props.lazyLoad=function(node,resolve){
+                            let pid=0;
+                            let level=column.operate.level;
+                            if(node.level){
+                                pid=node.value;
+                            }
+                            Yunqi.ajax.get(url,{pid:pid}).then(res=>{
+                                if(res instanceof Array){
+                                    res.map(t=>{
+                                        if(node.level>=level-1){
+                                            t.leaf=true;
+                                        }
+                                        return t;
+                                    });
+                                    resolve(res);
+                                }else{
+                                    resolve([]);
                                 }
-                                Yunqi.ajax.get(url,{pid:pid}).then(res=>{
-                                    if(res instanceof Array){
-                                        res.map(t=>{
-                                            if(node.level>=level-1){
-                                                t.leaf=true;
-                                            }
-                                            return t;
-                                        });
-                                        resolve(res);
-                                    }else{
-                                        resolve([]);
-                                    }
-                                });
-                            };
-                            delete columns[i].operate.options;
-                        }
+                            });
+                        };
+                        delete column.operate.options;
+                    }
+                    operate.filter='=';
+                }
+                if(column.operate.form=='date-picker'){
+                    if(column.operate.type=='date'){
+                        operate.format='YYYY-MM-DD';
                         operate.filter='=';
                     }
-                    if(columns[i].operate.form=='date-picker'){
-                        if(columns[i].operate.type=='date'){
-                            operate.format='YYYY-MM-DD';
-                            operate.filter='=';
-                        }
-                        if(columns[i].operate.type=='year'){
-                            operate.format='YYYY年';
-                            operate.filter='=';
-                        }
-                        if(columns[i].operate.type=='month'){
-                            operate.format='YYYY年MM月';
-                            operate.filter='=';
-                        }
-                        if(columns[i].operate.type=='dates'){
-                            operate.format='YYYY-MM-DD';
-                            operate.filter='=';
-                        }
-                        if(columns[i].operate.type=='datetime'){
-                            operate.format='YYYY-MM-DD HH:mm:ss';
-                            operate.filter='=';
-                        }
-                        if(columns[i].operate.type=='daterange') {
-                            operate.format = 'YYYY-MM-DD';
-                            operate.filter='between time';
-                            operate.shortcuts = [
-                                {text:'今天',value:function(){
+                    if(column.operate.type=='year'){
+                        operate.format='YYYY年';
+                        operate.filter='=';
+                    }
+                    if(column.operate.type=='month'){
+                        operate.format='YYYY年MM月';
+                        operate.filter='=';
+                    }
+                    if(column.operate.type=='dates'){
+                        operate.format='YYYY-MM-DD';
+                        operate.filter='=';
+                    }
+                    if(column.operate.type=='datetime'){
+                        operate.format='YYYY-MM-DD HH:mm:ss';
+                        operate.filter='=';
+                    }
+                    if(column.operate.type=='daterange') {
+                        operate.format = 'YYYY-MM-DD';
+                        operate.filter='between time';
+                        operate.shortcuts = [
+                            {
+                                text: '今天', value: function () {
                                     const start = new Date();
                                     return [start, start];
-                                }},
-                                {text:'昨天',value:function(){
+                                }
+                            },
+                            {
+                                text: '昨天', value: function () {
                                     const start = new Date();
-                                    start.setTime(start.getTime()-3600*1000*24*1);
+                                    start.setTime(start.getTime() - 3600 * 1000 * 24 * 1);
                                     return [start, start];
-                                }},
-                                {text:'最近7天',value:function(){
+                                }
+                            },
+                            {
+                                text: '最近7天', value: function () {
                                     const end = new Date();
                                     const start = new Date();
-                                    start.setTime(start.getTime()-3600*1000*24*6);
+                                    start.setTime(start.getTime() - 3600 * 1000 * 24 * 6);
                                     return [start, end];
-                                }},
-                                {text:'最近30天',value:function(){
+                                }
+                            },
+                            {
+                                text: '最近30天', value: function () {
                                     const end = new Date();
                                     const start = new Date();
-                                    start.setTime(start.getTime()-3600*1000*24*29);
+                                    start.setTime(start.getTime() - 3600 * 1000 * 24 * 29);
                                     return [start, end];
-                                }},
-                                {text:'本月',value:function(){
+                                }
+                            },
+                            {
+                                text: '本月', value: function () {
                                     const end = new Date();
-                                    const start=new Date(formatDate(end).slice(0,7)+'-01');
+                                    const start = new Date(formatDate(end).slice(0, 7) + '-01');
                                     return [start, end];
-                                }},
-                                {text:'上月',value:function(){
+                                }
+                            },
+                            {
+                                text: '上月', value: function () {
                                     const currentDate = new Date();
                                     let lastMonth = currentDate.getMonth() - 1;
                                     let year = currentDate.getFullYear();
@@ -436,79 +447,64 @@ export default {
                                     let firstDay = new Date(year, lastMonth, 1);
                                     let lastDay = new Date(year, lastMonth + 1, 0);
                                     return [firstDay, lastDay];
-                                }},
-                                {text:'今年',value:function(){
+                                }
+                            },
+                            {
+                                text: '今年', value: function () {
                                     let currentDate = new Date();
                                     let year = currentDate.getFullYear();
                                     let start = new Date(year, 0, 1);
                                     let end = new Date(year, 11, 31);
                                     return [start, end];
-                                }},
-                                {text:'去年',value:function(){
+                                }
+                            },
+                            {
+                                text: '去年', value: function () {
                                     let currentDate = new Date();
                                     let year = currentDate.getFullYear() - 1;
                                     let start = new Date(year, 0, 1);
                                     let end = new Date(year, 11, 31);
                                     return [start, end];
-                                }},
-                            ];
-                        }
-                    }
-                    //如果用户自定义了属性，则优先使用
-                    for(let key in operate){
-                        columns[i].operate[key]=(columns[i].operate[key]!==undefined)?columns[i].operate[key]:operate[key];
+                                }
+                            },
+                        ];
                     }
                 }
-                //通过visible隐藏数据
-                if(columns[i].visible!='none'){
-                    columns[i].visible=(columns[i].visible===false)?false:true;
+                //如果用户自定义了属性，则优先使用
+                for(let key in operate){
+                    column.operate[key]=(column.operate[key]!==undefined)?column.operate[key]:operate[key];
                 }
-                if(columns[i].field=='operate' || columns[i].checkbox || columns[i].treeExpand){
-                    if(columns[i].field=='operate' && !columns[i].direction){
-                        columns[i].direction='row';
-                    }
-                    if(columns[i].field=='operate' && columns[i].action){
-                        for(let kss in columns[i].action){
-                            if(typeof columns[i].action[kss]=='object' && typeof columns[i].action[kss].method=='string'){
-                                columns[i].action[kss].method=Yunqi.app[columns[i].action[kss].method];
-                            }
-                            if(typeof columns[i].action[kss]=='object' && !columns[i].action[kss].visible){
-                                columns[i].action[kss].visible=function(){return true;};
-                            }
-                        }
-                    }
-                    continue;
-                }
-                //默认格式
-                columns[i].formatter=(columns[i].field && (columns[i].formatter===undefined || columns[i].formatter===false))?Yunqi.formatter.text:columns[i].formatter;
             }
-            Promise.all(promise).then(res=>{
-                let j=0;
-                let tabList=[];
-                for(let i=0;i<columns.length;i++){
-                    //初始化cascader
-                    if(
-                        columns[i].operate
-                        && columns[i].operate.form=='cascader'
-                        && typeof columns[i].operate.options=='string'
-                        && !columns[i].operate.props.lazy
-                    ){
-                        columns[i].operate.options=res[j];
-                        j++;
-                    }
-                    //初始化tabs
-                    if(this.tabs && columns[i].field==this.tabs){
-                        this.tabList=columns[i].searchList || [];
+            //通过visible隐藏数据
+            if(column.visible!='none'){
+                column.visible=(column.visible===false)?false:true;
+            }
+            if(column.field=='operate' || column.checkbox || column.treeExpand){
+                if(column.field=='operate' && !column.direction){
+                    column.direction='row';
+                }
+                if(column.field=='operate' && !column.align){
+                    column.align='center';
+                }
+                if(column.field=='operate' && column.action){
+                    for(let kss in column.action){
+                        if(typeof column.action[kss]=='object' && typeof column.action[kss].method=='string'){
+                            column.action[kss].method=Yunqi.app[column.action[kss].method];
+                        }
+                        if(typeof column.action[kss]=='object' && !column.action[kss].visible){
+                            column.action[kss].visible=function(){return true;};
+                        }
                     }
                 }
-                this.table_.columns=columns;
-                this.searchValue='';
-                this.currentPage=1;
-                this.list=[];
-                this.total=0;
-                this.selections=[];
-                this.dataList();
-            });
+                return column;
+            }
+            //默认格式
+            column.formatter=(column.field && (column.formatter===undefined || column.formatter===false))?Yunqi.formatter.text:column.formatter;
+            //初始化tabs
+            if(this.tabs && column.field==this.tabs){
+                this.tabList=column.searchList || {};
+            }
+            return column;
         },
         dataList:function(){
             this.loading=true;
@@ -613,13 +609,23 @@ export default {
                 if(this.download.page){
                     json.page=this.currentPage;
                     json.limit=this.pageSize;
+                }else{
+                    json.page=1;
+                    json.limit=100000;
                 }
                 if(this.download.filter){
                     json.filter=filter;
                 }
                 Yunqi.ajax.json(this.extend.download_url,json,true,false).then(data=>{
-                    location.href=Yunqi.config.baseUrl+this.extend.download_url+'?file='+data;
+                    let url=Yunqi.config.baseUrl+this.extend.download_url;
+                    if(url.indexOf('?')!=-1){
+                        url+='&file='+data;
+                    }else{
+                        url+='?file='+data;
+                    }
+                    location.href=url;
                     this.loading=false;
+                    this.download.show=false;
                 }).catch(error=>{
                     this.loading=false;
                 });
@@ -645,103 +651,140 @@ export default {
         render:function(list){
             for(let j=0;j<list.length;j++){
                 let row=list[j];
-                row._formatter={};
-                for(let i=0;i<this.table_.columns.length;i++){
-                    if(this.table_.columns[i].field==undefined){
-                        continue;
-                    }
-                    let value=getValue(row,this.table_.columns[i].field);
-                    let formatter=copyObj(Yunqi.formatter.text);
-                    if(this.table_.columns[i].searchList){
-                        value=(this.table_.columns[i].searchList[value]!==undefined)?this.table_.columns[i].searchList[value]:value;
-                    }
-                    if(!this.table_.columns[i].formatter){
-                        formatter.value=value;
-                    }
-                    if(this.table_.columns[i].formatter && typeof this.table_.columns[i].formatter=='function'){
-                        let rx=this.table_.columns[i].formatter(value,row);
-                        if(rx===undefined || rx===''){
-                            rx='-';
-                        }
-                        if(typeof rx == 'object'){
-                            formatter=copyObj(rx);
-                            if(formatter._name=='button' && typeof formatter.click=='string'){
-                                let clickstr=formatter.click;
-                                formatter.click=function(row){
-                                    Yunqi.app[clickstr](row);
-                                }
-                            }
-                        }else{
-                            formatter.value=rx;
-                        }
-                    }
-                    if(this.table_.columns[i].formatter && typeof this.table_.columns[i].formatter=='object'){
-                        formatter=copyObj(this.table_.columns[i].formatter);
-                        if(formatter._name=='images'){
-                            value=value?value.split(','):[];
-                        }
-                        if(formatter._name=='date' && typeof value=='number'){
-                            value=formatDate(new Date(value*1000));
-                        }
-                        if(formatter._name=='datetime' && typeof value=='number'){
-                            value=formatDateTime(new Date(value*1000)).slice(0,16);
-                        }
-                        if(formatter._name=='select'){
-                            for(let k in this.table_.columns[i].searchList){
-                                if(value==this.table_.columns[i].searchList[k]){
-                                    value=k;
-                                }
-                            }
-                        }
-                        if(formatter._name=='tags'){
-                            if(value instanceof Array){
-
-                            }else{
-                                value=value?value.split(','):[];
-                            }
-                            if(this.table_.columns[i].searchList){
-                                value=value.map(ts=>{
-                                    ts=(this.table_.columns[i].searchList[ts]!==undefined)?this.table_.columns[i].searchList[ts]:ts;
-                                    return ts;
-                                });
-                            }
-                        }
-                        if(formatter._name=='switch' && this.table_.columns[i].searchList){
-                            let xs=0,activeValue,inactiveValue;
-                            for(let k in this.table_.columns[i].searchList){
-                                if(k==='0')k=0;
-                                if(k==='1')k=1;
-                                if(k===0 || k===1){
-                                    activeValue=1;
-                                    inactiveValue=0;
-                                }else if(k==='normal' || k==='hidden'){
-                                    activeValue='normal';
-                                    inactiveValue='hidden';
-                                }else{
-                                    if(xs===0){
-                                        activeValue=k;
-                                    }
-                                    if(xs===1){
-                                        inactiveValue=k;
-                                    }
-                                }
-                                if(value==this.table_.columns[i].searchList[k]){
-                                    value=k;
-                                }
-                                xs++;
-                            }
-                            formatter.activeValue=activeValue;
-                            formatter.inactiveValue=inactiveValue;
-                        }
-                        formatter.value=value;
-                    }
-                    row._formatter[this.table_.columns[i].field]=formatter;
+                this.formatRow(row);
+                if(row.childlist){
+                    this.render(row.childlist);
                 }
             }
             this.list=list;
-            if(this.treeExpandAll && !this.treeExpandAll_){
-                this.expandAllTree();
+        },
+        formatRow:function (row){
+            row._formatter={};
+            for(let i=0;i<this.table_.columns.length;i++){
+                let columns1=this.table_.columns[i];
+                if(columns1.children){
+                    for(let j=0;j<columns1.children.length;j++){
+                        let columns2=this.table_.columns[i].children[j];
+                        if(columns2.children){
+                            for(let k=0;k<columns2.children.length;k++){
+                                let columns3=columns2.children[k];
+                                if(columns3.field===undefined){
+                                    continue;
+                                }
+                                let formatter=this.getFormatter(row,columns3);
+                                row._formatter[columns3.field]=formatter;
+                            }
+                        }else{
+                            if(columns2.field===undefined){
+                                continue;
+                            }
+                            let formatter=this.getFormatter(row,columns2);
+                            row._formatter[columns2.field]=formatter;
+                        }
+                    }
+                }else{
+                    if(columns1.field===undefined){
+                        continue;
+                    }
+                    let formatter=this.getFormatter(row,columns1);
+                    row._formatter[columns1.field]=formatter;
+                }
             }
+        },
+        getFormatter:function (row,columns){
+            let value=getValue(row,columns.field);
+            let formatter=copyObj(Yunqi.formatter.text);
+            if(columns.searchList){
+                value=(columns.searchList[value]!==undefined)?columns.searchList[value]:value;
+            }
+            if(columns.field=='operate'){
+                return true;
+            }
+            if(!columns.formatter){
+                formatter.value=value;
+            }
+            if(columns.formatter && typeof columns.formatter=='function'){
+                let rx=columns.formatter(value,row);
+                if(rx===undefined || rx===''){
+                    rx='-';
+                }
+                if(typeof rx == 'object'){
+                    formatter=copyObj(rx);
+                    if(formatter._name=='button' && typeof formatter.click=='string'){
+                        let clickstr=formatter.click;
+                        formatter.click=function(row){
+                            Yunqi.app[clickstr](row);
+                        }
+                    }
+                }else{
+                    formatter.value=rx;
+                }
+            }
+            if(columns.formatter && typeof columns.formatter=='object'){
+                formatter=copyObj(columns.formatter);
+                if(formatter._name=='images'){
+                    value=value?value.split(','):[];
+                }
+                if(formatter._name=='date' && typeof value=='number'){
+                    value=formatDate(new Date(value*1000));
+                }
+                if(formatter._name=='datetime'){
+                    if(typeof value=='number'){
+                        value=formatDateTime(new Date(value*1000)).slice(0,16);
+                    }else if(!value){
+                        value='-';
+                    }
+                }
+                if(formatter._name=='select'){
+                    for(let k in columns.searchList){
+                        if(value==columns.searchList[k]){
+                            value=k;
+                        }
+                    }
+                }
+                if(formatter._name=='tags'){
+                    if(value instanceof Array){
+
+                    }else{
+                        value=value?value.split(','):[];
+                    }
+                    if(columns.searchList){
+                        value=value.map(ts=>{
+                            ts=(columns.searchList[ts]!==undefined)?columns.searchList[ts]:ts;
+                            return ts;
+                        });
+                    }
+                }
+                if(formatter._name=='switch' && columns.searchList){
+                    let xs=0,activeValue,inactiveValue;
+                    for(let k in columns.searchList){
+                        if(k==='0')k=0;
+                        if(k==='1')k=1;
+                        if(k===0 || k===1){
+                            activeValue=1;
+                            inactiveValue=0;
+                        }else if(k==='normal' || k==='hidden'){
+                            activeValue='normal';
+                            inactiveValue='hidden';
+                        }else{
+                            if(xs===0){
+                                activeValue=k;
+                            }
+                            if(xs===1){
+                                inactiveValue=k;
+                            }
+                        }
+                        if(value==columns.searchList[k]){
+                            value=k;
+                        }
+                        xs++;
+                    }
+                    formatter.activeValue=activeValue;
+                    formatter.inactiveValue=inactiveValue;
+                }
+                formatter.value=value;
+            }
+            return formatter;
         },
         rowDrop:function(){
             const tbody = document.querySelector('.el-table__body-wrapper tbody');
@@ -755,40 +798,29 @@ export default {
                 chosenClass: "sortable-chosen",
                 dragClass: "sortable-drag",
                 onEnd ({ newIndex, oldIndex }) {
-                    let order=_this.order;
-                    if(_this.sortData && _this.sortData.order.startsWith('desc')){
-                        order='desc';
+                    //交换权重
+                    let new_weigh=_this.list[newIndex].weigh;
+                    let old_weigh=_this.list[oldIndex].weigh;
+                    if(new_weigh===undefined || old_weigh===undefined){
+                        top.ElementPlus.ElMessage({
+                            message: __('没有weigh属性，排序失败'),
+                            type: 'error'
+                        });
+                        return;
                     }
-                    if(_this.sortData && _this.sortData.order.startsWith('asc')){
-                        order='asc';
-                    }
-                    //权重差值
-                    let weigh_new=_this.list[newIndex].weigh;
-                    let weigh=weigh_new;
-                    let id=_this.list[oldIndex].id;
+                    let data=[
+                        {id:_this.list[oldIndex].id,weigh:new_weigh}
+                    ];
                     let line=Math.abs(oldIndex-newIndex);
-                    let data=[{id,weigh:weigh}];
-                    if(order=='desc'){
-                        (newIndex>oldIndex)?weigh++:weigh--;
-                        let i=0;
-                        while(i<line){
-                            data.push({
-                                id:(newIndex>oldIndex)?_this.list[newIndex-i].id:_this.list[newIndex+i].id,
-                                weigh:(newIndex>oldIndex)?weigh++:weigh--
-                            });
-                            i++;
-                        }
-                    }
-                    if(order=='asc'){
-                        (newIndex>oldIndex)?weigh--:weigh++;
-                        let i=0;
-                        while(i<line){
-                            data.push({
-                                id:(newIndex>oldIndex)?_this.list[newIndex-i].id:_this.list[newIndex+i].id,
-                                weigh:(newIndex>oldIndex)?weigh--:weigh++
-                            });
-                            i++;
-                        }
+                    let weigh=_this.list[newIndex].weigh;
+                    (newIndex>oldIndex)?weigh++:weigh--;
+                    let i=0;
+                    while(i<line){
+                        data.push({
+                            id:(newIndex>oldIndex)?_this.list[newIndex-i].id:_this.list[newIndex+i].id,
+                            weigh:(newIndex>oldIndex)?weigh++:weigh--
+                        });
+                        i++;
                     }
                     const elloading=ElementPlus.ElLoading.service({text:'排序中..'});
                     const promise=data.map(res=>{
@@ -812,27 +844,6 @@ export default {
                     });
                 }
             });
-        },
-        rowsExpand:function(row){
-            let key='';
-            for(let i=0;i<this.list.length;i++){
-                if(this.list[i]==row){
-                    key=row[this.pk];
-                }
-            }
-            let index=-1;
-            for(let i=0;i<this.expandRowKeys.length;i++){
-                if(this.expandRowKeys[i]==key){
-                    index=i;
-                }
-            }
-            if(index==-1){
-                row.isExpand=true;
-                this.expandRowKeys.push(key);
-            }else{
-                row.isExpand=false;
-                this.expandRowKeys.splice(index,1);
-            }
         },
         tabChange:function (e){
             this.tabsValue=e;
@@ -888,11 +899,35 @@ export default {
             this.dataList();
         },
         changeVisiable:function(field){
-            this.table_.columns.forEach(res=>{
-                if(res.field==field){
-                    res.visible=!res.visible;
+            let columns=this.table_.columns;
+            for(let i=0;i<columns.length;i++){
+                if(columns[i].children){
+                    let show1=false;
+                    for(let j=0;j<columns[i].children.length;j++){
+                        if(columns[i].children[j].children){
+                            let show2=false;
+                            for (let k=0;k<columns[i].children[j].children.length;k++){
+                                if(columns[i].children[j].children[k].field==field){
+                                    columns[i].children[j].children[k].visible=!columns[i].children[j].children[k].visible;
+                                }
+                                show2=show2 || columns[i].children[j].children[k].visible;
+                            }
+                            columns[i].children[j].visible=show2;
+                        }else{
+                            if(columns[i].children[j].field==field){
+                                columns[i].children[j].visible=!columns[i].children[j].visible;
+                            }
+                        }
+                        show1=show1 || columns[i].children[j].visible;
+                    }
+                    columns[i].visible=show1;
+                }else{
+                    if(columns[i].field==field){
+                        columns[i].visible=!columns[i].visible;
+                    }
                 }
-            });
+            }
+            console.log(columns)
         },
         changeShow:function(status){
             let ids=[];
@@ -941,44 +976,6 @@ export default {
                 Yunqi.api.compress();
             }
         },
-        expandAllTree:function (){
-            this.treeExpandAll_=!this.treeExpandAll_;
-            let hide=this.treeExpandAll_?'':'hide';
-            this.list.forEach(res=>{
-                if(res.pid){
-                    let el=document.querySelector('.row-id-'+res.id);
-                    if(el){
-                        el.className='row-id-'+res.id+' '+hide;
-                    }
-                }
-            });
-        },
-        expandTree:function (topid){
-            let ids=getTreeChildren(this.list,topid);
-            let show=false;
-            for(let i=0;i<ids.length;i++){
-                let id=ids[i];
-                let el=document.querySelector('.row-id-'+id);
-                //检查第一个子项是打开还是关闭，如果是打开，就全部关闭，如果是关闭，就全部打开
-                if(i===0 && inArray(el.classList,'hide')){
-                    show=true;
-                }
-                if(show){
-                    el.className='row-id-'+id;
-                }else{
-                    el.className='row-id-'+id+' hide';
-                }
-            }
-        },
-        rowClassName:function (e){
-            if(this.isTree){
-                let c='row-id-'+e.row.id;
-                if(e.row.pid && !this.treeExpandAll_){
-                    return c+' hide';
-                }
-                return c;
-            }
-        },
         changeSelectpage:function (r){
             for(let i=0;i<this.table_.columns.length;i++){
                 if(this.table_.columns[i].field==r.field){
@@ -989,7 +986,24 @@ export default {
         },
         clickRightToolBar:function (btn){
             if(btn=='column'){
-                this.rightToolOption={type:'column',list:this.table_.columns};
+                let show=[];
+                let columns=this.table_.columns;
+                for(let i=0;i<columns.length;i++){
+                    if(columns[i].children){
+                        for(let j=0;j<columns[i].children.length;j++){
+                            if(columns[i].children[j].children){
+                                for (let k=0;k<columns[i].children[j].children.length;k++){
+                                    show.push(columns[i].children[j].children[k]);
+                                }
+                            }else{
+                                show.push(columns[i].children[j]);
+                            }
+                        }
+                    }else{
+                        show.push(columns[i]);
+                    }
+                }
+                this.rightToolOption={type:'column',list:show};
             }
             if(btn=='font'){
                 this.rightToolOption={type:'font',list:{large:'大',default:'中',small:'小'}};
@@ -1000,6 +1014,15 @@ export default {
                     return;
                 }
                 this.download.show=true;
+            }
+        },
+        clickLink:function (str,triger='copy'){
+            if(triger=='redict'){
+                window.open(str,'_blank');
+            }
+            if(triger=='copy'){
+                navigator.clipboard.writeText(str);
+                Yunqi.message.success('复制成功');
             }
         },
         changeFont:function (key){
@@ -1015,7 +1038,21 @@ export default {
                 Yunqi.message.error(__('recyclebin_url未设置'));
                 return;
             }
-            let table={width:'80%',height:690,title:__('回收站'),url:this.extend.recyclebin_url+'?action=list',icon:'fa fa-recycle'};
+            let table={
+                width:'80%',
+                height:690,
+                title:__('回收站'),
+                url:this.extend.recyclebin_url+'?action=list',
+                icon:'fa fa-recycle',
+                close:function (){
+                    let id=top.Yunqi.app.activeMenu.id;
+                    let tab=top.document.getElementById('addtabs-'+id).contentWindow;
+                    let doc=tab.document.getElementsByClassName('refresh');
+                    if(doc.length>0){
+                        doc[0].click();
+                    }
+                }
+            };
             Yunqi.api.open(table);
         },
         add:function () {
@@ -1090,6 +1127,9 @@ export default {
                 return;
             }
             Yunqi.ajax.post(this.extend.import_url,{file:file}).then(res=>{
+                this.importResult.success=res.success;
+                this.importResult.fail=res.fail;
+                this.importResult.show=true;
                 this.reload();
             });
         }

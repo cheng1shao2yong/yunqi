@@ -49,8 +49,7 @@ export default {
     emits:['change'],
     props:{
         imageUrl:{
-            type: String,
-            required: true
+            type: String
         },
         disabled:{
             type: Boolean,
@@ -67,6 +66,10 @@ export default {
         isCircle:{
             type: Boolean,
             default: false
+        },
+        field:{
+            type:String,
+            default:''
         }
     },
     template:template,
@@ -80,10 +83,18 @@ export default {
             dom && dom.click();
         },
         deleteImg:function (){
-            this.$emit('change','');
+            if(this.field){
+                this.$emit('change',{field:this.field,value:''});
+            }else{
+                this.$emit('change','');
+            }
         },
         fileUploadSuccess:function (e,f){
-            this.$emit('change',e.data.fullurl);
+            if(this.field){
+                this.$emit('change',{field:this.field,value:e.data.fullurl});
+            }else{
+                this.$emit('change',e.data.fullurl);
+            }
         },
     }
 };

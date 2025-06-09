@@ -12,10 +12,11 @@
     <link rel="stylesheet" href="{:request()->domain()}/assets/libs/font-awesome/css/font-awesome.min.css" />
     <script src="{:request()->domain()}/assets/js/vue.global.js" type="text/javascript"></script>
     <script src="{:request()->domain()}/assets/js/element-plus.js" type="text/javascript"></script>
-    <script src="//unpkg.com/@element-plus/icons-vue"></script>
+    <script src="{:request()->domain()}/assets/js/icons-vue.js"></script>
     <title>云起开发平台</title>
     <meta name="keywords" content="php框架,php快速开发平台,php开发框架,云起开发平台" />
     <meta name="description" content="云起-Yunqi开发平台 是基于Thinkphp8.0 + ES6.0 + Vue3.2 + Element Plus2.3等技术开发的，开源免费的快速开发平台。独此一家单页面单应用的设计思路，onLoad，onShow，onUnload，onHide，让管理端也能像uniapp一样开发。系统功能支持模块化打包成扩展，换个项目可以一键安装。"/>
+
     <style>
         body{
             margin: 0;
@@ -106,7 +107,7 @@
 </head>
 <body>
 <div id="app">
-    <el-container style="height: 100vh">
+    <el-container style="height: 97vh">
         <el-header height="80">
             <div class="header">
                 <div class="header-left">
@@ -129,14 +130,13 @@
                     <a target="_blank" href="https://gitee.com/lcfms/yunqi-development-platform" title="码云">
                         <img src="/assets/img/mayun.png" style="width: 24px"/>
                     </a>
-                     <a href="/" title="Github">
+                     <a target="_blank" href="https://github.com/cheng1shao2yong/yunqi" title="Github">
                         <img src="/assets/img/github.png"/>
                     </a>
                 </div>
             </div>
         </el-header>
         <el-main>
-            <el-scrollbar>
             <div class="desbox">
                 <div style="text-align: center;">
                     <h1 style="font-size: 3rem;">云起开发平台</h1>
@@ -159,7 +159,6 @@
                     </div>
                 </div>
             </div>
-            </el-scrollbar>
         </el-main>
         <el-footer>
             <div style="text-align: center;font-size: 14px;">

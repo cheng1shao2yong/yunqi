@@ -19,6 +19,16 @@ return [
             'root' => app()->getRootPath() . 'public/upload',
             'class'=> \app\common\service\upload\PublicUploadService::class
         ],
+        //腾讯云存储
+        'tencent_cos' => [
+            'name'=>'上传到腾讯云',
+            'class'=> \app\common\service\upload\TencentUploadService::class
+        ],
+        //腾讯云存储
+        'aliyun_oss' => [
+            'name'=>'上传到阿里云',
+            'class'=> \app\common\service\upload\AliyunUploadService::class
+        ],
         // 更多的磁盘配置信息
     ],
 ];

@@ -1,5 +1,5 @@
 const template=`
-    <el-popover placement="bottom" :width="310" trigger="click" @show="readMessage()">
+    <el-popover placement="bottom" :width="310" trigger="hover" @show="readMessage()">
       <template #reference>
         <div class="toolBar-dropdown" style="padding: 0 15px;">
             <el-badge :value="total" class="font-size-icon" :hidden="total===0">

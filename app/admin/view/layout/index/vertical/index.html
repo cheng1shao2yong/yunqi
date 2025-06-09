@@ -2,8 +2,8 @@
     <el-aside v-show="documentWidth>600 || !elementUi.is_menu_collapse">
         <div class="aside-box" :style="{ width: elementUi.is_menu_collapse ? '65px' : documentWidth>600 ? '210px':(documentWidth-2)+'px'}">
             <div class="logo flx-center">
-                <img class="logo-img" src="{:site_config('basic.logo')}" alt="logo" />
-                <span v-if="!elementUi.is_menu_collapse" class="logo-text">{:site_config('basic.sitename')}</span>
+                <img class="logo-img" :src="logo_img" alt="logo" />
+                <span v-if="!elementUi.is_menu_collapse" class="logo-text">{$site.sitename}</span>
             </div>
             <el-scrollbar :height="menuHeight+'px'">
                 <el-menu
