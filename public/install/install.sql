@@ -34,13 +34,13 @@ CREATE TABLE `__PREFIX__admin` (
   `mobile` varchar(11) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '手机号码',
   `groupids` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `loginfailure` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '失败次数',
-  `logintime` int(10) unsigned DEFAULT NULL COMMENT '登录时间',
+  `logintime` int(11) unsigned DEFAULT NULL COMMENT '登录时间',
   `loginip` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '登录IP',
   `token` varchar(59) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT 'Session标识',
   `element_ui` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '自定义UI设置',
   `status` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'normal' COMMENT '状态',
-  `createtime` int(10) unsigned DEFAULT NULL COMMENT '创建时间',
-  `updatetime` int(10) unsigned DEFAULT NULL COMMENT '更新时间',
+  `createtime` int(11) unsigned DEFAULT NULL COMMENT '创建时间',
+  `updatetime` int(11) unsigned DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='管理员表';
@@ -57,12 +57,41 @@ CREATE TABLE `__PREFIX__admin_log` (
   `url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `title` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '日志标题',
   `content` longtext COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '内容',
+  `depart_id` int(11) DEFAULT NULL COMMENT '部门id',
   `ip` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT 'IP',
   `useragent` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT 'User-Agent',
-  `createtime` int(10) unsigned DEFAULT NULL COMMENT '操作时间',
+  `createtime` int(11) unsigned DEFAULT NULL COMMENT '操作时间',
   PRIMARY KEY (`id`),
   KEY `name` (`username`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='管理员日志表';
+
+-- ----------------------------
+-- Table structure for __PREFIX__department
+-- ----------------------------
+DROP TABLE IF EXISTS `__PREFIX__department`;
+CREATE TABLE `__PREFIX__department` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `pid` int(11) DEFAULT NULL,
+  `name` varchar(30) DEFAULT NULL,
+  `description` varchar(255) DEFAULT NULL,
+  `create_admin` int(11) DEFAULT NULL COMMENT '创建人',
+  `weigh` int(11) DEFAULT NULL COMMENT '权重',
+  `status` varchar(30) DEFAULT NULL,
+  `createtime` int(11) unsigned DEFAULT NULL,
+  `updatetime` int(11) unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4;
+
+-- ----------------------------
+-- Records of __PREFIX__department
+-- ----------------------------
+INSERT INTO `__PREFIX__department` VALUES ('1', '0', '贵阳云起信息科技有限公司', '初始公司名称', '1', '1', 'normal', null, null);
+INSERT INTO `__PREFIX__department` VALUES ('2', '1', '技术部', null, null, null, 'normal', '1749965101', '1749965101');
+INSERT INTO `__PREFIX__department` VALUES ('3', '1', '市场部', null, null, null, 'normal', '1749965109', '1749965109');
+INSERT INTO `__PREFIX__department` VALUES ('4', '1', '工程部', null, null, null, 'normal', '1749965116', '1749965116');
+INSERT INTO `__PREFIX__department` VALUES ('5', '4', '工程1部', null, null, null, 'normal', '1749965125', '1749965125');
+INSERT INTO `__PREFIX__department` VALUES ('6', '4', '工程2部', null, null, null, 'normal', '1749965133', '1749965133');
+INSERT INTO `__PREFIX__department` VALUES ('7', '4', '工程3部', null, null, null, 'normal', '1750048263', '1750048263');
 
 -- ----------------------------
 -- Table structure for __PREFIX__attachment
@@ -85,9 +114,9 @@ CREATE TABLE `__PREFIX__attachment` (
   `storage` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'local' COMMENT '存储位置',
   `sha1` varchar(40) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '文件 sha1编码',
   `weigh` int(11) DEFAULT '0',
-  `uploadtime` int(10) unsigned DEFAULT NULL COMMENT '上传时间',
-  `createtime` int(10) unsigned DEFAULT NULL COMMENT '创建日期',
-  `updatetime` int(10) unsigned DEFAULT NULL COMMENT '更新时间',
+  `uploadtime` int(11) unsigned DEFAULT NULL COMMENT '上传时间',
+  `createtime` int(11) unsigned DEFAULT NULL COMMENT '创建日期',
+  `updatetime` int(11) unsigned DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='附件表';
 
@@ -101,8 +130,8 @@ CREATE TABLE `__PREFIX__auth_group` (
   `rules` text COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '规则ID',
   `auth_rules` text COLLATE utf8mb4_unicode_ci,
   `status` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '状态',
-  `createtime` int(10) unsigned DEFAULT NULL COMMENT '创建时间',
-  `updatetime` int(10) unsigned DEFAULT NULL COMMENT '更新时间',
+  `createtime` int(11) unsigned DEFAULT NULL COMMENT '创建时间',
+  `updatetime` int(11) unsigned DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='分组表';
 
@@ -121,15 +150,15 @@ CREATE TABLE `__PREFIX__auth_rule` (
   `action` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `title` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '规则名称',
   `icon` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '图标',
-  `menutype` enum('addtabs','blank','dialog') COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '菜单类型',
+  `menutype` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '菜单类型',
   `ismenu` tinyint(1) unsigned DEFAULT '0' COMMENT '是否为菜单',
   `isplatform` tinyint(1) unsigned DEFAULT '0' COMMENT '是否为平台',
   `extend` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '扩展属性',
   `weigh` int(10) DEFAULT '0' COMMENT '权重',
   `addons` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `status` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '状态',
-  `createtime` int(16) unsigned DEFAULT NULL COMMENT '创建时间',
-  `updatetime` int(16) unsigned DEFAULT NULL COMMENT '更新时间',
+  `createtime` int(11) unsigned DEFAULT NULL COMMENT '创建时间',
+  `updatetime` int(11) unsigned DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`id`),
   KEY `pid` (`pid`),
   KEY `weigh` (`weigh`)
@@ -138,19 +167,19 @@ CREATE TABLE `__PREFIX__auth_rule` (
 -- ----------------------------
 -- Records of __PREFIX__auth_rule
 -- ----------------------------
-INSERT INTO `__PREFIX__auth_rule` VALUES ('1', '0', 'app\\admin\\controller\\Dashboard', 'index', '控制台', 'fa fa-dashboard', 'addtabs', '1', '0', null, '999', null, 'normal', '1491635035', '1491635035');
-INSERT INTO `__PREFIX__auth_rule` VALUES ('2', '0', null, null, '常规管理', 'fa fa-cogs', 'addtabs', '1', '0', null, '997', null, 'normal', '1491635035', '1491635035');
-INSERT INTO `__PREFIX__auth_rule` VALUES ('3', '2', 'app\\admin\\controller\\general\\Config', 'index', '系统配置', 'fa fa-cog', 'addtabs', '1', '0', null, '996', null, 'normal', '1491635035', '1491635035');
-INSERT INTO `__PREFIX__auth_rule` VALUES ('4', '2', 'app\\admin\\controller\\general\\Category', 'index', '分类管理', 'fa fa-leaf', 'addtabs', '1', '0', null, '995', null, 'normal', '1491635035', '1491635035');
-INSERT INTO `__PREFIX__auth_rule` VALUES ('5', '2', 'app\\admin\\controller\\general\\Attachment', 'index', '附件管理', 'fa fa-file-image-o', 'addtabs', '1', '0', null, '994', null, 'normal', '1491635035', '1491635035');
-INSERT INTO `__PREFIX__auth_rule` VALUES ('6', '2', 'app\\admin\\controller\\general\\Profile', 'index', '个人资料', 'fa fa-user', 'addtabs', '1', '0', null, '993', null, 'normal', '1491635035', '1491635035');
-INSERT INTO `__PREFIX__auth_rule` VALUES ('7', '0', null, null, '权限管理', 'fa fa-group', 'addtabs', '1', '0', null, '992', null, 'normal', '1491635035', '1491635035');
-INSERT INTO `__PREFIX__auth_rule` VALUES ('8', '7', 'app\\admin\\controller\\auth\\Rule', 'index', '菜单规则', 'fa fa-bars', 'addtabs', '1', '0', null, '998', null, 'normal', '1491635035', '1491635035');
-INSERT INTO `__PREFIX__auth_rule` VALUES ('9', '7', 'app\\admin\\controller\\auth\\Group', 'index', '角色组', 'fa fa-th-large', 'addtabs', '1', '0', null, '990', null, 'normal', '1491635035', '1491635035');
-INSERT INTO `__PREFIX__auth_rule` VALUES ('10', '7', 'app\\admin\\controller\\auth\\Admin', 'index', '管理员管理', 'fa fa-user', 'addtabs', '1', '0', null, '989', null, 'normal', '1491635035', '1491635035');
-INSERT INTO `__PREFIX__auth_rule` VALUES ('11', '7', 'app\\admin\\controller\\auth\\Adminlog', 'index', '管理员日志', 'fa fa-list-alt', 'addtabs', '1', '0', null, '988', null, 'normal', '1491635035', '1690879080');
-INSERT INTO `__PREFIX__auth_rule` VALUES ('12', '0', null, null, '用户管理', 'fa fa-user', 'addtabs', '1', '0', null, '896', null, 'normal', '1491635035', '1692775961');
-INSERT INTO `__PREFIX__auth_rule` VALUES ('13', '12', 'app\\admin\\controller\\user\\Index', 'index', '会员列表', 'fa fa-user', 'addtabs', '1', '0', null, '906', null, 'normal', '1491635035', '1491635035');
+INSERT INTO `__PREFIX__auth_rule` VALUES ('1', '0', 'app\\admin\\controller\\Dashboard', 'index', '控制台', 'fa fa-dashboard', 'tab', '1', '0', null, '999', null, 'normal', '1491635035', '1710065106');
+INSERT INTO `__PREFIX__auth_rule` VALUES ('2', '0', null, null, '常规管理', 'fa fa-cogs', 'tab', '1', '0', null, '997', null, 'normal', '1491635035', '1491635035');
+INSERT INTO `__PREFIX__auth_rule` VALUES ('3', '2', 'app\\admin\\controller\\general\\Config', 'index', '系统配置', 'fa fa-cog', 'tab', '1', '0', null, '996', null, 'normal', '1491635035', '1491635035');
+INSERT INTO `__PREFIX__auth_rule` VALUES ('4', '2', 'app\\admin\\controller\\general\\Category', 'index', '分类管理', 'fa fa-leaf', 'tab', '1', '0', null, '995', null, 'normal', '1491635035', '1491635035');
+INSERT INTO `__PREFIX__auth_rule` VALUES ('5', '2', 'app\\admin\\controller\\general\\Attachment', 'index', '附件管理', 'fa fa-file-image-o', 'tab', '1', '0', null, '994', null, 'normal', '1491635035', '1491635035');
+INSERT INTO `__PREFIX__auth_rule` VALUES ('6', '2', 'app\\admin\\controller\\general\\Profile', 'index', '个人资料', 'fa fa-user', 'tab', '1', '0', null, '993', null, 'normal', '1491635035', '1491635035');
+INSERT INTO `__PREFIX__auth_rule` VALUES ('7', '0', null, null, '权限管理', 'fa fa-group', 'tab', '1', '0', null, '992', null, 'normal', '1491635035', '1491635035');
+INSERT INTO `__PREFIX__auth_rule` VALUES ('8', '7', 'app\\admin\\controller\\auth\\Rule', 'index', '菜单规则', 'fa fa-bars', 'tab', '1', '0', null, '998', null, 'normal', '1491635035', '1491635035');
+INSERT INTO `__PREFIX__auth_rule` VALUES ('9', '7', 'app\\admin\\controller\\auth\\Group', 'index', '角色组', 'fa fa-th-large', 'tab', '1', '0', null, '990', null, 'normal', '1491635035', '1491635035');
+INSERT INTO `__PREFIX__auth_rule` VALUES ('10', '7', 'app\\admin\\controller\\auth\\Admin', 'index', '管理员管理', 'fa fa-user', 'tab', '1', '0', null, '988', null, 'normal', '1491635035', '1491635035');
+INSERT INTO `__PREFIX__auth_rule` VALUES ('11', '7', 'app\\admin\\controller\\auth\\Adminlog', 'index', '管理员日志', 'fa fa-list-alt', 'tab', '1', '0', null, '987', null, 'normal', '1491635035', '1690879080');
+INSERT INTO `__PREFIX__auth_rule` VALUES ('12', '0', null, null, '用户管理', 'fa fa-user', 'tab', '1', '0', null, '980', null, 'normal', '1491634980', '1697017332');
+INSERT INTO `__PREFIX__auth_rule` VALUES ('13', '12', 'app\\admin\\controller\\user\\Index', 'index', '会员列表', 'fa fa-address-card', 'tab', '1', '0', null, '906', null, 'normal', '1491635035', '1491635035');
 INSERT INTO `__PREFIX__auth_rule` VALUES ('14', '3', 'app\\admin\\controller\\general\\Config', '[\"index\",\"add\",\"edit\",\"del\"]', '[\"查看\",\"添加\",\"编辑\",\"删除\"]', null, null, '0', '0', null, '979', null, null, '1491635035', '1491635035');
 INSERT INTO `__PREFIX__auth_rule` VALUES ('15', '5', 'app\\admin\\controller\\general\\Attachment', '[\"index\",\"add\",\"multi\",\"del\",\"setcate\"]', '[\"查看\",\"添加\",\"更新\",\"删除\",\"设置分类\"]', null, null, '0', '0', null, '978', null, null, '1491635035', '1491635035');
 INSERT INTO `__PREFIX__auth_rule` VALUES ('16', '8', 'app\\admin\\controller\\auth\\Rule', '[\"index\",\"add\",\"edit\",\"multi\",\"del\"]', '[\"查看\",\"添加\",\"编辑\",\"更新\",\"删除\"]', null, null, '0', '0', null, '977', null, null, '1491635035', '1491635035');
@@ -161,18 +190,20 @@ INSERT INTO `__PREFIX__auth_rule` VALUES ('20', '4', 'app\\admin\\controller\\ge
 INSERT INTO `__PREFIX__auth_rule` VALUES ('21', '6', 'app\\admin\\controller\\general\\Profile', '[\"index\",\"update\"]', '[\"查看\",\"更新\"]', null, null, '0', '0', null, '972', null, null, '1491635035', '1491635035');
 INSERT INTO `__PREFIX__auth_rule` VALUES ('22', '11', 'app\\admin\\controller\\auth\\Adminlog', '[\"index\",\"del\",\"detail\"]', '[\"查看\",\"删除\",\"详情\"]', null, null, '0', '0', null, '970', null, null, '1690883964', '1690885832');
 INSERT INTO `__PREFIX__auth_rule` VALUES ('23', '13', 'app\\admin\\controller\\user\\Index', '[\"index\"]', '[\"查看\"]', null, null, '0', '0', null, '905', null, null, '1690948968', '1692598929');
-INSERT INTO `__PREFIX__auth_rule` VALUES ('24', '0', null, null, '开发管理', 'fa fa-bug', 'addtabs', '1', '0', null, '987', null, 'normal', '1691023857', '1691023857');
-INSERT INTO `__PREFIX__auth_rule` VALUES ('25', '24', 'app\\admin\\controller\\Develop', 'crud', '一键Crud', 'fa fa-codepen', 'addtabs', '1', '0', null, '967', null, 'normal', '1691025627', '1691046865');
-INSERT INTO `__PREFIX__auth_rule` VALUES ('26', '24', 'app\\admin\\controller\\Develop', 'queue', '任务队列', 'fa fa-list-ol', 'addtabs', '1', '0', null, '904', null, 'normal', '1692589366', '1692612046');
+INSERT INTO `__PREFIX__auth_rule` VALUES ('24', '0', null, null, '开发管理', 'fa fa-bug', 'tab', '1', '0', null, '987', null, 'normal', '1691023857', '1691023857');
+INSERT INTO `__PREFIX__auth_rule` VALUES ('25', '24', 'app\\admin\\controller\\Develop', 'crud', '一键Crud', 'fa fa-codepen', 'tab', '1', '0', null, '967', null, 'normal', '1691025627', '1691046865');
+INSERT INTO `__PREFIX__auth_rule` VALUES ('26', '24', 'app\\admin\\controller\\Develop', 'queue', '任务队列', 'fa fa-list-ol', 'tab', '1', '0', null, '892', null, 'normal', '1692589366', '1692612046');
 INSERT INTO `__PREFIX__auth_rule` VALUES ('27', '25', 'app\\admin\\controller\\Develop', '[\"crud\",\"clear\"]', '[\"生成\",\"清除\"]', null, null, '0', '0', null, '891', null, null, '1694399955', '1694400040');
-INSERT INTO `__PREFIX__auth_rule` VALUES ('28', '26', 'app\\admin\\controller\\Develop', '[\"delQueue\",\"addQueue\",\"queueStatus\"]', '[\"删除任务\",\"添加任务\",\"修改状态\"]', null, null, '0', '0', null, '890', null, null, '1694400178', '1694400208');
-INSERT INTO `__PREFIX__auth_rule` VALUES ('29', '24', 'app\\admin\\controller\\Addons', 'index', '应用扩展', 'fa fa-puzzle-piece', 'addtabs', '1', '0', null, '889', null, 'normal', '1694508078', '1694592851');
-INSERT INTO `__PREFIX__auth_rule` VALUES ('30', '0', null, null, '平台菜单一', 'fa fa-th-large', 'addtabs', '1', '1', null, '964', null, 'normal', '1710661285', '1710661341');
-INSERT INTO `__PREFIX__auth_rule` VALUES ('31', '0', null, null, '平台菜单二', 'fa fa-th-large', 'addtabs', '1', '1', null, '963', null, 'normal', '1710661309', '1710661309');
-INSERT INTO `__PREFIX__auth_rule` VALUES ('32', '30', 'app\\admin\\controller\\Dashboard', 'platform1', '首页', 'fa fa-home', 'addtabs', '1', '0', null, '962', null, 'normal', '1710661390', '1710661830');
-INSERT INTO `__PREFIX__auth_rule` VALUES ('33', '31', 'app\\admin\\controller\\Dashboard', 'platform2', '首页', 'fa fa-home', 'addtabs', '1', '0', null, '961', null, 'normal', '1710661405', '1710661852');
-INSERT INTO `__PREFIX__auth_rule` VALUES ('34', '32', 'app\\admin\\controller\\Dashboard', '[\"platform1\"]', '[\"查看\"]', null, null, '0', '0', null, '960', null, null, '1710662931', '1710662949');
-INSERT INTO `__PREFIX__auth_rule` VALUES ('35', '33', 'app\\admin\\controller\\Dashboard', '[\"platform2\"]', '[\"查看\"]', null, null, '0', '0', null, '959', null, null, '1710662987', '1710662987');
+INSERT INTO `__PREFIX__auth_rule` VALUES ('28', '26', 'app\\admin\\controller\\Develop', '[\"delQueue\",\"addQueue\",\"queueStatus\"]', '[\"删除任务\",\"添加任务\",\"修改状态\"]', null, null, '0', '0', null, '891', null, null, '1694400178', '1694400208');
+INSERT INTO `__PREFIX__auth_rule` VALUES ('29', '24', 'app\\admin\\controller\\Addons', 'index', '应用扩展', 'fa fa-puzzle-piece', 'tab', '1', '0', null, '890', null, 'normal', '1694508078', '1694592851');
+INSERT INTO `__PREFIX__auth_rule` VALUES ('30', '7', 'app\\admin\\controller\\auth\\Depart', 'index', '部门管理', 'fa fa-address-book', 'tab', '1', '0', null, '989', null, 'normal', '1749700647', '1749700850');
+INSERT INTO `__PREFIX__auth_rule` VALUES ('31', '30', 'app\\admin\\controller\\auth\\Depart', '[\"index\",\"add\",\"del\",\"multi\",\"edit\"]', '[\"查看\",\"添加\",\"删除\",\"更新\",\"编辑\"]', null, null, '0', '0', null, '955', null, null, '1749712222', '1749962509');
+INSERT INTO `__PREFIX__auth_rule` VALUES ('32', '0', null, null, '平台菜单一', 'fa fa-th-large', 'tab', '1', '1', null, '964', null, 'normal', '1710661285', '1710661341');
+INSERT INTO `__PREFIX__auth_rule` VALUES ('33', '0', null, null, '平台菜单二', 'fa fa-th-large', 'tab', '1', '1', null, '963', null, 'normal', '1710661309', '1710661309');
+INSERT INTO `__PREFIX__auth_rule` VALUES ('34', '32', 'app\\admin\\controller\\Dashboard', 'platform1', '首页', 'fa fa-home', 'tab', '1', '0', null, '962', null, 'normal', '1710661390', '1710661830');
+INSERT INTO `__PREFIX__auth_rule` VALUES ('35', '33', 'app\\admin\\controller\\Dashboard', 'platform2', '首页', 'fa fa-home', 'tab', '1', '0', null, '961', null, 'normal', '1710661405', '1710661852');
+INSERT INTO `__PREFIX__auth_rule` VALUES ('36', '34', 'app\\admin\\controller\\Dashboard', '[\"platform1\"]', '[\"查看\"]', null, null, '0', '0', null, '960', null, null, '1710662931', '1710662949');
+INSERT INTO `__PREFIX__auth_rule` VALUES ('37', '35', 'app\\admin\\controller\\Dashboard', '[\"platform2\"]', '[\"查看\"]', null, null, '0', '0', null, '959', null, null, '1710662987', '1710662987');
 
 -- ----------------------------
 -- Table structure for __PREFIX__category
@@ -186,8 +217,8 @@ CREATE TABLE `__PREFIX__category` (
   `image` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '图片',
   `weigh` int(10) NOT NULL DEFAULT '0' COMMENT '权重',
   `status` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '状态',
-  `createtime` int(10) unsigned DEFAULT NULL COMMENT '创建时间',
-  `updatetime` int(10) unsigned DEFAULT NULL COMMENT '更新时间',
+  `createtime` int(11) unsigned DEFAULT NULL COMMENT '创建时间',
+  `updatetime` int(11) unsigned DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`id`),
   KEY `weigh` (`weigh`,`id`),
   KEY `pid` (`pid`)
@@ -235,9 +266,9 @@ INSERT INTO `__PREFIX__config` VALUES ('2', 'configgroup', 'dictionary', null, '
 INSERT INTO `__PREFIX__config` VALUES ('3', 'filegroup', 'dictionary', null, '附件分组', '', 'json', '{\"fold-1\":\"相册1\",\"fold-2\":\"相册2\",\"fold-3\":\"相册3\"}', '', '0', '[[\"键名\",\"键值\"],[\"0\",\"1\"]]');
 INSERT INTO `__PREFIX__config` VALUES ('4', 'sitename', 'basic', null, '站点名称', '', 'text', '我的网站', 'required', '0', '');
 INSERT INTO `__PREFIX__config` VALUES ('5', 'logo', 'basic', null, '站点Logo', '', 'image', '/assets/img/logo.png', 'required', '0', '');
-INSERT INTO `__PREFIX__config` VALUES ('6', 'logo_white', 'basic', null, '站点Logo', '', 'image', '/assets/img/logo-white.png', 'required', '0', '');
+INSERT INTO `__PREFIX__config` VALUES ('6', 'logo_white', 'basic', null, '亮色Logo', '', 'image', '/assets/img/logo-white.png', 'required', '0', '');
 INSERT INTO `__PREFIX__config` VALUES ('7', 'forbiddenip', 'basic', null, 'IP黑名单', '', 'textarea', '', '', '0', '');
-INSERT INTO `__PREFIX__config` VALUES ('8', 'version', 'basic', null, '版本号', '', 'text', '1.0.001', 'required', '0', '');
+INSERT INTO `__PREFIX__config` VALUES ('8', 'version', 'basic', null, '版本号', '', 'text', '1.4.2', 'required', '0', '');
 INSERT INTO `__PREFIX__config` VALUES ('9', 'copyright', 'basic', null, '版权标识', '', 'text', '贵阳云起信息科技有限公司', 'required', '0', '');
 
 -- ----------------------------
@@ -251,9 +282,9 @@ CREATE TABLE `__PREFIX__msg` (
   `content` text,
   `status` tinyint(4) DEFAULT '0',
   `error` varchar(255) DEFAULT NULL,
-  `createtime` int(11) DEFAULT NULL,
-  `updatetime` int(11) DEFAULT NULL,
-  `deletetime` int(11) DEFAULT NULL,
+  `createtime` int(11) unsigned DEFAULT NULL,
+  `updatetime` int(11) unsigned DEFAULT NULL,
+  `deletetime` int(11) unsigned DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
@@ -271,9 +302,9 @@ CREATE TABLE `__PREFIX__queue` (
   `lasttime` datetime DEFAULT NULL COMMENT '上次执行的时间',
   `status` varchar(255) DEFAULT 'normal',
   `error` varchar(255) DEFAULT NULL,
-  `createtime` int(11) DEFAULT NULL,
-  `updatetime` int(11) DEFAULT NULL,
-  `deletetime` int(11) DEFAULT NULL,
+  `createtime` int(11) unsigned DEFAULT NULL,
+  `updatetime` int(11) unsigned DEFAULT NULL,
+  `deletetime` int(11) unsigned DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
 
@@ -301,16 +332,16 @@ CREATE TABLE `__PREFIX__user` (
   `score` int(10) NOT NULL DEFAULT '0' COMMENT '积分',
   `successions` int(10) unsigned NOT NULL DEFAULT '1' COMMENT '连续登录天数',
   `maxsuccessions` int(10) unsigned NOT NULL DEFAULT '1' COMMENT '最大连续登录天数',
-  `prevtime` int(10) unsigned DEFAULT NULL COMMENT '上次登录时间',
-  `logintime` int(10) unsigned DEFAULT NULL COMMENT '登录时间',
+  `prevtime` int(11) unsigned DEFAULT NULL COMMENT '上次登录时间',
+  `logintime` int(11) unsigned DEFAULT NULL COMMENT '登录时间',
   `loginip` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '登录IP',
   `loginfailure` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '失败次数',
   `joinip` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '加入IP',
-  `jointime` int(10) unsigned DEFAULT NULL COMMENT '加入时间',
+  `jointime` int(11) unsigned DEFAULT NULL COMMENT '加入时间',
   `status` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '状态',
-  `createtime` int(10) unsigned DEFAULT NULL COMMENT '创建时间',
-  `deletetime` int(10) unsigned DEFAULT NULL,
-  `updatetime` int(10) unsigned DEFAULT NULL COMMENT '更新时间',
+  `createtime` int(11) unsigned DEFAULT NULL COMMENT '创建时间',
+  `deletetime` int(11) unsigned DEFAULT NULL,
+  `updatetime` int(11) unsigned DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`id`),
   KEY `username` (`username`),
   KEY `email` (`email`),
@@ -334,7 +365,7 @@ CREATE TABLE `__PREFIX__user_log` (
   `before` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '0.00' COMMENT '变更前余额',
   `after` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '0.00' COMMENT '变更后余额',
   `remark` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '备注',
-  `createtime` int(10) DEFAULT NULL COMMENT '创建时间',
+  `createtime` int(11) unsigned DEFAULT NULL COMMENT '创建时间',
   PRIMARY KEY (`id`),
   KEY `order_no` (`order_no`(191))
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='会员余额变动表';

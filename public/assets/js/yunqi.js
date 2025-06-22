@@ -94,30 +94,13 @@ window.Yunqi=(function(){
         });
         return pro;
     }
-    //根据url生成一个唯一识别的id,不严谨，但考虑弹出框个数有限，所以基本上够用
-    function constructId(url){
-        let arr=[
-            '0','1','2','3','4','5','6','7','8','9',
-            'a','b','c','d','e','f','g','h','i','j',
-            'k','l','m','n','o','p','q','r','s','t',
-            'u','v','w','x','y','z','/','?',':','-'
-        ];
-        //为了与menuid区分，这里加上一个10000
-        let r=10000;
-        for(let k in url){
-            for(let i=0;i<arr.length;i++){
-                if(url[k]==arr[i]){
-                    r+=i;
-                }
-            }
-        }
-        return r;
-    }
     function SupposeClass(){
         //系统配置
         this.config='';
         //系统变量
         this.data='';
+        //系统权限
+        this.auth='';
         //page应用
         this.app='';
         this.formatter={
@@ -174,7 +157,7 @@ window.Yunqi=(function(){
             //打开选项卡
             addtabs:function(options){
                 let config=top.Yunqi.config;
-                if(config.route.join(',')!='admin,index,index'){
+                if(config.controller!='app\\admin\\controller\\Index' && config.action!='index'){
                     Yunqi.message.error(__('请在框架内执行该操作'));
                     return;
                 }
@@ -192,19 +175,17 @@ window.Yunqi=(function(){
                     }
                 }
                 let menu={
-                    id:options.id || constructId(options.url),
                     url:options.url,
                     icon:options.icon,
                     title:options.title,
-                    menutype:'addtabs',
+                    menutype:'tab',
                     close:options.close || function (){}
                 };
                 top.Yunqi.app.clickMenu(menu);
-                return menu.id;
             },
             open:function (options) {
                 let config=top.Yunqi.config;
-                if(config.route.join(',')!='admin,index,index'){
+                if(config.controller!='app\\admin\\controller\\Index' && config.action!='index'){
                     Yunqi.message.error(__('请在框架内执行该操作'));
                     return;
                 }
@@ -222,7 +203,6 @@ window.Yunqi=(function(){
                     }
                 }
                 let menu={
-                    id:options.id || constructId(options.url),
                     url:options.url,
                     expand:options.expand || false,
                     icon:options.icon,
@@ -235,26 +215,27 @@ window.Yunqi=(function(){
                 top.Yunqi.app.clickMenu(menu);
             },
             //关闭选项卡
-            closetabs:function(id,data){
+            closetabs:function(options,data){
                 let config=top.Yunqi.config;
-                if(config.route.join(',')!='admin,index,index'){
+                if(config.controller!='app\\admin\\controller\\Index' && config.action!='index'){
                     Yunqi.message.error(__('请在框架内执行该操作'));
                     return;
                 }
-                top.Yunqi.app.closeTabs(id,data);
+                top.Yunqi.app.clickMenu(top.Yunqi.app.tabList[0]);
+                top.Yunqi.app.closeTabs(options,data);
             },
-            closelayer:function (id,data) {
+            closelayer:function (options,data) {
                 let config=top.Yunqi.config;
-                if(config.route.join(',')!='admin,index,index'){
+                if(config.controller!='app\\admin\\controller\\Index' && config.action!='index'){
                     Yunqi.message.error(__('请在框架内执行该操作'));
                     return;
                 }
-                top.Yunqi.app.closeLayer(id,data);
+                top.Yunqi.app.closeLayer(options,data);
             },
             //预览图片
             previewImg:function (img){
                 let config=top.Yunqi.config;
-                if(config.route.join(',')!='admin,index,index'){
+                if(config.controller!='app\\admin\\controller\\Index' && config.action!='index'){
                     if(img instanceof Array){
                         Yunqi.message.error(__('请在框架内执行该操作'));
                     }else{
@@ -267,7 +248,7 @@ window.Yunqi=(function(){
             //窗口最大化
             expand:function () {
                 let config=top.Yunqi.config;
-                if(config.route.join(',')!='admin,index,index'){
+                if(config.controller!='app\\admin\\controller\\Index' && config.action!='index'){
                     return;
                 }
                 top.Yunqi.app.expand();
@@ -275,7 +256,7 @@ window.Yunqi=(function(){
             //窗口缩小
             compress:function () {
                 let config=top.Yunqi.config;
-                if(config.route.join(',')!='admin,index,index'){
+                if(config.controller!='app\\admin\\controller\\Index' && config.action!='index'){
                     return;
                 }
                 top.Yunqi.app.compress();
@@ -513,7 +494,7 @@ window.Yunqi=(function(){
                 }
             }
             function setContentHeight_(){
-                let el=document.querySelector('#mainScrollbar>.el-scrollbar__wrap');
+                let el=document.querySelector('#mainScrollbar>.el-scrollbar>.el-scrollbar__wrap');
                 if(!el){
                     return;
                 }
@@ -531,7 +512,7 @@ window.Yunqi=(function(){
                         Vue.nextTick(()=>{
                             el.style.height=iframe.height+'px';
                         });
-                    //正常窗
+                        //正常窗
                     }else{
                         Vue.nextTick(()=>{
                             el.style.height=top.Yunqi.app.contentHeight+'px';
@@ -627,6 +608,33 @@ window.Yunqi=(function(){
             }
             return this;
         },
+        setAuth:function(arg,value){
+            if(!this.auth){
+                let _this=this;
+                this.auth=arg;
+                //权限判断
+                this.auth.check=function(controller,action){
+                    if(_this.auth.rules_list=='*'){
+                        return true;
+                    }
+                    for (let i in _this.auth.rules_list){
+                        let rule=_this.auth.rules_list[i];
+                        if(rule.controller==controller){
+                            for(let j in rule.action){
+                                let v=rule.action[j];
+                                if(v==action){
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                    return false;
+                }
+            }else{
+                this.auth[arg]=value;
+            }
+            return this;
+        },
         setData:function (data,value){
             if(!this.data){
                 this.data=data;
@@ -636,6 +644,19 @@ window.Yunqi=(function(){
             return this;
         },
         setApp: function(app){
+            if(app.window){
+                throw new Error('页面禁止使用window属性');
+            }
+            app.window={
+                menutype:'blank',
+            };
+            if(top!==window){
+                let menu=top.Yunqi.app.openMenu;
+                app.window.id=menu.id;
+                app.window.title=menu.title;
+                app.window.url=menu.url;
+                app.window.menutype=menu.menutype;
+            }
             this.app=app;
             return this;
         }

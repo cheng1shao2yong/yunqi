@@ -8,13 +8,17 @@
                 <template #default>
                     {:token_field()}
                 </template>
-            <template #pid="item">
-                <el-form-item label="{:__('父级')}:" prop="pid">
-                    <el-select placeholder="{:__('请选择父级')}" v-model="item.rows.pid" :clearable="true" style="width: 100%">
-                        {foreach $ruledata as $key=>$value}
-                        <el-option key="{$key}" label="{:str_replace('&amp;','&',$value)}" value="{$key}"></el-option>
-                        {/foreach}
-                    </el-select>
+            <template #pid="{rows}">
+                <el-form-item label="{:__('父级')}:" required>
+                    <el-tree-select
+                            placeholder="{:__('请选择父级')}"
+                            v-model="rows.pid"
+                            :data="ruledata"
+                            check-strictly
+                            :default-expand-all="true"
+                            :props='{label:"title",children:"childlist",value:"id"}'
+                    >
+                    </el-tree-select>
                 </el-form-item>
             </template>
             <template #icon="{rows}">
@@ -34,6 +38,7 @@
 <script>
     import form from "@components/Form.js";
     import checkicon from "@components/CheckIcon.js";
+    import {TreeIdtoString} from "@util.js";
     function parseActions(row){
         if(parseInt(row.ismenu)===1){
             return row;
@@ -50,6 +55,7 @@
     export default{
         components:{'YunForm':form,'CheckIcon':checkicon},
         data:{
+            ruledata:TreeIdtoString(Yunqi.data.ruledata),
             data:Yunqi.data.row?parseActions(Yunqi.data.row):{},
             eidtColumns:[
                 {field: 'id',edit:'hidden'},
@@ -72,10 +78,10 @@
                         return row.ismenu=='0';
                     },
                 },
-                {field: 'menutype', title: __('类型'),visible:function(row){return row.ismenu=='1'},edit:{form:'radio',value:'addtabs'},searchList: Yunqi.data.menutypeList},
+                {field: 'menutype', title: __('类型'),visible:function(row){return row.ismenu=='1'},edit:{form:'radio',value:'tab'},searchList: Yunqi.data.menutypeList},
                 {field: 'icon', title: __('图标'),edit: {form:'slot',value: 'fa fa-th-large'}},
                 {field: 'extend', title: __('扩展属性'),visible:function(row){return row.ismenu=='1'},edit: {form:'input',type:'textarea',placeholder:'请输入菜单的扩展属性，格式为json'}},
-                {field: 'weigh', title: __('权重'),visible:function(row){return row.ismenu=='1'},edit:Yunqi.config.route[2]=='edit'?'number':false},
+                {field: 'weigh', title: __('权重'),visible:function(row){return row.ismenu=='1'},edit:(Yunqi.config.action=='edit')?'number':false},
                 {field: 'status', title: __('状态'),visible:function(row){return row.ismenu=='1'},edit: {form:'radio',value:'normal'},searchList: {'normal': __('正常'),'hidden': __('隐藏')}}
             ],
             pageinit:false

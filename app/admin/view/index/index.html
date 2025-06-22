@@ -67,6 +67,7 @@
 <script type="text/javascript">
     Yunqi.setConfig({:json_encode($config,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)});
     Yunqi.setData({:build_var_json(get_defined_vars())});
+    Yunqi.setAuth({:json_encode($auth->getBackendAuth(),JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)});
 </script>
 <script type="module">
     import pageinfo from '{:request()->domain()}/assets/js/index.js?v={$config.version}';

@@ -5,11 +5,7 @@
                 tabs="category"
                 search="filename"
                 toolbar="refresh,add,del,guilei"
-                :auth="{
-                    del:{:$auth->check('app\\admin\\controller\\general\\Attachment','del')},
-                    add:{:$auth->check('app\\admin\\controller\\general\\Attachment','add')},
-                    multi:{:$auth->check('app\\admin\\controller\\general\\Attachment','multi')},
-                }"
+                :auth="auth"
                 :extend="extend">
                 <template #toolbar="{tool,selections}">
                     <el-dropdown trigger="click" v-if="tool=='guilei'">
@@ -41,6 +37,11 @@
     export default{
         components:{'YunTable':table},
         data:{
+            auth:{
+                del:Yunqi.auth.check('app\\admin\\controller\\general\\Attachment','del'),
+                add:Yunqi.auth.check('app\\admin\\controller\\general\\Attachment','add'),
+                multi:Yunqi.auth.check('app\\admin\\controller\\general\\Attachment','multi'),
+            },
             //列表页面
             extend:{
                 index_url: 'general/attachment/index',

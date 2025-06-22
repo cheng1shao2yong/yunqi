@@ -142,7 +142,7 @@
                 {field:"price",title:"价格",width: 80,formatter:function (data) {
                         let tag=Yunqi.formatter.tag;
                         if (data) {
-                            tag.type='';
+                            tag.type='primary';
                             tag.value='￥'+data;
                         }else{
                             tag.type='success';
@@ -188,7 +188,7 @@
                         let tag=Yunqi.formatter.tag;
                         if(data){
                             tag.value='是';
-                            tag.type='';
+                            tag.type='primary';
                         }else{
                             tag.value='否';
                             tag.type='danger';

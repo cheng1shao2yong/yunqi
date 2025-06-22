@@ -12,12 +12,7 @@
             :is-tree="true"
             :tree-expand-all="true"
             toolbar="refresh,add,del"
-            :auth="{
-                add:{:$auth->check('app\\admin\\controller\\auth\\Group','add')},
-                edit:{:$auth->check('app\\admin\\controller\\auth\\Group','edit')},
-                del:{:$auth->check('app\\admin\\controller\\auth\\Group','del')},
-                multi:{:$auth->check('app\\admin\\controller\\auth\\Group','multi')},
-            }"
+            :auth="auth"
             :extend="extend">
         </yun-table>
     </el-card>
@@ -36,6 +31,12 @@ const doCheck=function (tree,checkKey){
 export default{
     components:{'YunTable':table},
     data:{
+        auth:{
+            add:Yunqi.auth.check('app\\admin\\controller\\auth\\Group','add'),
+            edit:Yunqi.auth.check('app\\admin\\controller\\auth\\Group','edit'),
+            del:Yunqi.auth.check('app\\admin\\controller\\auth\\Group','del'),
+            multi:Yunqi.auth.check('app\\admin\\controller\\auth\\Group','multi'),
+        },
         extend:{
             index_url: 'auth/group/index',
             add_url: 'auth/group/add',

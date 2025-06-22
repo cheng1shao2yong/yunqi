@@ -41,9 +41,4 @@ class AuthGroup extends Model{
         $list = Tree::instance()->getTreeArray($rootid);
         return $list;
     }
-
-    public static function getGroupListArray(mixed $groupids=''):array
-    {
-        return Tree::instance()->getTreeList(self::getGroupListTree($groupids));
-    }
 }

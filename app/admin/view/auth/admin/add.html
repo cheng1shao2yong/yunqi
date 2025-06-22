@@ -1,14 +1,12 @@
 <template>
     <el-card shadow="never" style="border: 0;">
-        {if $config.route[2]=='edit'}
-        <template #header>
+        <template #header v-if="action=='edit'">
             <el-alert
                     type="warning"
                     show-icon>
                 非调试模式下，提交后请清空缓存才能生效！
             </el-alert>
         </template>
-        {/if}
         <yun-form
                 v-if="columns"
                 :data="data"
@@ -17,18 +15,34 @@
             <template #default>
                 {:token_field()}
             </template>
-            <template #groupids="item">
+            <template #groupids="{rows}" required>
                 <el-form-item label="{:__('所属组别')}:" prop="groupids">
-                    <el-select :disabled="disabled" placeholder="请选择{:__('所属组别')}" multiple v-model="item.rows.groupids" :clearable="true" style="width: 100%">
-                        {foreach $groupdata as $key=>$value}
-                        <el-option key="{$value.id}" label="{:str_replace('&amp;','&',$value.name)}" value="{$value.id}"></el-option>
-                        {/foreach}
-                    </el-select>
+                    <el-tree-select
+                            v-model="rows.groupids"
+                            :data="groupdata"
+                            multiple
+                            check-strictly
+                            :default-expand-all="true"
+                            :props='{label:"name",children:"childlist",value:"id"}'
+                    >
+                    </el-tree-select>
                 </el-form-item>
             </template>
-            <template v-slot:third_id="{rows}">
+            <template #third_id="{rows}">
                 <el-form-item label="绑定微信:">
                     <third :value="rows.third_id" :selectable="true" @change="changValue"></third>
+                </el-form-item>
+            </template>
+            <template #depart_id="{rows}">
+                <el-form-item label="{:__('所属部门')}:" required>
+                    <el-tree-select
+                            v-model="rows.depart_id"
+                            :data="departdata"
+                            check-strictly
+                            :default-expand-all="true"
+                            :props='{label:"name",children:"childlist",value:"id"}'
+                    >
+                    </el-tree-select>
                 </el-form-item>
             </template>
         </yun-form>
@@ -37,10 +51,14 @@
 <script>
     import form from "@components/Form.js";
     import third from "@components/Third.js";
+    import {TreeIdtoString} from "@util.js";
     export default{
         components:{'YunForm':form,'Third':third},
         data:{
+            action:Yunqi.config.action,
             data:Yunqi.data.row || {},
+            groupdata:TreeIdtoString(Yunqi.data.groupdata),
+            departdata:TreeIdtoString(Yunqi.data.departdata),
             disabled:false,
             columns:''
         },
@@ -49,12 +67,18 @@
             this.columns=[
                 {field: 'id',title: __('ID'),edit:'hidden'},
                 {field: 'username', title: __('用户名'),edit:(ids==1)?'readonly':'text',rules:'required'},
-                {field: 'password', title: __('密码'),edit:'password',rules:(Yunqi.config.route[2]=='add')?'required':''},
+                {field: 'password', title: __('密码'),edit:'password',rules:(Yunqi.config.action=='add')?'required':''},
                 {field: 'nickname', title: __('昵称'),edit:'text',rules:'required'},
                 {field: 'mobile', title: __('手机号'),edit:'text',rules:'required;mobile'},
                 {
                     field: 'groupids',
                     title: __('所属组别'),
+                    edit:{form:'slot',value:[]},
+                    rules:'required'
+                },
+                {
+                    field: 'depart_id',
+                    title: __('所属部门'),
                     edit:{form:'slot',value:[]},
                     rules:'required'
                 },
@@ -64,9 +88,6 @@
             if(ids==1){
                 this.disabled=true;
             }
-        },
-        onShow:function (){
-
         },
         methods: {
             changValue:function (e){

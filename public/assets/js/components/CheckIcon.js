@@ -24,7 +24,7 @@ const template=`
      </component>
      <el-drawer
         v-model="show"
-        custom-class="chooseIcon"
+        class="chooseIcon"
         size="100%"
         :show-close="true"
         direction="rtl">

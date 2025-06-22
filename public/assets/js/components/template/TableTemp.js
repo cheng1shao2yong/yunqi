@@ -155,7 +155,7 @@ const columnTemp=`
 const operateTemp=`
 <template v-if="column.field && column.field!='operate' && column.operate!==false">
     <el-col
-        v-if="column.operate.form!='hidden'"
+        v-if="column.operate.form!='hidden' && column.operate.type!='hidden'"
         :xs="24"
         :sm="(column.operate.size=='large')?24:(column.operate.size=='small')?6:12"
         :md="(column.operate.size=='large')?16:(column.operate.size=='small')?4:8"
@@ -330,7 +330,7 @@ const template=`
                                 <el-button v-if="commonSearch" type="info" @click.stop="table_.searchFormVisible=!table_.searchFormVisible">
                                     <i class="fa fa-search"></i>
                                 </el-button>
-                                <el-button v-if="${Yunqi.config.window.type == 'addtabs'}" type="info" @click.stop="changeExpand" id="mainFrameExpand">
+                                <el-button v-if="menutype == 'tab'" type="info" @click.stop="changeExpand" id="mainFrameExpand">
                                     <i v-if="!mainFrameExpand" class="fa fa-expand"></i>
                                     <i v-else class="fa fa-compress"></i>
                                 </el-button>

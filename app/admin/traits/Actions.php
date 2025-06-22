@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace app\admin\traits;
 
+use app\common\library\Tree;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 use think\annotation\route\Route;
@@ -492,6 +493,9 @@ trait Actions
             $obj=new ($this->downloadController)($this->request);
             $result=call_user_func_array([$obj,$this->downloadAction],[]);
             $list=$result->getData()['rows'];
+            if($postdata['isTree']){
+                $list=Tree::instance()->getTreeList($list);
+            }
             if($this->callback){
                 $callback=$this->callback;
                 foreach ($list as $k=>$v){

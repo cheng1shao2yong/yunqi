@@ -7,6 +7,7 @@ import fullscreen from "./components/index/Fullscreen.js";
 import trash from "./components/index/Trash.js";
 import platform from "./components/index/Platform.js";
 import userinfo from "./components/index/Userinfo.js";
+import {getUniqid} from "./util.js";
 const findBreadcrumbById=function(tree, targetId, result = []) {
     for (let i = 0; i < tree.length; i++) {
         const node = tree[i];
@@ -95,7 +96,9 @@ export default{
             menuList:[],
             childMenuList:[],
             breadcrumb:[],
-            activeMenu:'',
+            activeTab:'',
+            activeLayer:'',
+            openMenu:'',
             layerList:[],
             tabList:[],
             imageList:[],
@@ -182,7 +185,7 @@ export default{
             this.layerExpandHeight=layerExpandHeight/zoom;
         },
         isChildMenu:function (id){
-            let breadcrumb=findBreadcrumbById(Yunqi.data.menulist,this.activeMenu.id,[]);
+            let breadcrumb=findBreadcrumbById(Yunqi.data.menulist,this.activeTab.id,[]);
             for(let i in breadcrumb){
                 if(id==breadcrumb[i].id){
                     return true;
@@ -196,7 +199,7 @@ export default{
             tab.Yunqi.app.setContentHeight_();
         },
         maximize:function (){
-            let id=this.activeMenu.id;
+            let id=this.activeTab.id;
             let tab=document.getElementById('addtabs-'+id).contentWindow;
             let expand=tab.document.getElementById('mainFrameExpand');
             if(expand){
@@ -207,7 +210,7 @@ export default{
             tab.Yunqi.app.setContentHeight_();
         },
         minimize:function (){
-            let id=this.activeMenu.id;
+            let id=this.activeTab.id;
             let tab=document.getElementById('addtabs-'+id).contentWindow;
             let expand=tab.document.getElementById('mainFrameExpand');
             if(expand){
@@ -219,21 +222,21 @@ export default{
         },
         expand:function(){
             this.mainFrameExpand=true;
-            let id=this.activeMenu.id;
+            let id=this.activeTab.id;
             let tab=document.getElementById('addtabs-'+id).contentWindow;
             tab.Yunqi.app.setContentHeight_();
         },
         compress:function () {
             this.mainFrameExpand=false;
-            let id=this.activeMenu.id;
+            let id=this.activeTab.id;
             let tab=document.getElementById('addtabs-'+id).contentWindow;
             tab.Yunqi.app.setContentHeight_();
         },
         setBreadcrumb:function (){
-            if(this.activeMenu.id==Yunqi.data.selected.id){
+            if(this.activeTab.id==Yunqi.data.selected.id){
                 this.breadcrumb=[Yunqi.data.selected];
             }else{
-                let breadcrumb=findBreadcrumbById(Yunqi.data.menulist,this.activeMenu.id,[]);
+                let breadcrumb=findBreadcrumbById(Yunqi.data.menulist,this.activeTab.id,[]);
                 breadcrumb.unshift(Yunqi.data.selected);
                 this.breadcrumb=breadcrumb;
             }
@@ -245,7 +248,9 @@ export default{
             this.clickMenu(findTabsMenu(menu));
         },
         clickMenu:function (menu){
-            if(menu.menutype=='addtabs'){
+            menu.id=menu.id || getUniqid();
+            this.openMenu=menu;
+            if(menu.menutype=='tab'){
                 this.addTabs(menu);
             }
             if(menu.menutype=='layer'){
@@ -282,6 +287,7 @@ export default{
                 menu.show=true;
                 list.push(menu);
             }
+            this.activeLayer=menu;
             this.$refs.tabs.tabAdd(menu);
         },
         hideLayer:function (layer){
@@ -296,38 +302,7 @@ export default{
                     return;
                 }
             }
-            this.$refs.tabs.tabAdd(this.activeMenu);
-        },
-        closeLayer:function(id,data){
-            let index=-1;
-            let menu;
-            let list=this.layerList;
-            for(let i=0;i<list.length;i++){
-                if(id && list[i].id==id){
-                    index=i;
-                    menu=list[i];
-                }
-                if(!id && list[i].show){
-                    index=i;
-                    menu=list[i];
-                }
-            }
-            if(index!=-1){
-                menu.show=false;
-                let app=Yunqi.getApp(menu.id);
-                app && app.onUnload();
-                menu.close(data);
-                list.splice(index,1);
-                this.$refs.tabs.tabRemove(menu);
-                for(let i=list.length;i>0;i--){
-                    let j=i-1;
-                    if(list[j].show){
-                        this.$refs.tabs.tabAdd(list[j]);
-                        return;
-                    }
-                }
-                this.$refs.tabs.tabAdd(this.activeMenu);
-            }
+            this.$refs.tabs.tabAdd(this.activeTab);
         },
         calculateLayerIndex:function(index){
             let list=this.layerList;
@@ -351,7 +326,7 @@ export default{
                     return;
                 }
             }
-            if(this.activeMenu.id==menu.id){
+            if(this.activeTab.id==menu.id){
                 return;
             }
             let list=this.tabList;
@@ -362,10 +337,10 @@ export default{
                 }
             }
             //触发onHide事件
-            if(this.activeMenu){
-                let last=document.getElementById('addtabs-'+this.activeMenu.id);
+            if(this.activeTab){
+                let last=document.getElementById('addtabs-'+this.activeTab.id);
                 last.style.display='none';
-                let app=Yunqi.getApp(this.activeMenu.id);
+                let app=Yunqi.getApp(this.activeTab.id);
                 app && app.onHide();
             }
             //已经存在tab
@@ -389,7 +364,7 @@ export default{
                 document.getElementById('main-content').appendChild(iframe);
                 list.push(menu);
             }
-            this.activeMenu=menu;
+            this.activeTab=menu;
             if(this.elementUi.layout=='columns'){
                 this.childMenuList=findChildMenu(menu);
                 this.setMainContentFrame();
@@ -405,7 +380,57 @@ export default{
             this.$refs.tabs.tabAdd(menu);
             this.setBreadcrumb();
         },
-        closeTabs:function (id,callback){
+        closeLayer:function(options,callback){
+            //默认关闭焦点的那层
+            let id,menu,index=-1;
+            let list=this.layerList;
+            if(!options){
+                id=this.activeLayer.id;
+            }else{
+                if(typeof options=='object'){
+                    if(options.id){
+                        id=options.id;
+                    }else if(options.index){
+                        id=list[options.index].id;
+                    }else if(options.url){
+                        for(let i=0;i<list.length;i++){
+                            if(list[i].url==options.url){
+                                id=list[i].id;
+                                break;
+                            }
+                        }
+                    }
+                }else{
+                    id=options;
+                }
+            }
+            if(!id){
+                return;
+            }
+            for(let i=0;i<list.length;i++){
+                if(list[i].id==id){
+                    index=i;
+                    menu=list[i];
+                }
+            }
+            if(index!=-1){
+                menu.show=false;
+                let app=Yunqi.getApp(menu.id);
+                app && app.onUnload();
+                menu.close(callback);
+                list.splice(index,1);
+                this.$refs.tabs.tabRemove(menu);
+                for(let i=list.length;i>0;i--){
+                    let j=i-1;
+                    if(list[j].show){
+                        this.$refs.tabs.tabAdd(list[j]);
+                        return;
+                    }
+                }
+                this.$refs.tabs.tabAdd(this.activeTab);
+            }
+        },
+        closeTabs:function (options,callback){
             //弹窗模式下禁止增加tab
             for(let i=0;i<this.layerList.length;i++){
                 if(this.layerList[i].show){
@@ -413,11 +438,34 @@ export default{
                     return;
                 }
             }
+            //默认关闭焦点的那层
+            let id,menu,index=-1;
             let list=this.tabList;
-            let index=-1;
-            let menu;
+            if(!options){
+                id=this.activeTab.id;
+            }else{
+                if(typeof options=='object'){
+                    if(options.id){
+                        id=options.id;
+                    }else if(options.index){
+                        id=list[options.index].id;
+                    }else if(options.url){
+                        for(let i=0;i<list.length;i++){
+                            if(list[i].url==options.url){
+                                id=list[i].id;
+                                break;
+                            }
+                        }
+                    }
+                }else{
+                    id=options;
+                }
+            }
+            if(!id){
+                return;
+            }
             for(let i=0;i<list.length;i++){
-                if(id && list[i].id==id){
+                if(list[i].id==id){
                     index=i;
                     menu=list[i];
                 }
@@ -427,7 +475,9 @@ export default{
                 app && app.onUnload();
                 list.splice(index,1);
                 document.getElementById('addtabs-'+id).remove();
-                this.activeMenu='';
+                if(this.activeTab.id==menu.id){
+                    this.activeTab='';
+                }
                 this.$refs.tabs.tabRemove(menu);
                 menu.close && menu.close(callback);
             }

@@ -3,14 +3,9 @@
         <yun-table
                 :columns="columns"
                 search="nickname,mobile"
-                toolbar="refresh,edit,del"
+                toolbar="refresh,edit,del,recyclebin,more"
                 ref="yuntable"
-                :auth="{
-                    add:{:$auth->check('app\\admin\\controller\\user\\Index','add')},
-                    edit:{:$auth->check('app\\admin\\controller\\user\\Index','edit')},
-                    del:{:$auth->check('app\\admin\\controller\\user\\Index','del')},
-                    multi:{:$auth->check('app\\admin\\controller\\user\\Index','multi')},
-                }"
+                :auth="auth"
                 :extend="extend">
         </yun-table>
     </el-card>
@@ -20,12 +15,20 @@
     export default{
         components:{'YunTable':table},
         data:{
+            auth:{
+                add:Yunqi.auth.check('app\\admin\\controller\\user\\Index','add'),
+                edit:Yunqi.auth.check('app\\admin\\controller\\user\\Index','edit'),
+                del:Yunqi.auth.check('app\\admin\\controller\\user\\Index','del'),
+                multi:Yunqi.auth.check('app\\admin\\controller\\user\\Index','multi'),
+                recyclebin:Yunqi.auth.check('app\\admin\\controller\\user\\Index','recyclebin'),
+            },
             extend:{
                 index_url: 'user/index/index',
                 edit_url: 'user/index/edit',
                 del_url: 'user/index/del',
                 multi_url: 'user/index/multi',
-                download_url: 'user/index/download'
+                download_url: 'user/index/download',
+                recyclebin_url: 'user/index/recyclebin',
             },
             columns:[
                 {checkbox: true},

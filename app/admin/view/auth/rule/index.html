@@ -11,12 +11,7 @@
                 :is-tree="true"
                 :common-search="false"
                 :pagination="false"
-                :auth="{
-                    add:{:$auth->check('app\\admin\\controller\\auth\\Rule','add')},
-                    edit:{:$auth->check('app\\admin\\controller\\auth\\Rule','edit')},
-                    del:{:$auth->check('app\\admin\\controller\\auth\\Rule','del')},
-                    multi:{:$auth->check('app\\admin\\controller\\auth\\Rule','multi')}
-                }"
+                :auth="auth"
                 :extend="extend">
                 <template #formatter="item">
                     <div v-if="item.field=='icon'">
@@ -31,12 +26,20 @@
     export default{
         components:{'YunTable':table},
         data:{
+            auth:{
+                add:Yunqi.auth.check('app\\admin\\controller\\auth\\Rule','add'),
+                edit:Yunqi.auth.check('app\\admin\\controller\\auth\\Rule','edit'),
+                del:Yunqi.auth.check('app\\admin\\controller\\auth\\Rule','del'),
+                multi:Yunqi.auth.check('app\\admin\\controller\\auth\\Rule','multi'),
+                download:Yunqi.auth.check('app\\admin\\controller\\auth\\Rule','download'),
+            },
             extend:{
                 index_url: 'auth/rule/index',
                 add_url: 'auth/rule/add',
                 edit_url: 'auth/rule/edit',
                 del_url: 'auth/rule/del',
-                multi_url: 'auth/rule/multi'
+                multi_url: 'auth/rule/multi',
+                download_url: 'auth/rule/download',
             },
             indexColumns:[
                 {checkbox: true,selectable:function (row,index){
@@ -98,8 +101,7 @@
         },
         methods: {
             onRender:function (data){
-                let action=Yunqi.config.route[2];
-                if(action=='edit'){
+                if(Yunqi.config.action=='edit'){
                     if(parseInt(data.ismenu)===0){
                         let title=JSON.parse(data.title);
                         let action=JSON.parse(data.action);

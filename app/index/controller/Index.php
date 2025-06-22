@@ -5,6 +5,7 @@ namespace app\index\controller;
 
 use app\common\controller\BaseController;
 use app\common\library\Http;
+use app\common\library\TencentOrc;
 use think\annotation\route\Get;
 use think\facade\View;
 
@@ -20,5 +21,11 @@ class Index extends BaseController
     {
         $this->assign('version',site_config('basic.version'));
         return $this->fetch();
+    }
+
+    #[Get('/test')]
+    public function test()
+    {
+
     }
 }

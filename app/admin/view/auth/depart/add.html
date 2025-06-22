@@ -1,0 +1,47 @@
+<template>
+    <el-card shadow="never" style="border: 0;">
+        <yun-form
+            ref="yunform"
+            :data="data"
+            :columns="columns">
+            <template #default>
+                {:token_field()}
+            </template>
+            <template #pid="{rows}">
+                <el-form-item label="{:__('父级')}:" required>
+                    <el-tree-select
+                            v-model="rows.pid"
+                            :data="departdata"
+                            check-strictly
+                            :default-expand-all="true"
+                            :props='{label:"name",children:"childlist",value:"id"}'
+                    >
+                    </el-tree-select>
+                </el-form-item>
+            </template>
+        </yun-form>
+    </el-card>
+</template>
+<script>
+import form from "@components/Form.js";
+import {TreeIdtoString} from "@util.js";
+export default{
+    components:{'YunForm':form},
+    data:{
+        data:Yunqi.data.row || {},
+        departdata:TreeIdtoString(Yunqi.data.departdata),
+        columns:[
+            {field: 'id',title: __('ID'),edit:'hidden'},
+            {field: 'pid', title: __('父级'),edit:'slot'},
+            {field: 'name', title: __('名称'),edit:'text',rules:'required'},
+            {field: 'description', title: __('描述'),edit:'textarea'},
+            {field: 'status', title: __('状态'), edit:{form:'radio',value:'normal'},searchList: {'normal': __('正常'),'hidden': __('隐藏')}}
+        ]
+    },
+    methods: {
+
+    }
+}
+</script>
+<style>
+</style>

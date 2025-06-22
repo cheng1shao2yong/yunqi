@@ -1107,7 +1107,7 @@ export default {
                         }
                         Yunqi.ajax.post(action,postdata,true).then(res=>{
                             this.onSuccess(res);
-                            Yunqi.api.closelayer(Yunqi.config.window.id,true);
+                            Yunqi.api.closelayer(Yunqi.app.window.id,true);
                         }).catch(err=>{
                             this.onFail(err);
                         });

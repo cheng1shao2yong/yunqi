@@ -9,6 +9,11 @@ const template=`
         </div>
     </div>
 `;
+function unescapeHTML(escapedHTML) {
+    const temp = document.createElement('textarea');
+    temp.innerHTML = escapedHTML;
+    return temp.value;
+}
 export default {
     name: "Wangeditor",
     data: function () {
@@ -95,7 +100,7 @@ export default {
             };
             let editor=this.editor.createEditor({
                 selector: '#editor-container-'+this.id,
-                html: this.value?this.value:'<p><br></p>',
+                html: this.value?unescapeHTML(this.value):'<p><br></p>',
                 config: editorConfig,
                 mode: this.mode
             });

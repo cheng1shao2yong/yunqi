@@ -42,18 +42,13 @@ class Group extends Backend
         $this->model=new AuthGroup();
     }
 
-    private function getGroupData(bool $astree=false)
+    private function getGroupData()
     {
         $groupids='*';
         if(!$this->auth->isSuperAdmin()){
             $groupids=$this->auth->getChildrenGroupIds();
         }
-        if($astree){
-            $groupdata=AuthGroup::getGroupListTree($groupids);
-        }else{
-            $groupdata=AuthGroup::getGroupListArray($groupids);
-        }
-        return $groupdata;
+        return AuthGroup::getGroupListTree($groupids);
     }
 
     #[Route('GET,JSON','index')]
@@ -63,7 +58,7 @@ class Group extends Backend
             $this->assign('groupids',$this->auth->groupids);
             return $this->fetch();
         }
-        $result = ['total' => 1000, 'rows' =>$this->getGroupData(true)];
+        $result = ['total' => 1000, 'rows' =>$this->getGroupData()];
         return json($result);
     }
 

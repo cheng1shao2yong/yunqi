@@ -22,7 +22,7 @@ use think\facade\Session;
 use think\facade\Cache;
 
 class AdminAuthService extends AuthService{
-    protected $allowFields = ['id', 'username', 'nickname', 'mobile', 'avatar', 'user_id', 'group_id', 'status'];
+    protected $allowFields = ['id', 'username', 'nickname', 'mobile', 'avatar', 'third_id', 'depart_id', 'groupids', 'status'];
     protected $userRuleList = [];
     protected $userMenuList = [];
     private $platformList=[];
@@ -69,7 +69,7 @@ class AdminAuthService extends AuthService{
                 return null;
             }
         }
-        $r['groupids']=explode(',',$r['groupids']);
+        $r['groupids']=array_map('intval',explode(',',$r['groupids']));
         if($allinfo){
             return $r;
         }
@@ -240,7 +240,9 @@ class AdminAuthService extends AuthService{
                 unset($rule[$k]);
                 continue;
             }
-            $rule[$k]['url'] = $this->getPath($v['controller'], $v['action']);
+            if($v['ismenu'] && $v['status']=='normal'){
+                $rule[$k]['url'] = $this->getPath($v['controller'], $v['action']);
+            }
         }
         return $rule;
     }
@@ -491,6 +493,22 @@ class AdminAuthService extends AuthService{
             }
         }
         return null;
+    }
+
+    public function getBackendAuth()
+    {
+        $userlist=$this->userRuleList;
+        //如果$userlist是数组
+        if(is_array($userlist)){
+            foreach ($userlist as $key=>$value){
+                $userlist[$key]['action']=json_decode($value['action'],true);
+                $userlist[$key]['title']=json_decode($value['title'],true);
+            }
+        }
+        return [
+            'admin'=>$this->userinfo(),
+            'rules_list'=>$userlist
+        ];
     }
 
     public function loginByMobile(string $mobile, string $code)

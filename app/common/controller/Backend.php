@@ -98,13 +98,10 @@ class Backend extends BaseController
         $version=Config::get('app.app_debug')?time():site_config("basic.version");
         $this->config = [
             'version'        => $version,
-            'route'          => $route,
+            'controller'     => $controllername,
+            'action'         => $actionname,
             'url'            => request()->url(true),
             'query'          => $this->request->get(),
-            'window'         => [
-                'id'         => Cookie::get('window-id'),
-                'type'       => Cookie::get('window-type')
-            ],
             'baseUrl'        => $this->request->domain().'/'.$this->auth->getRoute('modulealis').'/',
             'upload'         => Config::get('yunqi.upload'),
             'elementUi'      => $elementUi,

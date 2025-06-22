@@ -11,10 +11,10 @@ declare(strict_types=1);
 
 namespace app\common\model;
 
-use think\facade\Config;
+use app\common\library\Tree;
 use think\Model;
 
-class Admin extends Model{
+class Department extends Model{
     // 自动写入时间戳字段
     protected $autoWriteTimestamp = true;
     // 定义时间戳字段名
@@ -26,8 +26,11 @@ class Admin extends Model{
         'createtime'     =>  'timestamp:Y-m-d H:i',
     ];
 
-    public function depart()
+    public static function getDepartData()
     {
-        return $this->hasOne(Department::class,'id','depart_id')->field('id,name');
+        $list=self::select();
+        Tree::instance()->init($list);
+        $data = Tree::instance()->getTreeArray(0);
+        return $data;
     }
 }

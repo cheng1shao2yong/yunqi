@@ -51,7 +51,6 @@ export function formatDateTime(date){
     return year+'-'+month+'-'+day+' '+hour+':'+minis+':'+seconds;
 }
 
-
 export function formatTime(date){
     let hour=date.getHours();
     if(hour<10){
@@ -148,4 +147,16 @@ export function getfileImage(filename){
     }else{
         return $domain+'/assets/img/fileicon/wz.png';
     }
+}
+
+export function TreeIdtoString(tree) {
+    for (let i = 0; i < tree.length; i++) {
+        if (tree[i].childlist && tree[i].childlist.length > 0) {
+            tree[i].childlist = TreeIdtoString(tree[i].childlist);
+        }
+        if (tree[i].id) {
+            tree[i].id = tree[i].id.toString();
+        }
+    }
+    return tree;
 }

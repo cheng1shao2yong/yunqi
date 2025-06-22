@@ -6,7 +6,7 @@
         </div>
         <el-menu
             mode="horizontal"
-            :default-active="activeMenu?activeMenu.id.toString():''"
+            :default-active="activeTab?activeTab.id.toString():''"
             :router="false"
             :unique-opened="true">
             <template v-for="menu in menuList">

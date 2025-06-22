@@ -1,30 +1,57 @@
 <template>
-    <el-card shadow="never">
-        <yun-table
-                :columns="columns"
-                toolbar="refresh,add,del"
-                order="asc"
-                :auth="{
-                    add:{:$auth->check('app\\admin\\controller\\auth\\Admin','add')},
-                    edit:{:$auth->check('app\\admin\\controller\\auth\\Admin','edit')},
-                    del:{:$auth->check('app\\admin\\controller\\auth\\Admin','del')},
-                    multi:{:$auth->check('app\\admin\\controller\\auth\\Admin','multi')},
-                }"
-                :extend="extend">
-                <template #formatter="{field,rows}">
-                    <div v-if="field=='groupids'">
-                        <template v-for="item in rows.groupids">
-                            <el-tag :type="item.status=='normal'?'':'info'" effect="dark" style="margin-right: 5px;">{{item.name}}</el-tag>
-                        </template>
-                    </div>
-                    {if $thirdLogin}
-                    <div v-if="field=='third'">
-                        <el-tag effect="dark" v-if="rows.third" style="margin-right: 5px;">{{rows.third.openname}}</el-tag>
-                    </div>
-                    {/if}
-                </template>
-        </yun-table>
-    </el-card>
+    <el-row>
+        <el-col :span="4" v-if="departdata[0].childlist.length>1">
+            <el-card shadow="never" style="width: 95%;">
+                <el-input placeholder="请输入部门名称" v-model="search" @input="handleSearch">
+                    <template #prepend>
+                        <i class="fa fa-search"></i>
+                    </template>
+                </el-input>
+                <el-scrollbar height="calc(100vh)">
+                <el-tree
+                    style="margin-top: 15px"
+                    ref="elTree"
+                    :data='departdata'
+                    :expand-on-click-node="false"
+                    :default-expand-all="true"
+                    :filter-node-method="filterNode"
+                    :props='{label:"name",children:"childlist",value:"id"}'
+                    @node-click="handleNodeClick"
+                >
+                </el-tree>
+                </el-scrollbar>
+            </el-card>
+        </el-col>
+        <el-col :span="departdata[0].childlist.length>1?20:24">
+            <el-card shadow="never">
+                <yun-table
+                        :columns="columns"
+                        toolbar="refresh,add,del"
+                        ref="yuntable"
+                        order="asc"
+                        :auth="{
+                            add:{:$auth->check('app\\admin\\controller\\auth\\Admin','add')},
+                            edit:{:$auth->check('app\\admin\\controller\\auth\\Admin','edit')},
+                            del:{:$auth->check('app\\admin\\controller\\auth\\Admin','del')},
+                            multi:{:$auth->check('app\\admin\\controller\\auth\\Admin','multi')},
+                        }"
+                        :extend="extend">
+                    <template #formatter="{field,rows}">
+                        <div v-if="field=='groupids'">
+                            <template v-for="item in rows.groupids">
+                                <el-tag :type="item.status=='normal'?'primary':'info'" effect="dark" style="margin-right: 5px;">{{item.name}}</el-tag>
+                            </template>
+                        </div>
+                        {if $thirdLogin}
+                        <div v-if="field=='third'">
+                            <el-tag effect="dark" v-if="rows.third" style="margin-right: 5px;">{{rows.third.openname}}</el-tag>
+                        </div>
+                        {/if}
+                    </template>
+                </yun-table>
+            </el-card>
+        </el-col>
+    </el-row>
 </template>
 <script>
     import table from "@components/Table.js";
@@ -32,6 +59,8 @@
     export default{
         components:{'YunTable':table},
         data:{
+            search:'',
+            departdata:Yunqi.data.departdata,
             extend:{
                 index_url: 'auth/admin/index',
                 add_url: 'auth/admin/add',
@@ -65,6 +94,14 @@
                     title: __('所属组别'),
                     formatter:Yunqi.formatter.slot,
                     operate:false
+                },
+                {
+                    field: 'depart',
+                    formatter: function (data){
+                        return data?data.name:'';
+                    },
+                    title: __('所属部门'),
+                    operate: {form:'input',type:'hidden',filter:false}
                 },
                 {field: 'status', title: __('状态'),operate:false, searchList: {'normal': __('正常'),'hidden': __('隐藏')},formatter:function(data,row){
                         let sw=Yunqi.formatter.switch;
@@ -120,7 +157,21 @@
             ]
         },
         methods: {
-
+            handleSearch:function (e){
+                this.$refs.elTree.filter();
+            },
+            filterNode:function (value,data){
+                return data.name.indexOf(this.search) !== -1;
+            },
+            handleNodeClick:function (e){
+                let columns=this.columns;
+                for(let i in columns){
+                    if(columns[i].field=='depart'){
+                        columns[i].operate.value=e.id;
+                    }
+                }
+                this.$refs.yuntable.reset();
+            }
         }
     }
 </script>

@@ -35,7 +35,7 @@
                 {field: 'name',title:__('名称'),edit:'text',rules:'required'},
                 {field: 'nickname',title:__('昵称'),edit:'text'},
                 {field: 'image', title: __('图片'),edit:'image'},
-                {field: 'weigh', title: __('权重'),edit:(Yunqi.config.route[2]=='edit')?'number':false},
+                {field: 'weigh', title: __('权重'),edit:(Yunqi.config.action=='edit')?'number':false},
                 {field: 'status', title: __('状态'),edit:'switch',searchList: {'normal': __('正常'),'hidden': __('隐藏')}},
             ]
         },

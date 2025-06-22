@@ -60,7 +60,7 @@ export default {
     methods:{
         //私有方法，当最小化弹出菜单时，显示旁边一个菜单
         refresh:function (){
-            let id=Yunqi.app.activeMenu.id;
+            let id=Yunqi.app.activeTab.id;
             let win=document.getElementById('addtabs-'+id).contentWindow;
             win.location.reload();
         },
@@ -85,7 +85,7 @@ export default {
             }
             let lastmenu;
             for(let i=0;i<this.tabsMenuList.length;i++){
-                if(this.tabsMenuList[i].menutype=='addtabs'){
+                if(this.tabsMenuList[i].menutype=='tab'){
                     lastmenu=this.tabsMenuList[i];
                 }
             }
@@ -127,7 +127,7 @@ export default {
         showMenu:function (id){
             this.tabsMenuList.forEach(menu=>{
                 if(menu.id==id){
-                    if(menu.menutype=='addtabs'){
+                    if(menu.menutype=='tab'){
                         Yunqi.app.addTabs(menu);
                     }
                     if(menu.menutype=='layer'){
@@ -138,7 +138,7 @@ export default {
         },
         //私有方法
         closeMenu:function (menu){
-            if(menu.menutype=='addtabs'){
+            if(menu.menutype=='tab'){
                 Yunqi.app.closeTabs(menu.id);
             }
             if(menu.menutype=='layer'){
@@ -163,8 +163,6 @@ export default {
                 }
             });
             if(!isIn){
-                document.cookie='window-id='+menu.id;
-                document.cookie='window-type='+menu.menutype;
                 this.tabsMenuValue=menu.id;
                 this.tabsMenuList.push(menu);
             }

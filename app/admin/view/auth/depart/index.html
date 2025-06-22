@@ -1,0 +1,71 @@
+<template>
+    <el-card shadow="never">
+        <yun-table
+            :columns="columns"
+            :common-search="false"
+            :pagination="false"
+            order="asc"
+            ref="yuntable"
+            :is-tree="true"
+            :tree-expand-all="true"
+            toolbar="refresh,add,del"
+            :auth="auth"
+            :extend="extend">
+        </yun-table>
+    </el-card>
+</template>
+<script>
+import table from "@components/Table.js";
+import auth from "@components/Auth.js";
+const doCheck=function (tree,checkKey){
+    tree.forEach(res=>{
+        checkKey.push(res.id);
+        if(res.children && res.children.length>0){
+            doCheck(res.children,checkKey);
+        }
+    });
+}
+export default{
+    components:{'YunTable':table,'Auth':auth},
+    data:{
+        auth:{
+            add:Yunqi.auth.check('app\\admin\\controller\\auth\\Depart','add'),
+            edit:Yunqi.auth.check('app\\admin\\controller\\auth\\Depart','edit'),
+            del:Yunqi.auth.check('app\\admin\\controller\\auth\\Depart','del'),
+            multi:Yunqi.auth.check('app\\admin\\controller\\auth\\Depart','multi'),
+            download:Yunqi.auth.check('app\\admin\\controller\\auth\\Depart','download'),
+        },
+        extend:{
+            index_url: 'auth/depart/index',
+            add_url: 'auth/depart/add',
+            edit_url: 'auth/depart/edit',
+            del_url: 'auth/depart/del',
+            multi_url: 'auth/depart/multi',
+            download_url: 'auth/depart/download',
+        },
+        columns:[
+            {checkbox: true},
+            {field: 'id',title: __('ID'),width:80},
+            {field: 'name', title: __('名称'),align:'left'},
+            {field: 'description', title: __('描述')},
+            {field: 'status', title: __('状态'),searchList: {'normal': __('正常'),'hidden': __('隐藏')},formatter:Yunqi.formatter.switch},
+            {treeExpand: true},
+            {
+                field: 'operate',
+                title: __('操作'),
+                width:150,
+                action:{
+                    edit:true,
+                    del:true
+                }
+            }
+        ]
+    },
+    methods: {
+
+    }
+}
+</script>
+<style>
+
+</style>

@@ -31,6 +31,7 @@ export default {
     components:{'SelectPage':selectpage},
     data: function () {
         return {
+            menutype:Yunqi.app.window.menutype,
             loading:true,
             sortData:'',
             expandRowKeys:[],
@@ -606,6 +607,7 @@ export default {
                 });
                 json.field=field;
                 json.searchList=searchList;
+                json.isTree=this.isTree;
                 if(this.download.page){
                     json.page=this.currentPage;
                     json.limit=this.pageSize;
@@ -787,8 +789,41 @@ export default {
             return formatter;
         },
         rowDrop:function(){
-            const tbody = document.querySelector('.el-table__body-wrapper tbody');
             const _this = this;
+            const tbody = document.querySelector('.el-table__body-wrapper tbody');
+            class TreeClass{
+                constructor(index) {
+                    this.index = index;
+                    this.j = 0;
+                    this.arr=[];
+                }
+                getItem(list) {
+                    for(let i=0;i<list.length;i++){
+                        if(this.j===this.index){
+                            return list[i];
+                        }
+                        this.j++;
+                        if(list[i].childlist && list[i].childlist.length>0){
+                            let item = this.getItem(list[i].childlist);
+                            if(item){
+                                return item;
+                            }
+                        }
+                    }
+                    return false;
+                }
+                getList(list,pid){
+                    for(let i=0;i<list.length;i++){
+                        if(list[i].pid==pid){
+                            this.arr.push(list[i]);
+                        }
+                        if(list[i].childlist && list[i].childlist.length>0){
+                            this.getList(list[i].childlist,pid);
+                        }
+                    }
+                    return this.arr;
+                }
+            };
             Sortable.create(tbody, {
                 //  指定父元素下可被拖拽的子元素
                 draggable: ".el-table__row",
@@ -798,29 +833,72 @@ export default {
                 chosenClass: "sortable-chosen",
                 dragClass: "sortable-drag",
                 onEnd ({ newIndex, oldIndex }) {
-                    //交换权重
-                    let new_weigh=_this.list[newIndex].weigh;
-                    let old_weigh=_this.list[oldIndex].weigh;
-                    if(new_weigh===undefined || old_weigh===undefined){
-                        top.ElementPlus.ElMessage({
-                            message: __('没有weigh属性，排序失败'),
-                            type: 'error'
-                        });
-                        return;
-                    }
-                    let data=[
-                        {id:_this.list[oldIndex].id,weigh:new_weigh}
-                    ];
-                    let line=Math.abs(oldIndex-newIndex);
-                    let weigh=_this.list[newIndex].weigh;
-                    (newIndex>oldIndex)?weigh++:weigh--;
-                    let i=0;
-                    while(i<line){
-                        data.push({
-                            id:(newIndex>oldIndex)?_this.list[newIndex-i].id:_this.list[newIndex+i].id,
-                            weigh:(newIndex>oldIndex)?weigh++:weigh--
-                        });
-                        i++;
+                    let data=[];
+                    if(_this.isTree){
+                        let new_item=(new TreeClass(newIndex)).getItem(_this.list);
+                        let old_item=(new TreeClass(oldIndex)).getItem(_this.list);
+                        if(new_item.weigh===undefined || old_item.weigh===undefined){
+                            Yunqi.message.error(__('没有weigh属性，排序失败'));
+                            return;
+                        }
+                        if(new_item.pid!==old_item.pid){
+                            Yunqi.message.error(__('只支持在同级别表内拖拽'));
+                            return;
+                        }
+                        //找到影响拖拽的其他行，并修改weigh属性
+                        let list=(new TreeClass(oldIndex)).getList(_this.list,old_item.pid);
+                        let weigh=new_item.weigh;
+                        data.push({id:old_item.id,weigh:weigh});
+                        //从上往下拖
+                        if(newIndex>oldIndex){
+                            for(let i=list.length-1;i>=0;i--){
+                                if(list[i].id==old_item.id){
+                                    break;
+                                }
+                                if(list[i].weigh<new_item.weigh){
+                                    continue;
+                                }
+                                if(list[i].weigh<=old_item.weigh){
+                                    data.push({
+                                        id:list[i].id,
+                                        weigh:list[i].weigh+1
+                                    });
+                                }
+                            }
+                        }
+                        //从下往上拖
+                        if(newIndex<oldIndex){
+                            for(let i=0;i<list.length;i++){
+                                if(list[i].id==old_item.id){
+                                    break;
+                                }
+                                if(list[i].weigh<=new_item.weigh){
+                                    data.push({
+                                        id:list[i].id,
+                                        weigh:list[i].weigh-1
+                                    });
+                                }
+                            }
+                        }
+                    }else{
+                        let new_weigh=_this.list[newIndex].weigh;
+                        let old_weigh=_this.list[oldIndex].weigh;
+                        if(new_weigh===undefined || old_weigh===undefined){
+                            Yunqi.message.error(__('没有weigh属性，排序失败'));
+                            return;
+                        }
+                        data.push({id:_this.list[oldIndex].id,weigh:new_weigh});
+                        let line=Math.abs(oldIndex-newIndex);
+                        let weigh=_this.list[newIndex].weigh;
+                        (newIndex>oldIndex)?weigh++:weigh--;
+                        let i=0;
+                        while(i<line){
+                            data.push({
+                                id:(newIndex>oldIndex)?_this.list[newIndex-i].id:_this.list[newIndex+i].id,
+                                weigh:(newIndex>oldIndex)?weigh++:weigh--
+                            });
+                            i++;
+                        }
                     }
                     const elloading=ElementPlus.ElLoading.service({text:'排序中..'});
                     const promise=data.map(res=>{
@@ -927,7 +1005,6 @@ export default {
                     }
                 }
             }
-            console.log(columns)
         },
         changeShow:function(status){
             let ids=[];
@@ -1045,7 +1122,7 @@ export default {
                 url:this.extend.recyclebin_url+'?action=list',
                 icon:'fa fa-recycle',
                 close:function (){
-                    let id=top.Yunqi.app.activeMenu.id;
+                    let id=top.Yunqi.app.activeTab.id;
                     let tab=top.document.getElementById('addtabs-'+id).contentWindow;
                     let doc=tab.document.getElementsByClassName('refresh');
                     if(doc.length>0){
@@ -1068,7 +1145,7 @@ export default {
                 if(!refresh){
                     return
                 }
-                let id=top.Yunqi.app.activeMenu.id;
+                let id=top.Yunqi.app.activeTab.id;
                 let tab=top.document.getElementById('addtabs-'+id).contentWindow;
                 let doc=tab.document.getElementsByClassName('refresh');
                 if(doc.length>0){
@@ -1102,7 +1179,7 @@ export default {
                         if(!refresh){
                             return;
                         }
-                        let id=top.Yunqi.app.activeMenu.id;
+                        let id=top.Yunqi.app.activeTab.id;
                         let tab=top.document.getElementById('addtabs-'+id).contentWindow;
                         let doc=tab.document.getElementsByClassName('refresh');
                         if(doc.length>0){

@@ -28,8 +28,8 @@ class AuthRule extends Model{
     ];
 
     const menutypeList = [
-        'addtabs'=>'选项卡',
-        'dialog'=>'弹窗',
+        'tab'=>'选项卡',
+        'layer'=>'弹窗',
         'blank'=>'跳转链接',
     ];
 
@@ -39,12 +39,16 @@ class AuthRule extends Model{
         $rule->save();
     }
 
-    public static function getRuleListTree(mixed $ruleids):array
+    public static function getRuleListTree(mixed $ruleids,bool $ismenu=false):array
     {
+        $where=[];
+        if($ismenu){
+            $where[]=['ismenu','=',1];
+        }
         if($ruleids=='*'){
-            $ruleList = self::field('id,pid,title,icon,controller,action,ismenu,isplatform,weigh,status')->order('weigh DESC,id ASC')->select()->toArray();
+            $ruleList = self::where($where)->field('id,pid,title,icon,controller,action,ismenu,isplatform,weigh,status')->order('weigh DESC,id ASC')->select()->toArray();
         }else{
-            $ruleList = self::whereIn('id',$ruleids)->field('id,pid,title,icon,controller,action,ismenu,isplatform,weigh,status')->order('weigh DESC,id ASC')->select()->toArray();
+            $ruleList = self::where($where)->whereIn('id',$ruleids)->field('id,pid,title,icon,controller,action,ismenu,isplatform,weigh,status')->order('weigh DESC,id ASC')->select()->toArray();
         }
         Tree::instance()->init($ruleList);
         $list = Tree::instance()->getTreeArray(0);

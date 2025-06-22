@@ -29,13 +29,6 @@ class Http extends Handle
                 $modulename=app('http')->getName();
                 View::assign('modulename',$modulename);
                 View::assign('modulealis',get_module_alis($modulename));
-                if($modulename=='admin'){
-                    View::assign('windowId',Cookie::get('window-id'));
-                    View::assign('windowType',Cookie::get('window-type'));
-                }else{
-                    View::assign('windowId',0);
-                    View::assign('windowType','');
-                }
                 $result=View::fetch('common@/404');
                 $response = Response::create($result, 'html', 404);
                 return $response;

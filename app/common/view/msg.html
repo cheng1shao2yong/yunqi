@@ -69,15 +69,14 @@
 <script>
     {if $result.modulename == 'admin'}
     function closePage(){
-        let windowId={$config.window.id};
-        let windowType='{$config.window.type}';
-        if(windowType == 'addtabs') {
-            let menu=top.Yunqi.app.tabList[top.Yunqi.app.tabList.length-2];
-            top.Yunqi.api.addtabs(menu);
-            top.Yunqi.api.closetabs(windowId);
-        }
-        if(windowType == 'layer') {
-            top.Yunqi.api.closelayer(windowId);
+        if(top!==window){
+            let menu=top.Yunqi.app.openMenu;
+            if(menu.menutype=='tab'){
+                top.Yunqi.api.closetabs(menu);
+            }
+            if(menu.menutype=='layer'){
+                top.Yunqi.api.closelayer(menu);
+            }
         }
     }
     {/if}

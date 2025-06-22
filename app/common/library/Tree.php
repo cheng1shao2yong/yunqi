@@ -389,16 +389,11 @@ class Tree
         if ($childs) {
             $total = count($childs);
             foreach ($childs as $id => $value) {
-                $j = $k = '';
                 if ($number == $total) {
-                    $j .= $this->icon[2];
                     $k = $itemprefix ? $this->nbsp : '';
                 } else {
-                    $j .= $this->icon[1];
                     $k = $itemprefix ? $this->icon[0] : '';
                 }
-                $spacer = $itemprefix ? $itemprefix . $j : '';
-                $value['spacer'] = $spacer;
                 $data[$n] = $value;
                 $data[$n]['childlist'] = $this->getTreeArray($id, $itemprefix . $k . $this->nbsp);
                 $n++;
@@ -414,19 +409,18 @@ class Tree
      * @param string $field
      * @return array
      */
-    public function getTreeList($data = [], $field = 'name')
+    public function getTreeList($data = [])
     {
         $arr = [];
         foreach ($data as $k => $v) {
             $childlist = isset($v['childlist']) ? $v['childlist'] : [];
             unset($v['childlist']);
-            $v[$field] = $v['spacer'] . ' ' . $v[$field];
             $v['haschild'] = $childlist ? 1 : 0;
             if ($v['id']) {
                 $arr[] = $v;
             }
             if ($childlist) {
-                $arr = array_merge($arr, $this->getTreeList($childlist, $field));
+                $arr = array_merge($arr, $this->getTreeList($childlist));
             }
         }
         return $arr;

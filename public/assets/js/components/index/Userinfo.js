@@ -38,7 +38,6 @@ export default {
     methods:{
         userinfo:function (){
             Yunqi.api.addtabs({
-                id:8,
                 url:Yunqi.config.baseUrl+'general/profile/index',
                 title:'个人资料',
                 icon:'fa fa-user',

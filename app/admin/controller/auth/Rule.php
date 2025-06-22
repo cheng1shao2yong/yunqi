@@ -44,13 +44,7 @@ class Rule extends Backend
         if (false === $this->request->isAjax()) {
             return $this->fetch();
         }
-        $ruleids='*';
-        if(!$this->auth->isSuperAdmin()){
-            $menulist=$this->auth->getUserMenuList();
-            $rulelist=$this->auth->getUserRuleList();
-            $ruleids=array_column(array_merge($menulist,$rulelist),'id');
-        }
-        $tree=AuthRule::getRuleListTree($ruleids);
+        $tree=AuthRule::getRuleListTree('*');
         $result = ['total' => 1000, 'rows' => $tree];
         return json($result);
     }
@@ -101,17 +95,12 @@ class Rule extends Backend
     private function beforeAction()
     {
         if(!$this->request->isPost()){
-            $ruleids='*';
-            if(!$this->auth->isSuperAdmin()){
-                $menulist=$this->auth->getUserMenuList();
-                $rulelist=$this->auth->getUserRuleList();
-                $ruleids=array_column(array_merge($menulist,$rulelist),'id');
-            }
-            $tree=AuthRule::getMenuListTree($ruleids);
-            $ruledata=[0 => __('无')];
-            foreach ($tree as $value){
-                $ruledata[$value['id']]=$value['title'];
-            }
+            $tree=AuthRule::getRuleListTree('*',true);
+            $ruledata=array_merge(array([
+                'id'=>'0',
+                'title'=>__('无'),
+                'childlist'=>[]
+            ]),$tree);
             $this->assign('ruledata',$ruledata);
             $this->assign('menutypeList',AuthRule::menutypeList);
         }else{
