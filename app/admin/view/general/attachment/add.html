@@ -112,7 +112,7 @@
                         this.$refs.uploadRef.submit();
                         setInterval(()=>{
                             if(this.addform.success==this.addform.ready){
-                                Yunqi.api.closelayer(Yunqi.config.window.id,true);
+                                Yunqi.api.closelayer(Yunqi.app.window.id,true);
                                 elloading.close();
                             }
                         },100);
